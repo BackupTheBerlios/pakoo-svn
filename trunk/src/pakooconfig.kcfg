@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kcfg SYSTEM "http://www.kde.org/standards/kcfg/1.0/kcfg.dtd">
+<kcfg> <kcfgfile name="pakoorc"/>
+	<group name="Pakoo">
+		<entry name="arch" type="String">
+			<label>The user's architecture (masked or stable).</label>
+		</entry>
+	</group>
+	<group name="User Interface">
+		<entry name="vSplitterSizes" type="IntList">
+			<label>The sizes of the top and down window parts.</label>
+			<default>32767,150</default>
+		</entry>
+		<entry name="hSplitterSizes" type="IntList">
+			<label>The sizes of the left and right window parts.</label>
+			<default>200,32767</default>
+		</entry>
+	</group>
+	<group name="Directories">
+		<entry name="configDir" type="String">
+			<label>Where Pakoo stores its data.</label>
+		</entry>
+		<entry name="useGentooDefaults" type="Bool">
+			<label>Use the standard paths instead of user defined ones.</label>
+			<default>true</default>
+		</entry>
+		<entry name="preferEdb" type="Bool">
+			<label>Scan the portage edb cache instead of the mainline tree for packages.
+			       This is much faster, but not guaranteed always to be complete.</label>
+			<default>true</default>
+		</entry>
+		<!-- portageDir and overlayDir are missing by design,
+		     they should be read from config files instead. -->
+		<entry name="installedPackagesDir" type="String">
+			<label>The installed packages database directory.</label>
+			<default>/var/db/pkg/</default>
+		</entry>
+		<entry name="edbDir" type="String">
+			<default>/var/cache/edb/dep/</default>
+		</entry>
+		<entry name="worldFile" type="String">
+			<label>Path of the world file.</label>
+			<default>/var/lib/portage/world</default>
+		</entry>
+		<entry name="packageMaskFile" type="String">
+			<label>Path of the package.mask file.</label>
+			<default>/etc/portage/package.mask</default>
+		</entry>
+		<entry name="packageUnmaskFile" type="String">
+			<label>Path of the package.unmask file.</label>
+			<default>/etc/portage/package.unmask</default>
+		</entry>
+		<entry name="packageKeywordsFile" type="String">
+			<label>Path of the package.keywords file.</label>
+			<default>/etc/portage/package.keywords</default>
+		</entry>
+		<entry name="packageUseFile" type="String">
+			<label>Path of the package.use file.</label>
+			<default>/etc/portage/package.use</default>
+		</entry>
+		<entry name="profilesPackageMaskFile" type="String">
+			<label>Path of the global package.mask file, relative to the portage directory.</label>
+			<default>profiles/package.mask</default>
+		</entry>
+	</group>
+</kcfg>

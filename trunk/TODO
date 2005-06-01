@@ -1,0 +1,16 @@
+Pakoo Todo.
+
+Immediate:
+- Proper output in the info view.
+- Replace the names for the portagewidgets
+- Stop package scanning, or make an option of it.
+- Load cascading profiles to retrieve arch, portage dirs, system packages and other things.
+- Package::latestVersion(slot)
+- Namespaces?
+
+Later:
+- Fix search line when switching categories.
+- "Updatable" or "Packages in world" filter?
+- Status bar enhancements (progressbar for tree loading).
+- Support for profiles.
+- Support for multiple overlay dirs (like "/usr/portage /usr/local/portage").

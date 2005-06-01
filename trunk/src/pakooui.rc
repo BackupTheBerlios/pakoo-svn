@@ -1,0 +1,23 @@
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<kpartgui name="pakoo" version="1">
+<MenuBar>
+  <Menu name="Actions"><text>&amp;Actions</text>
+    <Action name="actions_sync" />
+    <Action name="actions_update" />
+    <Action name="actions_install" />
+    <Action name="actions_uninstall" />
+    <Action name="actions_cleanup" />
+    <Separator/>
+    <Action name="actions_quit" />
+  </Menu>
+</MenuBar>
+<ToolBar fullWidth="true" name="mainToolBar" iconText="icontextbottom">
+  <Action name="actions_sync"/>
+  <Action name="actions_update"/>
+  <Separator/>
+  <Action name="actions_install"/>
+  <Action name="actions_uninstall"/>
+  <Separator/>
+  <Action name="actions_cleanup"/>
+</ToolBar>
+</kpartgui>
