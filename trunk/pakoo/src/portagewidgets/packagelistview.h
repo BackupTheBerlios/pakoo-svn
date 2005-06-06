@@ -127,6 +127,8 @@ private:
 	QString category;
 	//! The subcategory that's currently displayed.
 	QString subcategory;
+	//! The currently selected package.
+	Package* currentPackage;
 
 	//! A counter used for detailed package info progress.
 	int loadedPackages;

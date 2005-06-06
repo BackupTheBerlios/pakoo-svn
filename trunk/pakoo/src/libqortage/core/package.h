@@ -24,6 +24,7 @@
 #include <qstring.h>
 #include <qmap.h>
 #include <qvaluelist.h>
+#include <qstringlist.h>
 
 class PackageVersion;
 
@@ -58,8 +59,14 @@ public:
 	bool hasUpdate( const QString& arch );
 	bool hasUpdate( PackageVersion* version, const QString& arch );
 
+	// version retrieval functions
 	PackageVersionMap* versionMap();
-	QValueList<PackageVersion> sortedVersionList();
+	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
+	QValueList<PackageVersion*> sortedVersionList();
+	PackageVersion* latestVersion();
+	PackageVersion* latestStableVersion( const QString& arch );
+
+	QStringList slotList();
 
 protected:
 	//! The internal list of package versions.

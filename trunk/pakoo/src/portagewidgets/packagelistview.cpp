@@ -23,6 +23,7 @@
 
 #include <klocale.h>
 #include <kiconloader.h>
+#include <kdebug.h>
 
 
 /**
@@ -42,20 +43,16 @@ PakooPackageListView::PakooPackageListView( QWidget* parent, const char* name,
 	packageScanner = new PackageScanner( scanner );
 
 	parallelScanning = true; // you may set this to false when debugging
-	if( parallelScanning == true )
-	{
-		packageCategoryScanner = new PackageScanner( scanner );
+	packageCategoryScanner = new PackageScanner( scanner );
+	packageInstalledScanner = new PackageScanner( scanner );
+
+	if( parallelScanning == true ) {
 		packageCategoryScanner->setFilterInstalled( true, false );
-		packageInstalledScanner = new PackageScanner( scanner );
 		packageInstalledScanner->setFilterInstalled( true, true );
-	}
-	else
-	{
-		packageCategoryScanner = new PackageScanner( scanner );
-		packageInstalledScanner = new PackageScanner( scanner );
 	}
 
 	portageTree = NULL;
+	currentPackage = NULL;
 
 	loadedPackages = 0;
 	installedPackages = 0;
@@ -83,6 +80,49 @@ PakooPackageListView::PakooPackageListView( QWidget* parent, const char* name,
 		this, SIGNAL( expanded(QListViewItem*)         ),
 		this, SLOT( insertVersionItems(QListViewItem*) )
 	);
+}
+
+/**
+ * The deconstructor aborts and waits for the PackageScanner,
+ * if it's running, so that it can safely be deleted.
+ */
+PakooPackageListView::~PakooPackageListView()
+{
+	this->quit();
+}
+
+/**
+ * Prepare for deconstructing. Involves stopping threads and stuff.
+ */
+void PakooPackageListView::quit()
+{
+	if( packageCategoryScanner != NULL )
+	{
+		if( packageCategoryScanner->running() ) {
+			packageCategoryScanner->abort();
+			packageCategoryScanner->wait();
+		}
+		delete packageCategoryScanner;
+		packageCategoryScanner = NULL;
+	}
+	if( packageInstalledScanner != NULL )
+	{
+		if( packageInstalledScanner->running() ) {
+			packageInstalledScanner->abort();
+			packageInstalledScanner->wait();
+		}
+		delete packageInstalledScanner;
+		packageInstalledScanner = NULL;
+	}
+	if( packageScanner != NULL )
+	{
+		if( packageScanner->running() ) {
+			packageScanner->abort();
+			packageScanner->wait();
+		}
+		delete packageScanner;
+		packageScanner = NULL;
+	}
 }
 
 /**
@@ -147,49 +187,6 @@ bool PakooPackageListView::hasInstalledVersion( const QListViewItem* packageItem
 }
 
 /**
- * The deconstructor aborts and waits for the PackageScanner,
- * if it's running, so that it can safely be deleted.
- */
-PakooPackageListView::~PakooPackageListView()
-{
-	this->quit();
-}
-
-/**
- * Prepare for deconstructing. Involves stopping threads and stuff.
- */
-void PakooPackageListView::quit()
-{
-	if( packageCategoryScanner != NULL )
-	{
-		if( packageCategoryScanner->running() ) {
-			packageCategoryScanner->abort();
-			packageCategoryScanner->wait();
-		}
-		delete packageCategoryScanner;
-		packageCategoryScanner = NULL;
-	}
-	if( packageInstalledScanner != NULL )
-	{
-		if( packageInstalledScanner->running() ) {
-			packageInstalledScanner->abort();
-			packageInstalledScanner->wait();
-		}
-		delete packageInstalledScanner;
-		packageInstalledScanner = NULL;
-	}
-	if( packageScanner != NULL )
-	{
-		if( packageScanner->running() ) {
-			packageScanner->abort();
-			packageScanner->wait();
-		}
-		delete packageScanner;
-		packageScanner = NULL;
-	}
-}
-
-/**
  * Translate item selections into package[,version] selection signal.
  * @param item  The item that has been selected.
  */
@@ -226,13 +223,11 @@ void PakooPackageListView::emitSelectionChanged( QListViewItem* item )
 		Package* package = portageTree->package(
 			categoryName, subcategoryName, packageName );
 
-		emit selectionChanged( package );
-
 		// retrieve the package's detail info (description and hasUpdates)
 		if( packageScanner->running() ) {
-			packageScanner->abort();
 			packageScanner->wait();
 		}
+		this->currentPackage = package;
 		packageScanner->startScanningPackage( this, package );
 
 		return;
@@ -425,9 +420,12 @@ void PakooPackageListView::insertVersionItems( QListViewItem* packageItem )
 		packageItem->text(0)       // package name
 	);
 
-	// new PackageScanner that's definetely not running
-	PackageScanner* tempScanner = new PackageScanner(packageCategoryScanner);
-	tempScanner->scanPackage( package );
+	// get description, maskedness and Co.
+	if( packageScanner->running() ) {
+		packageScanner->abort();
+		packageScanner->wait();
+	}
+	packageScanner->scanPackage( package );
 	this->displayPackageDetails( package );
 
 	PackageViewPackage& pkg =
@@ -484,10 +482,16 @@ void PakooPackageListView::displayPackageDetails( Package* package )
 	else
 		pkg.hasDetails = true;
 
-	PackageVersion& firstVersion = *(package->versionMap()->begin());
-	pkg.item->setText( 1, firstVersion.description );
-
 	//TODO: generalize for all architectures
+	PackageVersion* descVersion = package->latestStableVersion("x86");
+	if( descVersion == NULL )
+		descVersion = package->latestVersion();
+	if( descVersion == NULL )
+		return;
+
+	pkg.item->setText( 1, descVersion->description );
+
+	//TODO: once more
 	if( package->hasUpdate("x86") ) {
 		pkg.item->setPixmap( 0, pxPackageItemUpdatable );
 		emit foundUpgradablePackage(package);
@@ -517,6 +521,11 @@ void PakooPackageListView::customEvent( QCustomEvent* event )
 				return;
 
 			displayPackageDetails( packageEvent->package );
+
+			if( packageEvent->package == currentPackage ) {
+				emit selectionChanged( currentPackage );
+				currentPackage = NULL;
+			}
 		}
 		else if( packageEvent->action == PackageScanner::ScanCategory
 		         && packageEvent->packageScanner == packageInstalledScanner )

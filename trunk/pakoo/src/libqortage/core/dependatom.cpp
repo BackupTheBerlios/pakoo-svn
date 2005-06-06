@@ -35,7 +35,7 @@
 #define POS_VERSION     6
 
 // The complete atom regexp in non-escaped form (for testing, or similar):
-// ^(!)?(~|(?:<|>|=|<=|>=))?([a-z]+)-([a-z]+)/((?:[a-z]|[0-9]|-|\+|_)+)((?:\*$|-\d+(?:\.\d+)*[a-z]?(?:\*$)?)(?:_(?:alpha|beta|pre|rc|p)\d+)?(?:-r\d+)?)?$
+// ^(!)?(~|(?:<|>|=|<=|>=))?((?:[a-z]|[0-9])+)-((?:[a-z]|[0-9])+)/((?:[a-z]|[A-Z]|[0-9]|-|\+|_)+)((?:\*$|-\d+(?:\.\d+)*[a-z]?(?:\*$)?)(?:_(?:alpha|beta|pre|rc|p)\d+)?(?:-r\d+)?)?$
 
 /**
  * Initialize this object.
@@ -46,8 +46,8 @@ DependAtom::DependAtom( PortageTree* portageTree )
 : rxAtom("^"    // Start of the string
          "(!)?" // "Block these packages" flag, only occurring in ebuilds
          "(~|(?:<|>|=|<=|>=))?" // greater-than/less-than/equal, or "all revisions" prefix
-         "([a-z]+)-([a-z]+)/"   // category and subcategory
-         "((?:[a-z]|[0-9]|-|\\+|_)+)" // package name
+         "((?:[a-z]|[0-9])+)-((?:[a-z]|[0-9])+)/"   // category and subcategory
+         "((?:[a-z]|[A-Z]|[0-9]|-|\\+|_)+)" // package name
          "("            // start of the version part
          "(?:\\*$|-\\d+(?:\\.\\d+)*[a-z]?(?:\\*$)?)" // base version number,
                                    // including wildcard version matching (*)

@@ -4,8 +4,8 @@ Immediate (for a 0.1 release, or such):
 - Proper output in the info view.
 - Stop package scanning, or make an option of it.
 - Load cascading profiles to retrieve arch, portage dirs, system packages and other things.
-- Package::latestVersion(slot)
 - Namespaces?
+- powieds bug (?), _beta without number
 
 Later:
 - Fix search line when switching categories.

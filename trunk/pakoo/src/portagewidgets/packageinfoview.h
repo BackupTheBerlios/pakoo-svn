@@ -25,6 +25,7 @@
 //#include <ktextbrowser.h>
 
 #include "../libqortage/libqortage.h"
+#include "portagehtmlgenerator.h"
 
 /**
  * A KHTMLPart with additional functions to display package info.
@@ -35,29 +36,23 @@ class PackageInfoView : public KHTMLPart // public KTextBrowser
 {
 	Q_OBJECT
 public:
-	PackageInfoView( QWidget* parentWidget, const char* widgetname, PackageScanner* scanner );
+	PackageInfoView( QWidget* parentWidget, const char* widgetname, const QString& arch = "x86" );
 	~PackageInfoView();
-	void quit();
-
-	//! The receiver for scan (and other) events.
-	void customEvent( QCustomEvent *event );
 
 public slots:
+	void setArchitecture( const QString& arch );
 	void displayPackage( Package* package );
 	void displayPackage( Package* package, PackageVersion* version );
 
 protected:
 	void displayScannedPackage();
 
-	QString getHTML( Package* package );
-	QString getHTML( Package* package, PackageVersion* version );
-
-	//! A PackageScanner object that retrieves missing package information.
-	PackageScanner* packageScanner;
 	//! The package that will be shown in the widget.
 	Package* package;
 	//! Not NULL if a specific version of the package will be shown in detail.
 	PackageVersion* version;
+	//! The object that produces the appropriate HTML that is displayed.
+	PortageHTMLGenerator* htmlGenerator;
 };
 
 #endif // PACKAGEINFOVIEW_H

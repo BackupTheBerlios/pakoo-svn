@@ -62,9 +62,9 @@ portageTreeScanner( "/usr/portage/", "",
 	);
 	hSplitter->setResizeMode( treeView, QSplitter::KeepSize );
 
-	packageInfoView = new PackageInfoView(
-		vSplitter, "packageInfoView", portageTreeScanner.packageScanner()
-	);
+	// TODO: generalize the architecture
+	packageInfoView = new PackageInfoView( vSplitter, "packageInfoView" );
+	// packageInfoView.setArchitecture( arch );
 	vSplitter->setResizeMode( packageInfoView->view(), QSplitter::KeepSize );
 
 	vSplitter->setSizes( PakooConfig::vSplitterSizes() );
@@ -379,7 +379,6 @@ void PakooView::quit()
 	}
 
 	packageView->quit();
-	packageInfoView->quit();
 }
 
 #include "pakooview.moc"

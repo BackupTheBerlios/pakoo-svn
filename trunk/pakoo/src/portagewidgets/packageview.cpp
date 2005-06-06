@@ -71,6 +71,7 @@ PackageView::PackageView( QWidget* parent, const char* name,
 	searchLine->setSearchColumns( searchColumns );
 
 	connect( filterCombo, SIGNAL(activated(int)), this, SLOT(updateFilter(int)) );
+	connect( listView, SIGNAL(cleared()), searchLine, SLOT(clear())  );
 	connect( listView, SIGNAL(contentsChanged()),
 	         searchLine, SLOT(updateSearch())   );
 	/*

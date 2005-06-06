@@ -23,15 +23,15 @@
 
 /**
  * Initialize this object.
- * @param scanner  A copy of this scanner will be kept
- *                 to retrieve detailed package info.
+ * @param arch  The architecture for which the info view should be specialized
+ *              on - something like "x86" or "~alpha"
  */
 PackageInfoView::PackageInfoView(
-	QWidget* parentWidget, const char* widgetname, PackageScanner* scanner )
+	QWidget* parentWidget, const char* widgetname, const QString& arch )
 : KHTMLPart(parentWidget, widgetname)
 //: KTextBrowser(parentWidget, widgetname)
 {
-	packageScanner = new PackageScanner(scanner);
+	htmlGenerator = new PortageHTMLGenerator(arch);
 }
 
 /**
@@ -39,41 +39,27 @@ PackageInfoView::PackageInfoView(
  */
 PackageInfoView::~PackageInfoView()
 {
-	this->quit();
+	delete htmlGenerator;
 }
 
 /**
- * Prepare for deconstructing. Involves stopping threads and stuff.
+ * Set the architecture that this info view specializes in.
+ * Default is "x86".
  */
-void PackageInfoView::quit()
+void PackageInfoView::setArchitecture( const QString& arch )
 {
-	if( packageScanner != NULL )
-	{
-		if( packageScanner->running() ) {
-			packageScanner->abort();
-			packageScanner->wait();
-		}
-		delete packageScanner;
-		packageScanner = NULL;
-	}
+	htmlGenerator->setArchitecture( arch );
 }
 
 /**
- * Display information about a whole package.
+ * Display information about a whole package that has already been loaded.
  */
 void PackageInfoView::displayPackage( Package* package )
 {
-	if( packageScanner == NULL )
-		return;
-
 	this->package = package;
 	this->version = NULL;
 
-	if( packageScanner->running() ) {
-		packageScanner->abort();
-		packageScanner->wait();
-	}
-	packageScanner->startScanningPackage( this, package );
+	displayScannedPackage();
 }
 
 /**
@@ -81,17 +67,12 @@ void PackageInfoView::displayPackage( Package* package )
  */
 void PackageInfoView::displayPackage( Package* package, PackageVersion* version )
 {
-	if( packageScanner == NULL )
-		return;
+	// same as in displayPackage(Package*)
 
 	this->package = package;
 	this->version = version;
 
-	if( packageScanner->running() ) {
-		packageScanner->abort();
-		packageScanner->wait();
-	}
-	packageScanner->startScanningPackage( this, package );
+	displayScannedPackage();
 }
 
 
@@ -106,89 +87,18 @@ void PackageInfoView::displayScannedPackage()
 	QString contents;
 
 	if( version == NULL )
-		contents = getHTML( package );
+		contents = htmlGenerator->fromPackage( package, NULL );
 	else
-		contents = getHTML( package, version );
+		contents = htmlGenerator->fromPackage( package, version );
 
 	//* KHTMLPart version
 	this->begin();
 	this->write( contents );
 	this->end();
 
-	/*/ KTextBrowser version
+	/*/
+	// KTextBrowser version
 	this->clear();
 	this->append( contents );
 	//*/
-}
-
-
-/**
- * Construct hypertext only from package information.
- * The package object argument is assumed not to be NULL.
- */
-QString PackageInfoView::getHTML( Package* package )
-{
-	QString contents;
-
-	if( !package->hasVersions() ) {
-		contents =
-			"<html><body><strong>" + package->name + "</strong><br/>"
-			+ package->category + "-" + package->subcategory
-			+ "</body></html>";
-	}
-	else
-	{
-		QValueList<PackageVersion> versions = package->sortedVersionList();
-		PackageVersion& firstVersion = *(versions.begin());
-
-		QString versionsString;
-		for( uint i = 0; i < versions.count(); i++ )
-		{
-			versionsString += versions[i].version + " ";
-		}
-
-		contents =
-			"<html><body><span style=\"font-size:x-small;margin:-10px;\"><p>"
-			/*+ package->name + "</strong> ("*/ + package->category + "-"
-			+ package->subcategory /*+ ")<br/>"*/ + " / <strong>" + package->name + "</strong><br/>"
-			+ firstVersion.description + "</p><p>" + versionsString +
-			+ "</p></span></body></html>";
-	}
-	return contents;
-}
-
-/**
- * Construct hypertext from package and version information.
- * Both argument objects are assumed not to be NULL.
- */
-QString PackageInfoView::getHTML( Package* package,
-                                       PackageVersion* version )
-{
-	QString contents =
-		"<html><body><span style=\"font-size:small\"><strong>"
-		+ package->name + "-" + version->version + "</strong> ("
-		+ package->category + "-" + package->subcategory + ")<br/>"
-		+ version->description + "</span></body></html>";
-
-	return contents;
-}
-
-
-/**
- * Receiver for package loading events (and others, if needed).
- */
-void PackageInfoView::customEvent( QCustomEvent* event )
-{
-	if( event->type() == (int) LoadingPackageComplete )
-	{
-		LoadingPackageCompleteEvent* packageEvent =
-			(LoadingPackageCompleteEvent*) event;
-
-		if( packageEvent->error != PortageLoaderBase::NoError )
-			return;
-		if( packageEvent->package != this->package )
-			return; // this is not the package that should be shown at the moment
-
-		displayScannedPackage();
-	}
 }

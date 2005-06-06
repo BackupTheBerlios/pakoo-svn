@@ -1,2 +1,10 @@
 2005-06-01 Jakob Petsovits <jpetso@gmx.at>
 	* initial import to the Subversion repository
+
+2005-06-02 Jakob Petsovits <jpetso@gmx.at>
+	* fix in the DEPEND atom regexp
+	* fix for loading version items in the list view
+
+2005-06-06 Jakob Petsovits <jpetso@gmx.at>
+	* more and prettier infos in the package info view
+	* fixed some semi-serious bug with package displaying, dropping some multithreading
