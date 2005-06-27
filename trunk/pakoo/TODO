@@ -2,10 +2,10 @@ Pakoo Todo.
 
 Immediate (for a 0.1 release, or such):
 - Proper output in the info view.
-- Stop package scanning, or make an option of it.
+- Let the user stop package scanning, and/or make an option of it.
 - Load cascading profiles to retrieve arch, portage dirs, system packages and other things.
 - Namespaces?
-- powieds bug (?), _beta without number
+- properly process _beta (& Co.) without number
 
 Later:
 - Fix search line when switching categories.

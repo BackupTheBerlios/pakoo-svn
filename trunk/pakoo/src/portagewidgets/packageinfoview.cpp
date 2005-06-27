@@ -20,6 +20,10 @@
 
 #include "packageinfoview.h"
 
+#include <kservice.h>
+#include <kuserprofile.h>
+#include <krun.h>
+
 
 /**
  * Initialize this object.
@@ -32,6 +36,9 @@ PackageInfoView::PackageInfoView(
 //: KTextBrowser(parentWidget, widgetname)
 {
 	htmlGenerator = new PortageHTMLGenerator(arch);
+	connect( this->browserExtension(),
+		SIGNAL( openURLRequest( const KURL&, const KParts::URLArgs&) ),
+		this, SLOT( openURLRequest(const KURL&, const KParts::URLArgs&) ) );
 }
 
 /**
@@ -101,4 +108,20 @@ void PackageInfoView::displayScannedPackage()
 	this->clear();
 	this->append( contents );
 	//*/
+}
+
+/**
+ * Called when a link in the info view is activated.
+ * Parameters are coming from KParts::BrowserExtension::openURLRequest().
+ */
+void PackageInfoView::openURLRequest( const KURL& url, const KParts::URLArgs& )
+{
+	// get service for web browsing
+	KService::Ptr ptr =
+		KServiceTypeProfile::preferredService("text/html", "Application");
+
+	KURL::List lst;
+	// append 'url' parameter to the service and run it
+	lst.append( url );
+	KRun::run( *ptr, lst );
 }

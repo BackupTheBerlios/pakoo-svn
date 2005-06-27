@@ -53,6 +53,9 @@ protected:
 	PackageVersion* version;
 	//! The object that produces the appropriate HTML that is displayed.
 	PortageHTMLGenerator* htmlGenerator;
+
+protected slots:
+	void openURLRequest( const KURL& url, const KParts::URLArgs& args );
 };
 
 #endif // PACKAGEINFOVIEW_H
