@@ -40,10 +40,10 @@ class PortageTreeView : public KListView
 public:
 	PortageTreeView( QWidget* parent, const char* name );
 
-	void setPortageTree( PortageTree* portageTree );
+	void displayTree( PortageTree* portageTree, PortageSettings* settings );
 
 signals:
-	void selectionChanged( PortageTree* tree,
+	void selectionChanged( PortageTree* tree, PortageSettings* settings,
 		const QString& categoryName, const QString& subcategoryName
 	);
 
@@ -59,6 +59,7 @@ protected:
 	QListViewItem* rootItem;
 	QMap<QString,TreeViewCategory> categories;
 	PortageTree* portageTree;
+	PortageSettings* portageSettings;
 
 	QPixmap pxRootItem, pxCategoryItem;
 	int width;

@@ -42,10 +42,7 @@
  * Initialize this object.
  */
 PakooView::PakooView( QWidget *parent )
-: DCOPObject("pakooIface"), QWidget(parent),
-portageTreeScanner( "/usr/portage/", "",
-                    PakooConfig::installedPackagesDir(),
-                    PakooConfig::edbDir() )
+: DCOPObject("pakooIface"), QWidget(parent)
 {
 	QHBoxLayout* topLayout = new QHBoxLayout(this);
 	topLayout->setAutoAdd( true );
@@ -62,9 +59,7 @@ portageTreeScanner( "/usr/portage/", "",
 	);
 	hSplitter->setResizeMode( treeView, QSplitter::KeepSize );
 
-	// TODO: generalize the architecture
 	packageInfoView = new PackageInfoView( vSplitter, "packageInfoView" );
-	// packageInfoView.setArchitecture( arch );
 	vSplitter->setResizeMode( packageInfoView->view(), QSplitter::KeepSize );
 
 	vSplitter->setSizes( PakooConfig::vSplitterSizes() );
@@ -77,8 +72,10 @@ portageTreeScanner( "/usr/portage/", "",
 
 	// Connect the package displaying widgets to work together
 	connect(
-		treeView, SIGNAL(selectionChanged(PortageTree*, const QString&, const QString&)),
-		packageView->listView, SLOT(displayPackages(PortageTree*, const QString&, const QString&))
+		treeView,
+		SIGNAL(selectionChanged(PortageTree*, PortageSettings*, const QString&, const QString&)),
+		packageView->listView,
+		SLOT(displayPackages(PortageTree*, PortageSettings*, const QString&, const QString&))
 	);
 	connect(
 		packageView->listView, SIGNAL(selectionChanged(Package*)),
@@ -127,6 +124,19 @@ QSize PakooView::sizeHint() const
  */
 void PakooView::loadPortageTree()
 {
+	ProfileLoader profileLoader;
+	profileLoader.loadProfile( &settings );
+
+	packageInfoView->setArchitecture( settings.acceptedKeyword() );
+	portageTreeScanner.setMainlineTreeDirectory(
+		settings.mainlineTreeDirectory() );
+	portageTreeScanner.setOverlayTreeDirectories(
+		settings.overlayTreeDirectories() );
+	portageTreeScanner.setInstalledPackagesDirectory(
+		PakooConfig::installedPackagesDir() );
+	portageTreeScanner.setEdbDepDirectory(
+		PakooConfig::edbDir() );
+
 	// if not using /var/cache/edb/dep, try to load the packages from a cache file
 	if( PakooConfig::preferEdb() == false )
 	{
@@ -142,7 +152,7 @@ void PakooView::loadPortageTree()
 		installedPackageCount = 0;
 
 		portageTree.clear();
-		portageTreeScanner.startScanningPortage(
+		portageTreeScanner.startScanningTrees(
 			this, &portageTree, PortageTree::All, PakooConfig::preferEdb()
 		);
 		QString message = i18n("Scanning the portage tree...");
@@ -271,7 +281,7 @@ void PakooView::handleLoadingTreeComplete( LoadingTreeCompleteEvent* event )
 	this->setStatusbarText( message );
 	kdDebug() << message << endl;
 
-	treeView->setPortageTree( &portageTree );
+	treeView->displayTree( &portageTree, &settings );
 }
 
 /**

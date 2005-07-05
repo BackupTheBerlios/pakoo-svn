@@ -256,6 +256,7 @@ void PakooPackageListView::emitSelectionChanged( QListViewItem* item )
  * a subset of the packages in the tree are displayed.
  *
  * @param tree  The tree object containing the packages that will be shown.
+ * @param settings  A Settings object containing configuration properties.
  * @param categoryName  Only show packages from this category. QString::null
  *                      means all packages will be shown (without filter).
  * @param subcategoryName  Only show packages from this subcategory.
@@ -263,13 +264,16 @@ void PakooPackageListView::emitSelectionChanged( QListViewItem* item )
  *                         also set. QString::null means that the packages
  *                         won't be filtered by subcategory.
  */
-void PakooPackageListView::displayPackages( PortageTree* tree,
+void PakooPackageListView::displayPackages(
+	PortageTree* tree, PortageSettings* settings,
 	const QString& categoryName, const QString& subcategoryName )
 {
 	if( tree == NULL )
 		return;
 	else
 		portageTree = tree;
+
+	updateSettings( settings );
 
 	if( packageCategoryScanner->running() ) {
 		packageCategoryScanner->abort();
@@ -452,8 +456,7 @@ void PakooPackageListView::insertVersionItems( QListViewItem* packageItem )
 		if( (*versionIterator).installed == true ) {
 			versionItem->setPixmap( 0, pxVersionItemInstalled );
 		}
-		//TODO: generalize for all architectures
-		else if( (*versionIterator).stability("x86") != PackageVersion::Stable ){
+		else if( (*versionIterator).stability(arch) != PackageVersion::Stable ){
 			versionItem->setPixmap( 0, pxVersionItemNotAvailable );
 		}
 		else {
@@ -482,8 +485,7 @@ void PakooPackageListView::displayPackageDetails( Package* package )
 	else
 		pkg.hasDetails = true;
 
-	//TODO: generalize for all architectures
-	PackageVersion* descVersion = package->latestStableVersion("x86");
+	PackageVersion* descVersion = package->latestStableVersion(arch);
 	if( descVersion == NULL )
 		descVersion = package->latestVersion();
 	if( descVersion == NULL )
@@ -491,8 +493,7 @@ void PakooPackageListView::displayPackageDetails( Package* package )
 
 	pkg.item->setText( 1, descVersion->description );
 
-	//TODO: once more
-	if( package->hasUpdate("x86") ) {
+	if( package->hasUpdate(arch) ) {
 		pkg.item->setPixmap( 0, pxPackageItemUpdatable );
 		emit foundUpgradablePackage(package);
 	}
@@ -503,6 +504,21 @@ void PakooPackageListView::displayPackageDetails( Package* package )
 		emit finishedLoadingPackageInfo( totalPackages );
 	}
 	//emit contentsChanged(); // NOT. try it out, if you want.
+}
+
+/**
+ * Get the name of the current category filter of the list view.
+ * Returns QString::null if all packages from the portage tree are shown.
+ */
+void PakooPackageListView::updateSettings( PortageSettings* settings )
+{
+	if( settings == NULL ) {
+		kdDebug() << "PackageListView: Got a NULL settings object." << endl;
+		arch = "x86";
+	}
+	else {
+		arch = settings->acceptedKeyword();
+	}
 }
 
 /**

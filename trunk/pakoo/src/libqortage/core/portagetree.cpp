@@ -68,8 +68,9 @@ bool PortageTree::setPackage( Package& package )
  * @return  true if the package has been added to the tree.
  *          false if it has not been added because its name string was empty.
  */
-bool PortageTree::setPackage(
-	QString category, QString subcategory, QString package )
+bool PortageTree::setPackage( const QString& category,
+                              const QString& subcategory,
+                              const QString& package )
 {
 	Package pkg( category, subcategory, package );
 	return this->setPackage( pkg );
@@ -83,8 +84,9 @@ bool PortageTree::setPackage(
  * @param package      The requested package name string.
  * @return  true if the tree contains the package, false otherwise.
  */
-bool PortageTree::hasPackage(
-	QString category, QString subcategory, QString package )
+bool PortageTree::hasPackage( const QString& category,
+                              const QString& subcategory,
+                              const QString& package )
 {
 	if( this->packages.contains( category + subcategory + package ) )
 		return true;
@@ -103,8 +105,9 @@ bool PortageTree::hasPackage(
  * @return  A Package object. If you change its values,
  *          they are also changed in this PortageTree object.
  */
-Package* PortageTree::package(
-	QString category, QString subcategory, QString package )
+Package* PortageTree::package( const QString& category,
+                               const QString& subcategory,
+                               const QString& package )
 {
 	Package* pkg = &(this->packages[ category + subcategory + package ]);
 	if( pkg->name == "" ) { // empty package

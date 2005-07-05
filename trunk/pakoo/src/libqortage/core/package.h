@@ -43,18 +43,20 @@ class Package
 public:
 	QString category, subcategory, name;
 
-	Package( QString category = "", QString subcategory = "", QString name = "" );
+	Package( const QString& category = "",
+	         const QString& subcategory = "",
+	         const QString& name = "" );
 
 	// modifying functions
 	void clear();
-	void removeVersion( QString version );
+	void removeVersion( const QString& version );
 	bool setVersion( PackageVersion& version );
-	bool setVersion( QString versionString );
-	PackageVersion* Package::version( QString version );
+	bool setVersion( const QString& versionString );
+	PackageVersion* Package::version( const QString& version );
 
 	// info functions
 	bool hasVersions();
-	bool hasVersion( QString version );
+	bool hasVersion( const QString& version );
 	bool hasInstalledVersion();
 	bool hasUpdate( const QString& arch );
 	bool hasUpdate( PackageVersion* version, const QString& arch );

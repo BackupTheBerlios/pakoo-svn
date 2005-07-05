@@ -40,7 +40,7 @@ public:
     FileAtomLoaderBase();
 
 	PortageLoaderBase::Error loadFile( PortageTree* portageTree,
-	                                        const QString& filename );
+	                                   const QString& filename );
 
 protected:
 	//! A DEPEND atom validator / package version retriever

@@ -57,7 +57,7 @@ PortageML::PortageML()
  *          PortageLoaderBase::FileTypeError if the file doesn't have a portageML
  *          doctype header. PortageLoaderBase::RootElementError
  *          if the root element is named anything but "portagetree".
- *          PortageLoaderBase::NullTreeError if the given tree is NULL.
+ *          PortageLoaderBase::NullObjectError if the given tree is NULL.
  *          PortageLoaderBase::AbortedError if the thread has been aborted.
  *          PortageLoaderBase::AlreadyRunningError if any thread is
  *          currently loading or saving (but there may only be one at a time).
@@ -76,7 +76,7 @@ PortageLoaderBase::Error PortageML::loadFile( PortageTree* portageTree,
 	// Check on a NULL tree, which would be bad
 	if( portageTree == NULL ) {
 		finishProcessing();
-		return NullTreeError;
+		return NullObjectError;
 	}
 	tree = portageTree;
 
@@ -110,13 +110,13 @@ PortageLoaderBase::Error PortageML::loadFile( PortageTree* portageTree,
  * @param element  The element containing portage tree data.
  * @return  PortageLoaderBase::NoError is the package list was
  *          successfully loaded.
- *          PortageLoaderBase::NullTreeError if the given tree is NULL.
+ *          PortageLoaderBase::NullObjectError if the given tree is NULL.
  *          PortageLoaderBase::AbortedError if the thread is being aborted.
  */
 PortageLoaderBase::Error PortageML::loadTreeElement( const QDomElement& element )
 {
 	if( element.isNull() || element.tagName() != TREEELEMENTSTRING ) {
-		return PortageLoaderBase::NullTreeError;
+		return PortageLoaderBase::NullObjectError;
 	}
 
 	tree->clear();
@@ -230,7 +230,7 @@ bool PortageML::loadVersionElement( const QDomElement& element )
  * @return  PortageLoaderBase::NoError is the package list was
  *          successfully saved. PortageLoaderBase::OpenFileError if
  *          there was an error opening the XML file.
- *          PortageLoaderBase::NullTreeError if the given tree is NULL.
+ *          PortageLoaderBase::NullObjectError if the given tree is NULL.
  *          PortageLoaderBase::AbortedError if the thread has been aborted.
  *          PortageLoaderBase::AlreadyRunningError if any thread is
  *          currently loading or saving (but there may only be one at a time).
@@ -246,7 +246,7 @@ PortageLoaderBase::Error PortageML::saveFile( PortageTree* portageTree,
 	// Check on a NULL tree, which would be bad
 	if( portageTree == NULL ) {
 		finishProcessing();
-		return NullTreeError;
+		return NullObjectError;
 	}
 	tree = portageTree;
 

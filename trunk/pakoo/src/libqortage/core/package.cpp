@@ -26,7 +26,9 @@
 /**
  * Initialize the package with name, category and subcategory.
  */
-Package::Package( QString category, QString subcategory, QString name )
+Package::Package( const QString& category,
+                  const QString& subcategory,
+                  const QString& name )
 {
 	this->category = category;
 	this->subcategory = subcategory;
@@ -46,7 +48,7 @@ void Package::clear()
  *
  * @param versionString  The package version, e.g. "2.6.11-r6".
  */
-void Package::removeVersion( QString versionString )
+void Package::removeVersion( const QString& versionString )
 {
 	versions.remove( versionString );
 }
@@ -75,7 +77,7 @@ bool Package::setVersion( PackageVersion& version )
  * @return  true if the version has been added to the package. false if it
  *          has not been added because the version string was empty.
  */
-bool Package::setVersion( QString versionString )
+bool Package::setVersion( const QString& versionString )
 {
 	PackageVersion version( versionString );
 	return this->setVersion( version );
@@ -100,7 +102,7 @@ bool Package::hasVersions()
  * @param versionString  The requested package version string.
  * @return  true if this package contains the version, false otherwise.
  */
-bool Package::hasVersion( QString versionString )
+bool Package::hasVersion( const QString& versionString )
 {
 	if( this->versions.contains(versionString) )
 		return true;
@@ -138,7 +140,7 @@ bool Package::hasInstalledVersion()
  *          (If you change its values, they are also changed
  *          in this Package object.)
  */
-PackageVersion* Package::version( QString versionString )
+PackageVersion* Package::version( const QString& versionString )
 {
 	PackageVersion* version = &(this->versions[versionString]);
 	// if( version->version == "" ) {

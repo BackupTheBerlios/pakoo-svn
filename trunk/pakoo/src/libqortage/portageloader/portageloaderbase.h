@@ -25,9 +25,9 @@
 
 /**
  * PortageLoaderBase is an abstract base class for threaded classes which
- * load and/or save PortageTree objects. It's derived from QThread with
- * protected access permissions and provides a few of the QThread functions
- * as public ones again.
+ * load, modify and/or save core objects like PortageTree, PortageSettings,
+ * or similar. It's derived from QThread with protected access permissions
+ * and provides a few of the QThread functions as public ones again.
  *
  * Each derived class should at least provide one public startSomething(...)
  * member function that replaces QThread::start() by setting configuration
@@ -39,8 +39,10 @@ class PortageLoaderBase : protected QThread
 {
 public:
 	//! Return values for load/save functions.
-	enum Error {
-		NoError, // great! success.
+	enum Error
+	{
+		// no error - great, success!
+		NoError,
 
 		// Thread errors
 		AbortedError,        // when the thread is being aborted before it finishes.
@@ -48,10 +50,12 @@ public:
 		                     // (Only one function should be running at the same time.)
 
 		// General errors
-		NullTreeError,    // when the given PortageTree object is NULL.
-		OpenFileError,    // when the file can't be opened
-		FileTypeError,    // when the doctype header isn't "portageML"
-		RootElementError  // when the root element is named anything but "portagetree"
+		NullObjectError, // when the given object (PortageTree, PortageSettings, ...) is NULL.
+		OpenFileError,   // when the file can't be opened
+
+		// PortageML specific errors
+		FileTypeError,   // when the doctype header isn't "portageML"
+		RootElementError // when the root element is named anything but "portagetree"
 	};
 
 	PortageLoaderBase();

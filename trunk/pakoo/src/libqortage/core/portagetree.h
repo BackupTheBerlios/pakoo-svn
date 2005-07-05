@@ -53,10 +53,16 @@ public:
 	void clear();
 
 	bool setPackage( Package& package );
-	bool setPackage( QString category, QString subcategory, QString package );
+	bool setPackage( const QString& category,
+	                 const QString& subcategory,
+	                 const QString& package );
 
-	bool hasPackage( QString category, QString subcategory, QString package );
-	Package* package( QString category, QString subcategory, QString package );
+	bool hasPackage( const QString& category,
+	                 const QString& subcategory,
+	                 const QString& package );
+	Package* package( const QString& category,
+	                  const QString& subcategory,
+	                  const QString& package );
 
 	PackageMap* packageMap();
 	int packageCount();

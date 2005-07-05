@@ -23,7 +23,6 @@
 
 #include "portageloaderbase.h"
 
-#include <qdir.h>
 #include <qregexp.h>
 
 class Package;
@@ -47,14 +46,14 @@ public:
 		ScanCategory
 	};
 
-	PackageScanner( QString treeDir = "/usr/portage/",
-	                QString overlayDir = "",
-	                QString installedDir = "/var/db/pkg/",
-	                QString edbDepDir = "/var/cache/edb/dep/" );
+	PackageScanner( QString     treeDir = "/usr/portage/",
+	                QStringList overlayDirs = QStringList(),
+	                QString     installedDir = "/var/db/pkg/",
+	                QString     edbDepDir = "/var/cache/edb/dep/" );
 	PackageScanner( PackageScanner* anotherScanner );
 
 	PortageLoaderBase::Error scanPackage( Package* package,
-	                                           bool preferEdb = true );
+	                                      bool preferEdb = true );
 	PortageLoaderBase::Error scanCategory(
 		PortageTree* tree, QString category,
 		QString subcategory, bool preferEdb = true
@@ -68,8 +67,8 @@ public:
 
 	void setFilterInstalled( bool doFilter, bool scanInstalled = true );
 
-	void setPortageTreeDirectory( QString directory );
-	void setOverlayDirectory( QString directory );
+	void setMainlineTreeDirectory( QString directory );
+	void setOverlayTreeDirectories( QStringList directories );
 	void setInstalledPackagesDirectory( QString directory );
 	void setEdbDepDirectory( QString directory );
 
@@ -84,11 +83,11 @@ protected:
 	Package* package;
 
 	//! The directory where PackageScanner tries to find packages.
-	QString  portageTreeDir;
-	//! The portage overlay directory for finding additional packages.
-	QString  portageOverlayDir;
+	QString portageTreeDir;
+	//! The overlay directories for finding additional packages.
+	QStringList portageOverlayDirs;
 	//! The directory where the database of installed packages resides.
-	QString  installedPackagesDir;
+	QString installedPackagesDir;
 	//! The directory where the portage cache resides.
 	QString edbDir;
 
@@ -116,7 +115,9 @@ protected:
 	bool scanInstalled;
 
 private:
-	//! Helper function for extracting tokens from a string
+	// Helper function for scanPackage().
+	bool scanOverlayPackage( Package* package, PackageVersion* version );
+	// Helper function for extracting tokens from a string
 	bool extractStringList( const QString& string, QRegExp* rx, QStringList* targetList );
 
 	// Regexps for various line strings inside an ebuild.

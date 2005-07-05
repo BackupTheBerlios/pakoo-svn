@@ -1,17 +1,39 @@
-Pakoo Todo.
+List of TODO items for the Pakoo package manager frontend.
 
-Immediate (for a 0.1 release, or such):
-- Proper output in the info view.
+Immediate tasks:
 - Let the user stop package scanning, and/or make an option of it.
-- Load cascading profiles to retrieve arch, portage dirs, system packages and other things.
-- Namespaces?
-- properly process _beta (& Co.) without number
 
-Later:
+Really Serious Bugs (TM):
+- Killed when scrolling down packages that have not yet been loaded.
+
+Not so serious bugs:
 - Fix search line when switching categories.
-- "Updatable" or "Packages in world" filter?
-- Status bar enhancements (progressbar for tree loading).
-- Support for profiles.
-- Support for multiple overlay dirs (like "/usr/portage /usr/local/portage").
 
-And many other things that haven't yet been written down.
+Visible enhancements:
+- Version links in the info view should select version items.
+- "Updatable" or "Packages in world" filter?
+- Status bar enhancements (progressbar while loading the tree).
+
+Code enhancements:
+- A consistent interface for passing the Settings object
+- Namespaces?
+
+UI Design:
+- Search folders in the tree view, together with the categories
+  ("Refine Search" button instead of quick filter area)
+- "Vertical tab" widget (as in KDevelop's documentation sidebar), don't know what it's called
+- Other tab categories: "Actions" (like install, uninstall, revdep-rebuild, etc.)
+- How to handle "late loading" package info (description, updatable) in the quick search?
+- How to select packages for installing/deinstalling/etc?
+- Install queue or instant "one emerge per thread" processing?
+
+Big features:
+- merging
+  * refresh (emerge sync)
+  * install (emerge)
+  * uninstall (emerge -C)
+  * clean up (emerge depclean)
+  * etc-update
+  * revdep-rebuild
+- searching
+- configuring

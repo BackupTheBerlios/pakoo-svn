@@ -65,30 +65,34 @@ void PortageTreeView::emitSelectionChanged( QListViewItem* item )
 	if( item->depth() == 0 ) // the root item
 	{
 		// this is easy, no filter at all.
-		emit selectionChanged( portageTree, QString::null, QString::null );
+		emit selectionChanged( portageTree, portageSettings,
+		                       QString::null, QString::null );
 		return;
 	}
 	else if( item->depth() == 1 ) // category match
 	{
 		// emit signal only with category filter
-		emit selectionChanged( portageTree, item->text(0), QString::null );
+		emit selectionChanged( portageTree, portageSettings,
+		                       item->text(0), QString::null );
 		return;
 	}
 	else // It must be one of the subcategory items then. So, strict filter.
 	{
-		emit selectionChanged( portageTree,
+		emit selectionChanged( portageTree, portageSettings,
 		                       item->parent()->text(0), item->text(0) );
 		return;
 	}
 }
 
 /**
- * Assign a PortageTree object to this widget and add
- * category and subcategory items to the list view.
+ * Assign a PortageTree object (along with its settings) to this widget
+ * and add category and subcategory items to the list view.
  */
-void PortageTreeView::setPortageTree( PortageTree* tree )
+void PortageTreeView::displayTree( PortageTree* tree,
+                                   PortageSettings* settings )
 {
 	this->portageTree = tree;
+	this->portageSettings = settings;
 	QListViewItem *catItem, *subcatItem;
 	QString categoryName, subcategoryName;
 

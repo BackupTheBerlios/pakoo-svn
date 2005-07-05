@@ -8,3 +8,8 @@
 2005-06-06 Jakob Petsovits <jpetso@gmx.at>
 	* more and prettier infos in the package info view
 	* fixed some semi-serious bug with package displaying, dropping some multithreading
+
+2005-07-05 Jakob Petsovits <jpetso@gmx.at>
+	* support for cascading profiles, including automatic ARCH, PORTDIR & Co. retrieval
+	* fixes for the PackageVersion compare algorithm
+	  (which now handles trailing characters and "_beta" without number)

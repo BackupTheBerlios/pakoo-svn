@@ -91,6 +91,7 @@ protected:
 	PortageTreeScanner portageTreeScanner;
 	PortageML portageML;
 	PortageTree portageTree;
+	PortageSettings settings;
 
 private slots:
 	void handleLoadingPackageInfo( int loadedPackageCount, int totalPackageCount );

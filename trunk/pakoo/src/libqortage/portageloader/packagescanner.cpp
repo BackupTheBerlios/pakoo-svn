@@ -25,6 +25,7 @@
 #include "../core/portagetree.h"
 #include "loadingevent.h"
 
+#include <qdir.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
 #include <qapplication.h>
@@ -41,10 +42,10 @@
 /**
  * Initialize this object, defining where to search for packages.
  */
-PackageScanner::PackageScanner( QString treeDir, QString overlayDir,
+PackageScanner::PackageScanner( QString treeDir, QStringList overlayDirs,
                                 QString installedDir, QString edbDepDir )
 : PortageLoaderBase(),
-  portageTreeDir(treeDir), portageOverlayDir(overlayDir),
+  portageTreeDir(treeDir), portageOverlayDirs(overlayDirs),
   installedPackagesDir(installedDir), edbDir(edbDepDir),
   rxDescription(RXDESCRIPTION), rxHomepage(RXHOMEPAGE),
   rxSlot(RXSLOT), rxLicenses(RXLICENSES),
@@ -69,7 +70,7 @@ PackageScanner::PackageScanner( PackageScanner* anotherScanner )
 	package = NULL;
 	if( anotherScanner != NULL ) {
 		portageTreeDir = anotherScanner->portageTreeDir;
-		portageOverlayDir = anotherScanner->portageOverlayDir;
+		portageOverlayDirs = anotherScanner->portageOverlayDirs;
 		installedPackagesDir = anotherScanner->installedPackagesDir;
 		edbDir = anotherScanner->edbDir;
 		preferEdb = anotherScanner->preferEdb;
@@ -89,9 +90,9 @@ void PackageScanner::setFilterInstalled( bool doFilter, bool scanInstalled )
 }
 
 /**
- * Set the portage tree search directory to a new value.
+ * Set the mainline tree search directory to a new value.
  */
-void PackageScanner::setPortageTreeDirectory( QString directory )
+void PackageScanner::setMainlineTreeDirectory( QString directory )
 {
 	portageTreeDir = directory;
 }
@@ -105,11 +106,11 @@ void PackageScanner::setEdbDepDirectory( QString directory )
 }
 
 /**
- * Set the portage overlay directory to a new value.
+ * Set the portage overlay directories to a new value.
  */
-void PackageScanner::setOverlayDirectory( QString directory )
+void PackageScanner::setOverlayTreeDirectories( QStringList directories )
 {
-	portageOverlayDir = directory;
+	portageOverlayDirs = directories;
 }
 
 /**
@@ -133,14 +134,14 @@ void PackageScanner::setInstalledPackagesDirectory( QString directory )
  *                   of the mainline tree, which will probably be much faster.
  *
  * @return  PortageLoaderBase::NoError if scanning was done.
- *          PortageLoaderBase::NullTreeError if the tree is NULL.
+ *          PortageLoaderBase::NullObjectError if the tree is NULL.
  *          PortageLoaderBase::AbortedError if the thread was aborted.
  */
 PortageLoaderBase::Error PackageScanner::scanCategory(
 	PortageTree* tree, QString category, QString subcategory, bool preferEdb )
 {
 	if( tree == NULL ) {
-		return NullTreeError;
+		return NullObjectError;
 	}
 
 	PortageLoaderBase::Error result;
@@ -210,8 +211,8 @@ PortageLoaderBase::Error PackageScanner::scanCategory(
 
 
 /**
- * Scan the package version's ebuild and digest files and
- * add the found information to the PackageVersion objects.
+ * Scan each package version's ebuild and digest files and
+ * add the found information to the current package's PackageVersion objects.
  *
  * @param package  The package that will be filled with detailed info.
  * @param preferEdb  If true, the edb/dep/ directory will be searched instead
@@ -221,13 +222,13 @@ PortageLoaderBase::Error PackageScanner::scanCategory(
  *          PortageLoaderBase::AbortedError if only installed packages
  *          are scanned (when the filter is enabled) and this package
  *          doesn't have any installed versions.
- *          PortageLoaderBase::NullTreeError if the package is NULL.
+ *          PortageLoaderBase::NullObjectError if the package is NULL.
  */
 PortageLoaderBase::Error PackageScanner::scanPackage(
 	Package* package, bool preferEdb )
 {
 	if( package == NULL ) {
-		return NullTreeError;
+		return NullObjectError;
 	}
 
 	// filter installed packages out or in, if enabled
@@ -239,7 +240,6 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 			return AbortedError;
 	}
 
-	QFile file;
 	QString filename;
 
 	PackageVersionMap* versions = package->versionMap();
@@ -290,22 +290,8 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 		}
 		else  // from the overlay tree
 		{
-			// Get package size from the digest
-			filename = this->portageOverlayDir + "/" + package->category
-				+ "-" + package->subcategory + "/" + package->name
-				+ "/files/digest-" + package->name + "-"
-				+ (*versionIterator).version;
-			scanDigest( &(*versionIterator), filename );
-
-			filename = this->portageOverlayDir + "/" + package->category
-				+ "-" + package->subcategory + "/" + package->name + "/"
-				+ package->name + "-" + (*versionIterator).version
-				+ ".ebuild";
-
-			// try to scan this ebuild
-			if( scanEbuild( &(*versionIterator), filename ) == true ) {
+			if( scanOverlayPackage( package, &(*versionIterator) ) == true )
 				continue; // no need to scan the installed package
-			}
 		}
 
 		// no luck, try the installed version (the ebuild in /var/db/pkg/*/*/)
@@ -321,6 +307,44 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 	}
 
 	return NoError;
+}
+
+/**
+ * Scan the ebuild and digest files for a specific version of a package
+ * in one of the overlay tree. This function basically tries to call
+ * scanDigest() and scanEbuild() for each possible overlay path
+ * until it works.
+ *
+ * @param package  The package that will be filled with detailed info.
+ * @param version  The package version of the ebuild and digest files.
+ * @return  true if the files have been loaded, false otherwise.
+ */
+bool PackageScanner::scanOverlayPackage( Package* package,
+                                         PackageVersion* version )
+{
+	QString filename;
+	for( QStringList::iterator overlayIterator = portageOverlayDirs.begin();
+	     overlayIterator != portageOverlayDirs.end(); overlayIterator++ )
+	{
+		// Get package size from the digest
+		filename = (*overlayIterator) + "/" + package->category
+			+ "-" + package->subcategory + "/" + package->name
+			+ "/files/digest-" + package->name + "-"
+			+ version->version;
+		if( scanDigest( version, filename ) == false )
+			continue;
+
+		filename = (*overlayIterator) + "/" + package->category
+			+ "-" + package->subcategory + "/" + package->name + "/"
+			+ package->name + "-" + version->version
+			+ ".ebuild";
+
+		// try to scan this ebuild
+		if( scanEbuild( version, filename ) == true )
+			return true;
+	}
+	// none of the paths contains the package? well then:
+	return false;
 }
 
 /**

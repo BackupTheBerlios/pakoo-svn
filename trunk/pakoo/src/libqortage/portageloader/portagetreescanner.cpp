@@ -36,18 +36,19 @@
  * Initialize this object, defining where to search for packages.
  *
  * @param treeDir       The mainline tree directory.
- * @param overlayDir    The overlay tree directory.
+ * @param overlayDirs   The overlay tree directories.
  * @param installedDir  The installed packages database directory.
  * @param edbDepDir     The directory where the portage cache resides.
  */
-PortageTreeScanner::PortageTreeScanner( QString treeDir, QString overlayDir,
-                                QString installedDir, QString edbDepDir )
-: portageTreeDir(treeDir), portageOverlayDir(overlayDir),
+PortageTreeScanner::PortageTreeScanner(
+	QString treeDir, QStringList overlayDirs,
+	QString installedDir, QString edbDepDir )
+: portageTreeDir(treeDir), portageOverlayDirs(overlayDirs),
   installedPackagesDir(installedDir), edbDir(edbDepDir),
   rxVersion("(-\\d+(?:\\.\\d+)*[a-z]?)")
 {
 	tree = NULL;
-	pkgScanner = new PackageScanner( treeDir, overlayDir, installedDir );
+	pkgScanner = new PackageScanner( treeDir, overlayDirs, installedDir );
 }
 
 /**
@@ -61,10 +62,10 @@ PortageTreeScanner::~PortageTreeScanner()
 /**
  * Set the portage tree search directory to a new value.
  */
-void PortageTreeScanner::setPortageTreeDirectory( QString directory )
+void PortageTreeScanner::setMainlineTreeDirectory( QString directory )
 {
 	portageTreeDir = directory;
-	pkgScanner->setPortageTreeDirectory( directory );
+	pkgScanner->setMainlineTreeDirectory( directory );
 }
 
 /**
@@ -77,12 +78,12 @@ void PortageTreeScanner::setEdbDepDirectory( QString directory )
 }
 
 /**
- * Set the portage overlay directory to a new value.
+ * Set the list of portage overlay directories to a new value.
  */
-void PortageTreeScanner::setOverlayDirectory( QString directory )
+void PortageTreeScanner::setOverlayTreeDirectories( QStringList directories )
 {
-	portageOverlayDir = directory;
-	pkgScanner->setOverlayDirectory( directory );
+	portageOverlayDirs = directories;
+	pkgScanner->setOverlayTreeDirectories( directories );
 }
 
 /**
@@ -113,7 +114,7 @@ PackageScanner* PortageTreeScanner::packageScanner()
  *                       instead of the mainline tree, which will probably
  *                       be much faster.
  */
-PortageLoaderBase::Error PortageTreeScanner::scanPortage(
+PortageLoaderBase::Error PortageTreeScanner::scanTrees(
 	PortageTree* portageTree, PortageTree::Trees searchedTrees, bool preferEdb
 )
 {
@@ -127,64 +128,86 @@ PortageLoaderBase::Error PortageTreeScanner::scanPortage(
 
 	if( portageTree == NULL ) {
 		finishProcessing();
-		return NullTreeError;
+		return NullObjectError;
 	}
 
 	tree = portageTree;
 	this->preferEdb = preferEdb;
 
-	PortageLoaderBase::Error result;
-	QDateTime startTime = QDateTime::currentDateTime();
-
-	if( searchedTrees == PortageTree::All )
-	{
-		result = scanPortageTree( portageTreeDir, PortageTree::Mainline );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Mainline );
-
-		startTime = QDateTime::currentDateTime();
-		result = scanPortageTree( portageOverlayDir, PortageTree::Overlay );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Overlay );
-
-		startTime = QDateTime::currentDateTime();
-		result = scanPortageTree( installedPackagesDir, PortageTree::Installed );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Installed );
-
+	if( searchedTrees == PortageTree::All ) {
+		if( scanMainlineTree() == AbortedError ) DO_ABORT;
+		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
+		if( scanInstalledTree() == AbortedError ) DO_ABORT;
 	}
-	else if( searchedTrees == PortageTree::MainlineAndOverlay )
-	{
-		result = scanPortageTree( portageTreeDir, PortageTree::Mainline );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Mainline );
-
-		startTime = QDateTime::currentDateTime();
-		result = scanPortageTree( portageOverlayDir, PortageTree::Overlay );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Overlay );
+	else if( searchedTrees == PortageTree::MainlineAndOverlay ) {
+		if( scanMainlineTree() == AbortedError ) DO_ABORT;
+		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
 	}
-	else if( searchedTrees == PortageTree::Mainline )
-	{
-		result = scanPortageTree( portageTreeDir, PortageTree::Mainline );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Mainline );
+	else if( searchedTrees == PortageTree::Mainline ) {
+		if( scanMainlineTree() == AbortedError ) DO_ABORT;
 	}
-	else if( searchedTrees == PortageTree::Overlay )
-	{
-		result = scanPortageTree( portageOverlayDir, PortageTree::Overlay );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Overlay );
+	else if( searchedTrees == PortageTree::Overlay ) {
+		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
 	}
-	else if( searchedTrees == PortageTree::Installed )
-	{
-		result = scanPortageTree( installedPackagesDir, PortageTree::Installed );
-		if( result == AbortedError ) DO_ABORT;
-		postPartlyCompleteEvent( startTime, PortageTree::Installed );
+	else if( searchedTrees == PortageTree::Installed ) {
+		if( scanInstalledTree() == AbortedError ) DO_ABORT;
 	}
 
 	finishProcessing();
 	return PortageLoaderBase::NoError;
+}
+
+/**
+ * Scan the mainline tree for packages.
+ * @return  The result of the internal scanTree() call.
+ */
+PortageLoaderBase::Error PortageTreeScanner::scanMainlineTree()
+{
+	QDateTime startTime = QDateTime::currentDateTime();
+	localTreeCount = 0;
+	Error result = scanTree(portageTreeDir, PortageTree::Mainline);
+	if( result != AbortedError ) {
+		postPartlyCompleteEvent( startTime, PortageTree::Mainline );
+	}
+	return result;
+}
+
+/**
+ * Scan the overlay trees for packages.
+ * @return  PortageLoaderBase::AbortedError if the thread was aborted,
+ *          PortageLoaderBase::NoError otherwise.
+ */
+PortageLoaderBase::Error PortageTreeScanner::scanOverlayTrees()
+{
+	QDateTime startTime = QDateTime::currentDateTime();
+	localTreeCount = 0;
+
+	for( QStringList::iterator overlayIterator = portageOverlayDirs.begin();
+	     overlayIterator != portageOverlayDirs.end(); overlayIterator++ )
+	{
+		Error result = scanTree( *overlayIterator, PortageTree::Overlay );
+
+		if( result != AbortedError )
+			postPartlyCompleteEvent( startTime, PortageTree::Overlay );
+		else
+			return AbortedError;
+	}
+	return NoError;
+}
+
+/**
+ * Scan the installed packages tree for packages.
+ * @return  The result of the internal scanTree() call.
+ */
+PortageLoaderBase::Error PortageTreeScanner::scanInstalledTree()
+{
+	QDateTime startTime = QDateTime::currentDateTime();
+	localTreeCount = 0;
+	Error result = scanTree( installedPackagesDir, PortageTree::Installed );
+	if( result != AbortedError ) {
+		postPartlyCompleteEvent( startTime, PortageTree::Installed );
+	}
+	return result;
 }
 
 
@@ -231,10 +254,10 @@ void PortageTreeScanner::postPartlyCompleteEvent(
  *         by setting this->stop to true.
  *         PortageLoaderBase::AlreadyRunningError if any thread is
  *         currently scanning (but there may only be one at a time).
- *         PortageLoaderBase::NullTreeError if the tree directory was
+ *         PortageLoaderBase::NullObjectError if the tree directory was
  *         either "" or could not be entered.
  */
-PortageLoaderBase::Error PortageTreeScanner::scanPortageTree(
+PortageLoaderBase::Error PortageTreeScanner::scanTree(
 	QString treeDir, PortageTree::Trees searchedTree
 )
 {
@@ -242,11 +265,9 @@ PortageLoaderBase::Error PortageTreeScanner::scanPortageTree(
 	LoadingTreeProgressEvent* progressEvent;
 	int pos;
 
-	localTreeCount = 0;
-
 	// set the d directory to the treeDir string
-	if( treeDir == "" || !d.cd(treeDir) ) {
-		return NullTreeError;
+	if( treeDir.isNull() || treeDir.isEmpty() || !d.cd(treeDir) ) {
+		return NullObjectError;
 	}
 
 	if( searchedTree == PortageTree::Installed ) {
@@ -284,7 +305,7 @@ PortageLoaderBase::Error PortageTreeScanner::scanPortageTree(
 		if( (searchedTree == PortageTree::Mainline) && (preferEdb == true) )
 		{
 			// Compose the folder name of the current category
-			if( !d.cd(edbDir + portageTreeDir + (*categoryIterator)) )
+			if( !d.cd(edbDir + portageTreeDir + "/" + (*categoryIterator)) )
 				continue;
 
 			scanEdbCategory(d);
@@ -298,7 +319,7 @@ PortageLoaderBase::Error PortageTreeScanner::scanPortageTree(
 		else
 		{
 			// Compose the folder name of the current category
-			if( ! d.cd(treeDir + "/" + (*categoryIterator)) ) {
+			if( !d.cd(treeDir + "/" + (*categoryIterator)) ) {
 				continue;
 			}
 
@@ -484,7 +505,7 @@ void PortageTreeScanner::scanInstalledPackage( QDir& d )
  *
  * @returns  true if the thread was started, false if it's already running.
  */
-bool PortageTreeScanner::startScanningPortage( QObject* receiver,
+bool PortageTreeScanner::startScanningTrees( QObject* receiver,
                                            PortageTree* portageTree,
                                            PortageTree::Trees searchedTrees,
                                            bool preferEdb )
@@ -513,7 +534,7 @@ void PortageTreeScanner::run()
 	QDateTime startTime = QDateTime::currentDateTime();
 	QObject* receiver = this->receiver;
 
-	result = scanPortage( tree, searchedTrees, preferEdb );
+	result = scanTrees( tree, searchedTrees, preferEdb );
 
 	// Inform main thread that scan is complete
 	LoadingTreeCompleteEvent *event = new LoadingTreeCompleteEvent();

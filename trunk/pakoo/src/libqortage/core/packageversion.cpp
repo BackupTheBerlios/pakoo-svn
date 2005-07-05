@@ -24,9 +24,13 @@
 /**
  * Initialize the version with its version string.
  */
-PackageVersion::PackageVersion( QString version )
+PackageVersion::PackageVersion( const QString& version )
 : rxNumber("\\d+"),
-  rxSuffix("_(alpha|beta|pre|rc|p)(\\d+)(?:-r\\d+)?$"), // including the revision, but not for capturing
+  // Regexp for a trailing character, like in util-linux-2.12i
+  rxTrailingChar("\\d([a-z])(?:_(?:alpha|beta|pre|rc|p)\\d?)?(?:-r\\d+)?$"),
+  // Regexp for a version suffix, like in freetts-1.2_beta
+  rxSuffix("_(alpha|beta|pre|rc|p)(\\d?)(?:-r\\d+)?$"),
+  // Regexp for a revision number, occurs everywhere
   rxRevision("-r(\\d+)$")
 {
 	this->version = version;
@@ -132,16 +136,23 @@ bool PackageVersion::isNewerThan( const QString& otherVersion )
 
 	// Revision number. 0 means the version doesn't have a revision.
 	int thisRevision, thatRevision;
+	// Numerical representation for possible trailing characters.
+	int thisTrailingChar, thatTrailingChar;
 
 	uint pos; // multi-purpose position integer
-	int revisionPos, suffixPos; // start index of revision and suffix
+
+	// start index of revision, suffix, and trailing character
+	int revisionPos, suffixPos, trailingCharPos;
 
 	// Retrieve revision, suffix and their positions in the version string
 	thisRevision = PackageVersion::revisionNumber( this->version, &revisionPos );
 	thisSuffix = PackageVersion::suffixNumber( this->version, &suffixPos );
+	thisTrailingChar = PackageVersion::trailingCharNumber( this->version, &trailingCharPos );
 
 	// determine the first non-base-version character
-	if( suffixPos != -1 )
+	if( trailingCharPos != -1 )
+		pos = trailingCharPos;
+	else if( suffixPos != -1 )
 		pos = suffixPos;
 	else if( revisionPos != -1 )
 		pos = revisionPos;
@@ -154,9 +165,12 @@ bool PackageVersion::isNewerThan( const QString& otherVersion )
 	// Same procedure for the other version string
 	thatRevision = PackageVersion::revisionNumber( otherVersion, &revisionPos );
 	thatSuffix = PackageVersion::suffixNumber( otherVersion, &suffixPos );
+	thatTrailingChar = PackageVersion::trailingCharNumber( otherVersion, &trailingCharPos );
 
 	// determine the first non-base-version character
-	if( suffixPos != -1 )
+	if( trailingCharPos != -1 )
+		pos = trailingCharPos;
+	else if( suffixPos != -1 )
 		pos = suffixPos;
 	else if( revisionPos != -1 )
 		pos = revisionPos;
@@ -199,17 +213,25 @@ bool PackageVersion::isNewerThan( const QString& otherVersion )
 			if( thisBaseVersion.length() <= pos
 			    && thatBaseVersion.length() <= pos ) // both versions end here
 			{
-				// compare suffixes, if they are also the same, then revisions
-				if( thisSuffix > thatSuffix )
+				// compare trailing characters, if they are the same,
+				// then suffixes, if they are also the same, then revisions
+				if( thisTrailingChar > thatTrailingChar )
 					return true;
-				else if( thisSuffix < thatSuffix )
+				else if( thisTrailingChar < thatTrailingChar )
 					return false;
-				else if( thisSuffix == thatSuffix )
+				else if( thisTrailingChar == thatTrailingChar )
 				{
-					if( thisRevision > thatRevision )
+					if( thisSuffix > thatSuffix )
 						return true;
-					else // if( thisRevision <= thatRevision )
+					else if( thisSuffix < thatSuffix )
 						return false;
+					else if( thisSuffix == thatSuffix )
+					{
+						if( thisRevision > thatRevision )
+							return true;
+						else // if( thisRevision <= thatRevision )
+							return false;
+					}
 				}
 			}
 			else if( thisBaseVersion.length() <= pos ) { // but not the other one
@@ -277,7 +299,7 @@ int PackageVersion::revisionNumber( const QString& versionString,
  *           means higher precedence.
  */
 long PackageVersion::suffixNumber( const QString& versionString,
-                                  int* foundPos )
+                                   int* foundPos )
 {
 	// search for a possible suffix
 	int pos = rxSuffix.search( versionString );
@@ -291,7 +313,8 @@ long PackageVersion::suffixNumber( const QString& versionString,
 	else // there is a suffix, check which one
 	{
 		QString suffix = rxSuffix.cap(1);
-		int suffixNumber = rxSuffix.cap(2).toInt(); // NUM in, say, "_betaNUM"
+		int suffixNumber = rxSuffix.cap(2).toInt(); // X in, say "_betaX"
+		// if it's just "_beta" (which is allowed), toInt("") returns 0.
 
 		// The big numbers are needed because some people use stuff like
 		// _p20041130 which is more than an integer can handle
@@ -309,6 +332,38 @@ long PackageVersion::suffixNumber( const QString& versionString,
 			return 0;
 	}
 } // end of suffixNumber()
+
+/**
+ * Search for a trailing character (like "a", "b" or "i") at the end of
+ * a version string and get a numerical representation for it.
+ *
+ * @param versionString  The version that maybe contains a trailing character.
+ * @param foundPos  A pointer to an integer that will be filled with the
+ *                  index of the character inside the string (if there is
+ *                  such a character), or -1 if no character has been found.
+ *                  You can leave out this argument if you don't need it.
+ * @returns  A numerical representation of the character (1 or more).
+ *           or 0 if no revision has been found.
+ */
+int PackageVersion::trailingCharNumber( const QString& versionString,
+                                        int* foundPos )
+{
+	// search for a possible trailing character
+	int pos = rxTrailingChar.search( versionString );
+	if( pos != -1 )
+		pos++; // because the regexp starts one character left
+		       // of the actual position
+
+	if( foundPos != NULL ) // return the position inside the string
+		*foundPos = pos;
+
+	if( pos == -1 ) {  // no trailing character, so return 0
+		return 0;
+	}
+	else { // has a trailing character, get its number
+		return (int) versionString.at(pos).latin1();
+	}
+} // end of trailingCharNumber()
 
 
 /**

@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE kcfg SYSTEM "http://www.kde.org/standards/kcfg/1.0/kcfg.dtd">
 <kcfg> <kcfgfile name="pakoorc"/>
-	<group name="Pakoo">
-		<entry name="arch" type="String">
-			<label>The user's architecture (masked or stable).</label>
-		</entry>
-	</group>
 	<group name="User Interface">
 		<entry name="vSplitterSizes" type="IntList">
 			<label>The sizes of the top and down window parts.</label>
@@ -30,7 +25,7 @@
 			<default>true</default>
 		</entry>
 		<!-- portageDir and overlayDir are missing by design,
-		     they should be read from config files instead. -->
+		     they are read from config files instead. -->
 		<entry name="installedPackagesDir" type="String">
 			<label>The installed packages database directory.</label>
 			<default>/var/db/pkg/</default>
@@ -59,7 +54,8 @@
 			<default>/etc/portage/package.use</default>
 		</entry>
 		<entry name="profilesPackageMaskFile" type="String">
-			<label>Path of the global package.mask file, relative to the portage directory.</label>
+			<label>Path of the global package.mask file,
+			       relative to the portage directory.</label>
 			<default>profiles/package.mask</default>
 		</entry>
 	</group>

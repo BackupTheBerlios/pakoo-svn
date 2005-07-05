@@ -39,7 +39,8 @@ class PakooPackageListView : public KListView
 {
 	Q_OBJECT
 public:
-	PakooPackageListView( QWidget* parent, const char* name, PackageScanner* packageScanner );
+	PakooPackageListView( QWidget* parent, const char* name,
+	                      PackageScanner* packageScanner );
 	~PakooPackageListView();
 	void quit();
 
@@ -79,7 +80,9 @@ signals:
 	void foundUpgradablePackage( Package* package );
 
 public slots:
-	void displayPackages( PortageTree* tree,
+	void displayPackages(
+		PortageTree* tree,
+		PortageSettings* settings,
 		const QString& categoryName = QString::null,
 		const QString& subcategoryName = QString::null
 	);
@@ -103,6 +106,8 @@ protected:
 	QMap<QString,PackageViewCategory> categories;
 	//! A pointer to the portage tree where the displayed packages come from.
 	PortageTree* portageTree;
+	//! Accepted keyword for the system architecture, e.g. "x86" or "~alpha"
+	QString arch;
 	//! A PackageScanner object that retrieves missing package information for the whole package list.
 	PackageScanner* packageCategoryScanner;
 	//! A PackageScanner object that retrieves missing package information for all installed packages.
@@ -119,6 +124,7 @@ protected slots:
 	void displayPackageDetails( Package* package );
 
 private:
+	void updateSettings( PortageSettings* settings );
 	void insertPackageItem( QListViewItem* parent, Package& package );
 
 	void customEvent( QCustomEvent* event );

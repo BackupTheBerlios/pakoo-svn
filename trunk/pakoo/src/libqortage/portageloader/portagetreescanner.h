@@ -24,6 +24,7 @@
 #include "portageloaderbase.h"
 #include "../core/portagetree.h"
 
+#include <qstringlist.h>
 #include <qdir.h>
 #include <qregexp.h>
 
@@ -45,24 +46,24 @@ class PortageTreeScanner : public PortageLoaderBase
 {
 public:
 	PortageTreeScanner( QString treeDir = "/usr/portage/",
-	                QString overlayDir = "",
-	                QString installedDir = "/var/db/pkg/",
-	                QString edbDepDir = "/var/cache/edb/dep/" );
+	                    QStringList overlayDirs = QStringList(),
+	                    QString installedDir = "/var/db/pkg/",
+	                    QString edbDepDir = "/var/cache/edb/dep/" );
 
 	~PortageTreeScanner();
 
-	PortageLoaderBase::Error scanPortage(
+	PortageLoaderBase::Error scanTrees(
 		PortageTree* portageTree,
 		PortageTree::Trees searchedTrees = PortageTree::All,
 		bool preferEdb = true
 	);
 
-	bool startScanningPortage( QObject* receiver, PortageTree* portageTree,
-	                           PortageTree::Trees searchedTrees = PortageTree::All,
-	                           bool preferEdb = true );
+	bool startScanningTrees( QObject* receiver, PortageTree* portageTree,
+	                         PortageTree::Trees searchedTrees = PortageTree::All,
+	                         bool preferEdb = true );
 
-	void setPortageTreeDirectory( QString directory );
-	void setOverlayDirectory( QString directory );
+	void setMainlineTreeDirectory( QString directory );
+	void setOverlayTreeDirectories( QStringList directories );
 	void setInstalledPackagesDirectory( QString directory );
 	void setEdbDepDirectory( QString directory );
 
@@ -71,7 +72,11 @@ public:
 protected:
 	void run();
 
-	PortageLoaderBase::Error scanPortageTree(
+	PortageLoaderBase::Error scanMainlineTree();
+	PortageLoaderBase::Error scanOverlayTrees();
+	PortageLoaderBase::Error scanInstalledTree();
+
+	PortageLoaderBase::Error scanTree(
 		QString treeDir, PortageTree::Trees searchedTree
 	);
 	void scanTreePackage( QDir& d, bool overlay );
@@ -86,8 +91,8 @@ protected:
 
 	//! The directory where PortageTreeScanner tries to find packages.
 	QString portageTreeDir;
-	//! The portage overlay directory, only used when searching for all packages.
-	QString portageOverlayDir;
+	//! The list of portage overlay directories.
+	QStringList portageOverlayDirs;
 	//! The directory where the database of installed packages resides.
 	QString installedPackagesDir;
 	//! The directory where the portage cache resides.

@@ -29,7 +29,7 @@
  * Calling loadFile() sets or unsets the hardmasked flag for each
  * package version contained in this file. By calling setMode(),
  * you can decide if the found packages will be masked or unmasked.
-*/
+ */
 class FilePackageMaskLoader : public FileAtomLoaderBase
 {
 public:

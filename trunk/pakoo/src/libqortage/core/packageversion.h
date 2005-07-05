@@ -44,7 +44,7 @@ public:
 		NotAvailable
 	};
 
-	PackageVersion( QString version = "" );
+	PackageVersion( const QString& version = "" );
 
 	PackageVersion::Stability stability( const QString& arch );
 	bool isNewerThan( const QString& otherVersion );
@@ -96,10 +96,11 @@ public:
 	bool isHardMasked;
 
 private:
-	QRegExp rxNumber, rxSuffix, rxRevision;
+	QRegExp rxNumber, rxTrailingChar, rxSuffix, rxRevision;
 
 	int revisionNumber( const QString& versionString, int* foundPos = NULL );
 	long suffixNumber( const QString& versionString, int* foundPos = NULL );
+	int trailingCharNumber( const QString& versionString, int* foundPos = NULL );
 };
 
 #endif // PACKAGEVERSION_H

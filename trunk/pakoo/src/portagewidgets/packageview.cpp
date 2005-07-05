@@ -32,12 +32,15 @@
 
 /**
  * Initialize this object.
+ *
+ * @param scanner  A copy of this scanner will be kept
+ *                 to retrieve detailed package info.
  */
 PackageView::PackageView( QWidget* parent, const char* name,
-                                    PackageScanner* scanner )
+                          PackageScanner* scanner )
 : QVBox( parent, name )
 {
-	QString qname(name);
+	QString qname = name;
 
 	// We need a KToolBar to have that fancy look for the clear button
 	KToolBar* searchToolBar = new KToolBar( this, "searchBar" );

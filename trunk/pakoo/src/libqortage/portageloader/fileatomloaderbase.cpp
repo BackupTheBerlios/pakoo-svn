@@ -46,16 +46,16 @@ FileAtomLoaderBase::FileAtomLoaderBase()
  * @param portageTree  The PortageTree object whose packages will be modified.
  * @param filename     The file that contains masking information.
  *
- * @return  PortageLoaderBase::NoError if the file has successfully be handled.
+ * @return  PortageLoaderBase::NoError if the file has successfully been handled.
  *          PortageLoaderBase::OpenFileError if there was an error opening the file.
- *          PortageLoaderBase::NullTreeError if the given tree is NULL.
+ *          PortageLoaderBase::NullObjectError if the given tree is NULL.
  */
 PortageLoaderBase::Error FileAtomLoaderBase::loadFile(
 	PortageTree* portageTree, const QString& filename )
 {
 	// Check on a NULL tree, which would be bad
 	if( portageTree == NULL ) {
-		return NullTreeError;
+		return NullObjectError;
 	}
 	tree = portageTree;
 
