@@ -52,14 +52,18 @@ int main(int argc, char **argv)
 	KAboutData about("pakoo", appname, version, description,
                      KAboutData::License_GPL, COPYRIGHT,
 	                 disclaimer, HOMEPAGE,
-	                 HOMEPAGE /* as place for bug reports */ );
+	                 "https://developer.berlios.de/bugs/?group_id=3829"
+	                 /* the place for bug reports */ );
 
 	about.addAuthor( "Jakob Petsovits",
-	                 I18N_NOOP("User interface, refactoring, many extensions"),
+	                 I18N_NOOP("Main Pakoo developer"),
 	                 "jpetso@gmx.at" );
 	about.addAuthor( "karye", I18N_NOOP("Initial code (from Kuroo)"),
 	                 "karye@users.sourceforge.net", "http://tux.myftp.org" );
 
+	about.addCredit( I18N_NOOP("Doug Whiteley (a.k.a. rezza)"),
+	                 I18N_NOOP("who did the the amazing web design for Pakoo."),
+	                 "dougwhiteley@gmail.com", 0 );
 	about.addCredit( I18N_NOOP("Gentoo's Portage developers"),
 	                 I18N_NOOP("For making a package management system that just rocks."),
 	                 0, "http://www.gentoo.org" );
@@ -67,37 +71,37 @@ int main(int argc, char **argv)
 	                 I18N_NOOP("It's just a great desktop and development framework."),
 	                 0, "http://www.kde.org" );
 
-    KCmdLineArgs::init(argc, argv, &about);
-    KApplication app;
+	KCmdLineArgs::init(argc, argv, &about);
+	KApplication app;
 
-    // register ourselves as a dcop client
-    app.dcopClient()->registerAs(app.name(), false);
+	// register ourselves as a dcop client
+	app.dcopClient()->registerAs(app.name(), false);
 
-    // see if the app is starting with session management
-    if (app.isRestored())
-    {
-        RESTORE(Pakoo);
-    }
-    else
-    {
-        // no session.. just start up normally
-        /*KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
-        if (args->count() == 0)
-        {*/
-            Pakoo *widget = new Pakoo;
-            widget->show();
-        /*}
-        else
-        {
-            for (int i = 0; i < args->count(); i++)
-            {
-                pakoo *widget = new pakoo;
-                widget->show();
-                widget->load(args->url(i));
-            }
-        }
-        args->clear();*/
-    }
+	// see if the app is starting with session management
+	if (app.isRestored())
+	{
+		RESTORE(Pakoo);
+	}
+	else
+	{
+		// no session.. just start up normally
+		/*KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
+		if (args->count() == 0)
+		{*/
+			Pakoo *widget = new Pakoo;
+			widget->show();
+		/*}
+		else
+		{
+			for (int i = 0; i < args->count(); i++)
+			{
+				pakoo *widget = new pakoo;
+				widget->show();
+				widget->load(args->url(i));
+			}
+		}
+		args->clear();*/
+	}
 
-    return app.exec();
+	return app.exec();
 }

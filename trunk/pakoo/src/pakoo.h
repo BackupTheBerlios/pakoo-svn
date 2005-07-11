@@ -26,9 +26,12 @@
 #include <config.h>
 #endif
 
+#include <qhbox.h>
+
 #include <kapplication.h>
 #include <kmainwindow.h>
 #include <kprogress.h> // progress indicator for the status bar
+#include <kpushbutton.h>
 
 #include "pakooview.h"
 
@@ -63,8 +66,8 @@ public slots:
 	void slotQuit();
 
 	void setStatusbarText(const QString& text);
-	void setStatusbarProgress( int progress, int totalSteps );
-	void hideStatusbarProgress( bool hide );
+	void setStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
+	void showStatusbarProgress( bool show, bool showProgressButton = false );
 	void setCaption(const QString& text);
 
 protected:
@@ -90,7 +93,9 @@ private:
     void setupActions();
 
     PakooView* m_view;
-	KProgress* statusBarProgress;
+	QHBox* statusBarProgress;
+	KProgress* statusBarProgressBar;
+	KPushButton* statusBarProgressButton;
 	QLabel* statusBarLabel;
 
     KToggleAction *m_toolbarAction;

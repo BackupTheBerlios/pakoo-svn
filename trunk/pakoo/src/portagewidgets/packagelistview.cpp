@@ -251,6 +251,24 @@ void PakooPackageListView::emitSelectionChanged( QListViewItem* item )
 }
 
 /**
+ * Stop scanning the appropriate files for package details.
+ * This stops harddisk reading activity, with the effect
+ * that remaining package descriptions are not loaded
+ * until displayPackages() is called again.
+ */
+void PakooPackageListView::abortLoadingPackageDetails()
+{
+	if( packageCategoryScanner->running() ) {
+		packageCategoryScanner->abort();
+		packageCategoryScanner->wait();
+	}
+	if( packageInstalledScanner->running() ) {
+		packageInstalledScanner->abort();
+		packageInstalledScanner->wait();
+	}
+}
+
+/**
  * Show packages from the given PortageTree object inside this ListView.
  * The packages can be filtered by category and subcategory, so that only
  * a subset of the packages in the tree are displayed.
@@ -275,14 +293,7 @@ void PakooPackageListView::displayPackages(
 
 	updateSettings( settings );
 
-	if( packageCategoryScanner->running() ) {
-		packageCategoryScanner->abort();
-		packageCategoryScanner->wait();
-	}
-	if( packageInstalledScanner->running() ) {
-		packageInstalledScanner->abort();
-		packageInstalledScanner->wait();
-	}
+	abortLoadingPackageDetails();
 
 	// scan the package descriptions (in an extra thread)
 	packageCategoryScanner->startScanningCategory(
@@ -499,10 +510,6 @@ void PakooPackageListView::displayPackageDetails( Package* package )
 	}
 
 	loadedPackages++;
-	emit loadingPackageInfo( loadedPackages, totalPackages );
-	if( loadedPackages == totalPackages ) {
-		emit finishedLoadingPackageInfo( totalPackages );
-	}
 	//emit contentsChanged(); // NOT. try it out, if you want.
 }
 
@@ -542,11 +549,20 @@ void PakooPackageListView::customEvent( QCustomEvent* event )
 				emit selectionChanged( currentPackage );
 				currentPackage = NULL;
 			}
+
+			if( packageEvent->packageScanner == packageCategoryScanner
+			    || packageEvent->packageScanner == packageInstalledScanner )
+			{
+				emit loadingPackageInfo( loadedPackages, totalPackages );
+			}
 		}
-		else if( packageEvent->action == PackageScanner::ScanCategory
-		         && packageEvent->packageScanner == packageInstalledScanner )
+		else if( packageEvent->action == PackageScanner::ScanCategory )
 		{
-			emit finishedLoadingInstalledPackageInfo();
+			emit finishedLoadingPackageInfo( totalPackages );
+
+			if( packageEvent->packageScanner == packageInstalledScanner ) {
+				emit finishedLoadingInstalledPackageInfo();
+			}
 		}
 	}
 }

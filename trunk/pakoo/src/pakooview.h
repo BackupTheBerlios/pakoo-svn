@@ -64,8 +64,9 @@ public slots:
 	void initData();
 	void setStatusbarText( const QString& text );
 	void setTitle( const QString& title );
-	void setStatusbarProgress( int progress, int totalSteps );
-	void hideStatusbarProgress( bool hide = true );
+	void setStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
+	void showStatusbarProgress( bool show, bool showProgressButton = false );
+	void abortProgress();
 
 signals:
 	//! Use this signal to change the content of the statusbar.
@@ -76,9 +77,9 @@ signals:
 	 * Use this signal to set the progress of the main window's status bar.
 	 * If it's hidden, it will be set visible.
 	 */
-	void signalSetStatusbarProgress( int progress, int totalSteps );
+	void signalSetStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
 	//! Use this signal to hide or show the main window's status bar.
-	void signalHideStatusbarProgress( bool hide );
+	void signalShowStatusbarProgress( bool show, bool showProgressButton );
 
 protected:
 

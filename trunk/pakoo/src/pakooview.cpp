@@ -293,19 +293,22 @@ void PakooView::setStatusbarText( const QString& text )
 }
 
 /**
- * Emitting signalSetStatusbarProgress(text).
+ * Emitting signalSetStatusbarProgress( progress, totalSteps ).
  */
-void PakooView::setStatusbarProgress( int progress, int totalSteps )
+void PakooView::setStatusbarProgress( int progress, int totalSteps,
+                                      bool showProgressButton )
 {
-	emit signalSetStatusbarProgress( progress, totalSteps );
+	emit signalSetStatusbarProgress( progress, totalSteps,
+	                                 showProgressButton );
 }
 
 /**
- * Emitting signalHideStatusbarProgress(text).
+ * Emitting signalShowStatusbarProgress( show, showProgressButton ).
  */
-void PakooView::hideStatusbarProgress( bool hide )
+void PakooView::showStatusbarProgress( bool show,
+                                       bool showProgressButton )
 {
-	emit signalHideStatusbarProgress( hide );
+	emit signalShowStatusbarProgress( show, showProgressButton );
 }
 
 /**
@@ -314,6 +317,14 @@ void PakooView::hideStatusbarProgress( bool hide )
 void PakooView::setTitle( const QString& title )
 {
 	emit signalSetCaption( title );
+}
+
+/**
+ * Tell the package list view to stop loading package details.
+ */
+void PakooView::abortProgress()
+{
+	packageView->listView->abortLoadingPackageDetails();
 }
 
 /**
@@ -331,7 +342,7 @@ void PakooView::handleFinishedLoadingPackageInfo( int totalPackageCount )
 	else if( subcategory != QString::null )
 		category += "-" + subcategory;
 
-	emit hideStatusbarProgress();
+	emit showStatusbarProgress( false );
 	emit setStatusbarText(
 		PACKAGESINCATEGORYTEXT
 			.arg( totalPackageCount )
@@ -358,7 +369,7 @@ void PakooView::handleLoadingPackageInfo( int loadedPackageCount,
 	else if( subcategory != QString::null )
 		category += "-" + subcategory;
 
-	emit setStatusbarProgress( loadedPackageCount, totalPackageCount );
+	emit setStatusbarProgress( loadedPackageCount, totalPackageCount, true );
 	emit setStatusbarText(
 		PACKAGESINCATEGORYTEXT
 			.arg( totalPackageCount )

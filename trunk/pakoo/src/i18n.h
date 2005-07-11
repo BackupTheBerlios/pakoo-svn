@@ -31,6 +31,12 @@
 #define THEPORTAGETREETEXT i18n("Substitute for the category name when browsing 'All Packages'.", "the portage tree")
 #define LOADINGPACKAGEDETAILSTEXT i18n("Appended to the 'x packages in category y' text (as %4) when detailed descriptions are still loaded.", " (Loading package details...)")
 
+// Tooltips
+#define TOOLTIP_ABORTLOADINGPACKAGEDETAILS i18n("Tooltip for the button next to the status bar's progress bar.", "Abort loading package details")
+
+// What's this help texts
+#define WHATSTHIS_ABORTLOADINGPACKAGEDETAILS i18n("What's this for the button next to the status bar's progress bar.", "With this button you can abort the progress of loading package details. This stops harddisk reading activity, with the effect that remaining package descriptions are not loaded until you browse another package category.")
+
 // debug output text
 #define SECONDSTEXT i18n("Debug output, showing the elapsed loading time for a portage tree.", "(%1 seconds)")
 

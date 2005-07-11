@@ -87,6 +87,7 @@ public slots:
 		const QString& subcategoryName = QString::null
 	);
 	void emitSelectionChanged( QListViewItem* item );
+	void abortLoadingPackageDetails();
 
 protected:
 

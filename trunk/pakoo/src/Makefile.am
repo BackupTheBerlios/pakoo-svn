@@ -51,6 +51,7 @@ kde_kcfg_DATA = pakooconfig.kcfg
 
 
 
-METASOURCES = AUTO
+
 
 SUBDIRS = libqortage portagewidgets
+METASOURCES = AUTO

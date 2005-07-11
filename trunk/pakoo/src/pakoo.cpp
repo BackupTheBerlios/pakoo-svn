@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include <qtimer.h>
-#include <qpixmap.h>
 
 #include <kglobal.h>
 #include <kiconloader.h>
@@ -53,13 +52,25 @@ Pakoo::Pakoo()
 
 	// and a status bar, with progress
 	statusBar()->show();
-	statusBarProgress = new KProgress(0, "statusBarProgress");
 	statusBarLabel = new QLabel(0, "statusBarLabel");
 
+	statusBarProgress = new QHBox(0, "statusBarProgress");
+	statusBarProgress->setSizePolicy(
+		QSizePolicy::Maximum, QSizePolicy::Preferred, false );
+
+	statusBarProgressButton = new KPushButton(
+		KGuiItem( "", "stop",
+		          TOOLTIP_ABORTLOADINGPACKAGEDETAILS,
+		          WHATSTHIS_ABORTLOADINGPACKAGEDETAILS ),
+		statusBarProgress, "statusBarProgressButton"
+	);
+	statusBarProgressBar = new KProgress(
+		statusBarProgress, "statusBarProgressBar" );
+
 	statusBar()->addWidget( statusBarLabel, 1 /* id */, 1 /* stretch factor */ );
-	statusBar()->addWidget( statusBarProgress, 0 /* stretch factor */,
+	statusBar()->addWidget( statusBarProgress, 1 /* stretch factor */,
 	                        true /* permanent (on the right side) */ );
-	statusBarProgress->hide();
+	showStatusbarProgress( false );
 
 	// apply the saved mainwindow settings, if any, and ask the mainwindow
 	// to automatically save settings if changed: window size, toolbar
@@ -71,10 +82,12 @@ Pakoo::Pakoo()
 	         this,     SLOT(setStatusbarText(const QString&))      );
 	connect( m_view, SIGNAL(signalSetCaption(const QString&)),
 	         this,     SLOT(setCaption(const QString&))      );
-	connect( m_view, SIGNAL(signalSetStatusbarProgress(int,int)),
-	         this,     SLOT(setStatusbarProgress(int,int))      );
-	connect( m_view, SIGNAL(signalHideStatusbarProgress(bool)),
-	         this,     SLOT(hideStatusbarProgress(bool))      );
+	connect( m_view, SIGNAL(signalSetStatusbarProgress(int,int,bool)),
+	         this,     SLOT(setStatusbarProgress(int,int,bool))      );
+	connect( m_view, SIGNAL(signalShowStatusbarProgress(bool,bool)),
+	         this,     SLOT(showStatusbarProgress(bool,bool))      );
+	connect( statusBarProgressButton, SIGNAL(clicked()),
+	         m_view,                    SLOT(abortProgress()) );
 
 	// Zack Rusin's delayed initialization technique
 	QTimer::singleShot( 0, m_view, SLOT(initData()) );
@@ -86,38 +99,80 @@ Pakoo::~Pakoo()
 
 void Pakoo::setupActions()
 {
-	//TODO: get the i18n texts into i18n.h
-	KAction *actionsSync = new KAction( i18n("&Sync"), "reload", KShortcut( CTRL + Key_S ),
-	                                    this, SLOT(actionsSync()),
-	                                    actionCollection(), "actions_sync");
+	// TODO (?): get the i18n texts into i18n.h
+	KAction *actionsInstallEbuild =
+		new KAction( i18n("&Install Ebuild File..."), "open",
+		             0 /* KShortcut( CTRL + Key_E ) */, this,
+		             SLOT(actionsSync()), actionCollection(),
+		             "installebuild"
+		           );
 
-	KAction *actionsUpdate = new KAction( i18n("&Update Packages..."), "up", KShortcut( CTRL + Key_U ),
-	                                      this, SLOT(actionsUpdate()),
-	                                      actionCollection(), "actions_update");
+	KAction *actionsSync =
+		new KAction( i18n("&Sync"), "reload",
+		             KShortcut( CTRL + Key_S ), this,
+		             SLOT(actionsSync()), actionCollection(), "sync"
+		           );
 
-	KAction *actionsInstall = new KAction( i18n("&Install Selected..."), "button_ok", KShortcut( CTRL + Key_I ),
-	                                       this, SLOT(actionsInstall()),
-	                                       actionCollection(), "actions_install");
+	KAction *actionsUpdate =
+		new KAction( i18n("&Update Packages..."), "up",
+		             KShortcut( CTRL + Key_U ), this,
+		             SLOT(actionsUpdate()), actionCollection(), "update"
+		           );
 
-	KAction *actionsUninstall = new KAction( i18n("U&ninstall Selected..."), "button_cancel", KShortcut( CTRL + Key_N ),
-	                                         this, SLOT(actionsUninstall()),
-	                                         actionCollection(), "actions_uninstall");
+	KAction *actionsCleanUp =
+		new KAction( i18n("&Clean Up..."), "editdelete",
+		             KShortcut( CTRL + Key_C ), this,
+		             SLOT(actionsCleanUp()), actionCollection(), "cleanup"
+		           );
 
-	KAction *actionsCleanUp = new KAction( i18n("&Clean Up..."), "editdelete", KShortcut( CTRL + Key_C ),
-	                                       this, SLOT(actionsCleanUp()),
-	                                       actionCollection(), "actions_cleanup");
+	KAction *actionsAdvancedSearch =
+		new KAction( i18n("Advanced &Search..."), "find",
+		             KShortcut( CTRL + Key_F ), this,
+		             SLOT(actionsCleanUp()), actionCollection(),
+		             "advancedsearch"
+		           );
 
-	KStdAction::quit(this, SLOT(slotQuit()), actionCollection(), "actions_quit");
+	KAction *actionsInstall =
+		new KAction( i18n("&Install Selected..."), "button_ok",
+		             KShortcut( CTRL + Key_I ), this,
+		             SLOT(actionsInstall()), actionCollection(), "install"
+		           );
 
-	m_toolbarAction = KStdAction::showToolbar(this, SLOT(optionsShowToolbar()), actionCollection());
-	//m_statusbarAction = KStdAction::showStatusbar(this, SLOT(optionsShowStatusbar()), actionCollection());
+	KAction *actionsUninstall =
+		new KAction( i18n("U&ninstall Selected..."), "button_cancel",
+		             KShortcut( CTRL + Key_N ), this,
+		             SLOT(actionsUninstall()), actionCollection(), "uninstall"
+		           );
 
+	// File menu standard items
+	KStdAction::quit( this, SLOT(slotQuit()), actionCollection() );
+
+	// Settings menu standard items
 	KStdAction::keyBindings(this, SLOT(optionsConfigureKeys()), actionCollection());
 	KStdAction::configureToolbars(this, SLOT(optionsConfigureToolbars()), actionCollection());
-	KStdAction::preferences(this, SLOT(optionsPreferences()), actionCollection());
+	//KStdAction::preferences(this, SLOT(optionsPreferences()), actionCollection());
+
+	// disable items until they are implemented
+	//TODO: delete from here once they work
+	actionsInstallEbuild->setEnabled( false );
+	actionsSync->setEnabled( false );
+	actionsUpdate->setEnabled( false );
+	actionsCleanUp->setEnabled( false );
+	actionsAdvancedSearch->setEnabled( false );
+	actionsInstall->setEnabled( false );
+	actionsUninstall->setEnabled( false );
+
+	m_toolbarAction = KStdAction::showToolbar(
+		this, SLOT(optionsShowToolbar()), actionCollection() );
+	//m_statusbarAction = KStdAction::showStatusbar(
+	//	this, SLOT(optionsShowStatusbar()), actionCollection() );
 
 	#ifdef DEBUG
-	createGUI("/home/jakob/dev/pakoo/src/pakooui.rc");
+	// load the XMLGUI definition file even if it's not installed
+	createGUI(
+		KApplication::kApplication()->applicationDirPath().replace("debug/", "")
+		+ "/pakooui.rc"
+	);
 	#else
 	createGUI();
 	#endif
@@ -253,26 +308,38 @@ void Pakoo::setStatusbarText(const QString& text)
  * @param progress    The current amount of progress.
  * @param totalSteps  The total number of steps.
  */
-void Pakoo::setStatusbarProgress( int progress, int totalSteps )
+void Pakoo::setStatusbarProgress( int progress, int totalSteps,
+                                  bool showProgressButton )
 {
-	if( statusBarProgress->isHidden() )
-		statusBarProgress->show();
+	if( statusBarProgress->isHidden() ) {
+		showStatusbarProgress( true, showProgressButton );
+	}
 
-	statusBarProgress->setTotalSteps( totalSteps );
-	statusBarProgress->setProgress( progress );
+	statusBarProgressBar->setTotalSteps( totalSteps );
+	statusBarProgressBar->setProgress( progress );
 }
 
 /**
  * Define if the progress bar should be shown or hidden.
  * @param hide  If true, the progress bar will be hidden.
  *              If false, it will be shown.
+ * @param showProgressButton  If this and the "hide" parameter are both true,
+ *                            the button right next to the status bar will be
+ *                            shown. Otherwise it will be hidden.
  */
-void Pakoo::hideStatusbarProgress( bool hide )
+void Pakoo::showStatusbarProgress( bool show, bool showProgressButton )
 {
-	if( hide == true )
+	if( show == false ) {
 		statusBarProgress->hide();
-	else
+	}
+	else { // show == true
 		statusBarProgress->show();
+
+		if( showProgressButton == true )
+			statusBarProgressButton->show();
+		else
+			statusBarProgressButton->hide();
+	}
 }
 
 /**
