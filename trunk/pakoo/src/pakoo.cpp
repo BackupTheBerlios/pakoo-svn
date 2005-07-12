@@ -40,6 +40,11 @@
 #include "i18n.h"
 #include "pixmapnames.h"
 
+#ifdef DEVELOPMENT_VERSION
+#include <qdir.h>
+#endif
+
+
 Pakoo::Pakoo()
     : KMainWindow( 0, "Pakoo" ),
       m_view(new PakooView(this))
@@ -167,12 +172,14 @@ void Pakoo::setupActions()
 	//m_statusbarAction = KStdAction::showStatusbar(
 	//	this, SLOT(optionsShowStatusbar()), actionCollection() );
 
-	#ifdef DEBUG
+	#ifdef DEVELOPMENT_VERSION
 	// load the XMLGUI definition file even if it's not installed
-	createGUI(
-		KApplication::kApplication()->applicationDirPath().replace("debug/", "")
-		+ "/pakooui.rc"
-	);
+	QString appPath( QString(KApplication::kApplication()->argv()[0]) );
+	appPath = appPath.left( appPath.findRev("pakoo") );
+	QDir appDir( appPath );
+	appPath = appDir.absPath().remove("debug/") + "/pakooui.rc";
+
+	createGUI( appPath );
 	#else
 	createGUI();
 	#endif

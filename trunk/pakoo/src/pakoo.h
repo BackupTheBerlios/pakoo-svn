@@ -26,6 +26,8 @@
 #include <config.h>
 #endif
 
+#define DEVELOPMENT_VERSION
+
 #include <qhbox.h>
 
 #include <kapplication.h>
