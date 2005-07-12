@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <qheader.h>
+
 #include <kiconloader.h>
 
 #include "portagetreeview.h"
@@ -38,7 +40,8 @@ PortageTreeView::PortageTreeView( QWidget* parent, const char* name )
 	pxRootItem = iconLoader->loadIcon( ALLPACKAGESICON, KIcon::Small );
 	pxCategoryItem = iconLoader->loadIcon( CATEGORYICON, KIcon::Small );
 
-	this->addColumn( i18n("Category") );
+	this->header()->hide();
+	this->addColumn( "Categories" );
 	this->setColumnWidthMode( 0, QListView::Maximum );
 	this->setRootIsDecorated( true );
 

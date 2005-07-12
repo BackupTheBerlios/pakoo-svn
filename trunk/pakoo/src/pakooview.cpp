@@ -29,6 +29,7 @@
 
 #include <qpainter.h>
 #include <qlayout.h>
+#include <qtoolbox.h>
 
 #include <klibloader.h>
 #include <kmessagebox.h>
@@ -37,6 +38,9 @@
 #include <kglobalsettings.h>
 #include <khtmlview.h>
 
+// TODO: remove
+#include <qlabel.h>
+
 
 /**
  * Initialize this object.
@@ -44,22 +48,30 @@
 PakooView::PakooView( QWidget *parent )
 : DCOPObject("pakooIface"), QWidget(parent)
 {
-	QHBoxLayout* topLayout = new QHBoxLayout(this);
+	QHBoxLayout* topLayout = new QHBoxLayout( this );
 	topLayout->setAutoAdd( true );
 
-	vSplitter = new QSplitter(this);
+	hSplitter = new QSplitter( this );
+	hSplitter->setOpaqueResize( true );
+
+	QToolBox* toolBox = new QToolBox( hSplitter, "toolBox" );
+
+	treeView = new PortageTreeView( 0, "treeView" );
+	toolBox->addItem( treeView, TREEVIEWTEXT );
+	toolBox->addItem( new QLabel("Action View", 0, "tempactionlabel"), ACTIONVIEWTEXT );
+	toolBox->addItem( new QLabel("Config View", 0, "tempactionlabel"), CONFIGVIEWTEXT );
+
+	vSplitter = new QSplitter( hSplitter );
 	vSplitter->setOrientation(QSplitter::Vertical);
 	vSplitter->setOpaqueResize( true );
 
-	hSplitter = new QSplitter( vSplitter );
-	hSplitter->setOpaqueResize( true );
-	treeView = new PortageTreeView( hSplitter, "treeView" );
 	packageView = new PackageView(
-		hSplitter, "packageView", portageTreeScanner.packageScanner()
+		vSplitter, "packageView", portageTreeScanner.packageScanner()
 	);
-	hSplitter->setResizeMode( treeView, QSplitter::KeepSize );
 
 	packageInfoView = new PackageInfoView( vSplitter, "packageInfoView" );
+
+	hSplitter->setResizeMode( toolBox, QSplitter::KeepSize );
 	vSplitter->setResizeMode( packageInfoView->view(), QSplitter::KeepSize );
 
 	vSplitter->setSizes( PakooConfig::vSplitterSizes() );
@@ -120,7 +132,8 @@ QSize PakooView::sizeHint() const
 }
 
 /**
- * Initiate Portage tree scanning.
+ * Initiate loading the Portage tree, either by loading from file
+ * or by delegating to scanPortageTree().
  */
 void PakooView::loadPortageTree()
 {
@@ -144,7 +157,17 @@ void PakooView::loadPortageTree()
 			this, &portageTree, KGlobalSettings::documentPath() + "/portagetree.xml"
 		);
 	}
-	else if( !portageTreeScanner.running() )
+	else {
+		scanPortageTree();
+	}
+}
+
+/**
+ * Initiate Portage tree scanning.
+ */
+void PakooView::scanPortageTree()
+{
+	if( !portageTreeScanner.running() )
 	{
 		packageCount  = 0;
 		mainlineCount = 0;
@@ -270,7 +293,7 @@ void PakooView::handleLoadingTreeComplete( LoadingTreeCompleteEvent* event )
 			// Doesn't happen if PakooConfig::preferEdb() == true
 			kdDebug() << "Couldn't load portagetree.xml, "
 				"so try to load the real tree..." << endl;
-			this->loadPortageTree();
+			this->scanPortageTree();
 			return;
 		}
 		else {

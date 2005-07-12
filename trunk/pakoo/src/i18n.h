@@ -23,6 +23,21 @@
 
 #include <klocale.h>
 
+// Menu entry texts
+#define MENUTEXT_INSTALLEBUILD i18n("Menu command", "&Install Ebuild File...")
+#define MENUTEXT_SYNC i18n("Menu command", "&Sync")
+#define MENUTEXT_UPDATE i18n("Menu command", "&Update Packages...")
+#define MENUTEXT_CLEANUP i18n("Menu command", "&Clean Up...")
+#define MENUTEXT_FIND i18n("Menu command", "&Find Packages...")
+#define MENUTEXT_INSTALL i18n("Menu command", "&Install Selected...")
+#define MENUTEXT_UNINSTALL i18n("Menu command", "&Uninstall Selected...")
+#define MENUTEXT_ i18n("Menu command", )
+
+// Widget labels
+#define TREEVIEWTEXT i18n("Label of the package tree view's vertical tab", "Browse Packages")
+#define ACTIONVIEWTEXT i18n("Label of the action view's vertical tab", "Actions")
+#define CONFIGVIEWTEXT i18n("Label of the config view's vertical tab", "Configuration")
+
 // Status bar text fragments
 #define LOADINGTREEPACKAGESTEXT i18n("Loading packages from portage tree: %1 packages (%2 installed).")
 #define LOADINGINSTALLEDPACKAGESTEXT i18n("Loading installed packages: %1 packages (%2 installed).")

@@ -99,6 +99,7 @@ private slots:
 	void handleFinishedLoadingPackageInfo( int totalPackageCount );
 
 private:
+	void scanPortageTree();
 	void handleLoadingTreeComplete( LoadingTreeCompleteEvent* event );
 
 	QString message; // temp variable to store message texts

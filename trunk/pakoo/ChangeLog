@@ -1,3 +1,8 @@
+2005-07-12 Jakob Petsovits <jpetso@gmx.at>
+	* release of Pakoo 0.1
+	* user interface changes
+	* make the /usr/portage scanner work again
+
 2005-07-11 Jakob Petsovits <jpetso@gmx.at>
 	* button for aborting the package scanner
 	* disable the buttons that don't work (ahem, that's nearly all ;-)

@@ -1,5 +1,5 @@
 <!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
-<kpartgui name="pakoo" version="1">
+<kpartgui name="pakoo" version="2">
 <MenuBar>
 	<Menu name="file"><!--<text>&amp;File</text>-->
 		<Action name="installebuild" />
@@ -10,7 +10,7 @@
 		<Action name="update" />
 		<Action name="cleanup" />
 		<Separator/>
-		<Action name="advancedsearch" />
+		<Action name="find" />
 	</Menu>
 	<Menu name="package"><text>&amp;Package</text>
 		<Action name="install" />
@@ -25,6 +25,6 @@
 	<Action name="uninstall"/>
 	<Separator/>
 	<Action name="cleanup"/>
-	<Action name="advancedsearch" />
+	<Action name="find" />
 </ToolBar>
 </kpartgui>

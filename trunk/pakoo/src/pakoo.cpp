@@ -104,47 +104,45 @@ Pakoo::~Pakoo()
 
 void Pakoo::setupActions()
 {
-	// TODO (?): get the i18n texts into i18n.h
 	KAction *actionsInstallEbuild =
-		new KAction( i18n("&Install Ebuild File..."), "open",
+		new KAction( MENUTEXT_INSTALLEBUILD, "open",
 		             0 /* KShortcut( CTRL + Key_E ) */, this,
 		             SLOT(actionsSync()), actionCollection(),
 		             "installebuild"
 		           );
 
 	KAction *actionsSync =
-		new KAction( i18n("&Sync"), "reload",
+		new KAction( MENUTEXT_SYNC, "reload",
 		             KShortcut( CTRL + Key_S ), this,
 		             SLOT(actionsSync()), actionCollection(), "sync"
 		           );
 
 	KAction *actionsUpdate =
-		new KAction( i18n("&Update Packages..."), "up",
+		new KAction( MENUTEXT_UPDATE, "up",
 		             KShortcut( CTRL + Key_U ), this,
 		             SLOT(actionsUpdate()), actionCollection(), "update"
 		           );
 
 	KAction *actionsCleanUp =
-		new KAction( i18n("&Clean Up..."), "editdelete",
+		new KAction( MENUTEXT_CLEANUP, "editdelete",
 		             KShortcut( CTRL + Key_C ), this,
 		             SLOT(actionsCleanUp()), actionCollection(), "cleanup"
 		           );
 
 	KAction *actionsAdvancedSearch =
-		new KAction( i18n("Advanced &Search..."), "find",
+		new KAction( MENUTEXT_FIND, "find",
 		             KShortcut( CTRL + Key_F ), this,
-		             SLOT(actionsCleanUp()), actionCollection(),
-		             "advancedsearch"
+		             SLOT(actionsCleanUp()), actionCollection(), "find"
 		           );
 
 	KAction *actionsInstall =
-		new KAction( i18n("&Install Selected..."), "button_ok",
+		new KAction( MENUTEXT_INSTALL, "button_ok",
 		             KShortcut( CTRL + Key_I ), this,
 		             SLOT(actionsInstall()), actionCollection(), "install"
 		           );
 
 	KAction *actionsUninstall =
-		new KAction( i18n("U&ninstall Selected..."), "button_cancel",
+		new KAction( MENUTEXT_UNINSTALL, "button_cancel",
 		             KShortcut( CTRL + Key_N ), this,
 		             SLOT(actionsUninstall()), actionCollection(), "uninstall"
 		           );
@@ -173,15 +171,14 @@ void Pakoo::setupActions()
 	//	this, SLOT(optionsShowStatusbar()), actionCollection() );
 
 	#ifdef DEVELOPMENT_VERSION
-	// load the XMLGUI definition file even if it's not installed
-	QString appPath( QString(KApplication::kApplication()->argv()[0]) );
-	appPath = appPath.left( appPath.findRev("pakoo") );
-	QDir appDir( appPath );
-	appPath = appDir.absPath().remove("debug/") + "/pakooui.rc";
-
-	createGUI( appPath );
+		// load the XMLGUI definition file even if it's not installed
+		QString appPath( QString(KApplication::kApplication()->argv()[0]) );
+		appPath = appPath.left( appPath.findRev("pakoo") );
+		QDir appDir( appPath );
+		appPath = appDir.absPath().remove("debug/") + "/pakooui.rc";
+		createGUI( appPath );
 	#else
-	createGUI();
+		createGUI();
 	#endif
 }
 

@@ -266,7 +266,8 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 	int pos;
 
 	// set the d directory to the treeDir string
-	if( treeDir.isNull() || treeDir.isEmpty() || !d.cd(treeDir) ) {
+	d.setPath( treeDir );
+	if( treeDir.isNull() || treeDir.isEmpty() || !d.exists() ) {
 		return NullObjectError;
 	}
 
@@ -305,7 +306,8 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 		if( (searchedTree == PortageTree::Mainline) && (preferEdb == true) )
 		{
 			// Compose the folder name of the current category
-			if( !d.cd(edbDir + portageTreeDir + "/" + (*categoryIterator)) )
+			d.setPath( edbDir + portageTreeDir + "/" + (*categoryIterator) );
+			if( !d.exists() )
 				continue;
 
 			scanEdbCategory(d);
@@ -319,11 +321,13 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 		else
 		{
 			// Compose the folder name of the current category
-			if( !d.cd(treeDir + "/" + (*categoryIterator)) ) {
+			d.setPath( treeDir + "/" + (*categoryIterator) );
+			if( !d.exists() ) {
 				continue;
 			}
 
-			// Iterate through the available package dirs in the current category
+			// Iterate through the available package dirs
+			// in the current category
 			QStringList packages = d.entryList();
 			QStringList::Iterator packageIteratorEnd = packages.end();
 			for ( QStringList::Iterator packageIterator = packages.begin();
@@ -333,11 +337,10 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 				if( (*packageIterator)[0] == '.' )
 					continue;
 
-				// Compose the folder name of the current package and cd there
-				if ( !d.cd( treeDir + "/" +
-							(*categoryIterator) + "/" +
-							(*packageIterator)) )
-				{
+				// Compose the folder name of the current package and check it
+				d.setPath( treeDir + "/" + (*categoryIterator)
+				           + "/" + (*packageIterator) );
+				if ( !d.exists() ) {
 					continue;
 				}
 
