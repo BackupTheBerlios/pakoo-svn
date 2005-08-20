@@ -22,11 +22,14 @@
 #ifndef PAKOO_H
 #define PAKOO_H
 
-#ifdef HAVE_CONFIG_H
+//#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
+//#endif
 
+// comment out when doing a release
 #define DEVELOPMENT_VERSION
+
+#define APPNAME I18N_NOOP("Pakoo")
 
 #include <qhbox.h>
 
@@ -34,12 +37,10 @@
 #include <kmainwindow.h>
 #include <kprogress.h> // progress indicator for the status bar
 #include <kpushbutton.h>
+#include <kactionclasses.h>
 
 #include "pakooview.h"
 
-class KPrinter;
-class KToggleAction;
-class KURL;
 
 /**
  * This class serves as the main window for pakoo.  It handles the
@@ -51,26 +52,35 @@ class KURL;
  */
 class Pakoo : public KMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    /**
-     * Default Constructor
-     */
-    Pakoo();
+	/**
+		* Default Constructor
+		*/
+	Pakoo();
 
-    /**
-     * Default Destructor
-     */
-    virtual ~Pakoo();
+	/**
+		* Default Destructor
+		*/
+	virtual ~Pakoo();
 
 
 public slots:
 	void slotQuit();
 
-	void setStatusbarText(const QString& text);
-	void setStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
-	void showStatusbarProgress( bool show, bool showProgressButton = false );
 	void setCaption(const QString& text);
+	void setStatusbarText( const QString& text );
+	void setStatusbarProgress( int progress, int totalSteps );
+	void showStatusbarProgress( bool show = true );
+	void hideStatusbarProgress() {
+		showStatusbarProgress(false);
+	}
+
+	void showStatusbarProgressButton( bool showProgressButton = true );
+
+	void hideStatusbarProgressButton() {
+		showStatusbarProgressButton(false);
+	}
 
 protected:
 	//! Reimplemented to call slotQuit().

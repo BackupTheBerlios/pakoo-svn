@@ -22,7 +22,7 @@
 
 #include "core/portagesettings.h"
 #include "core/portagecategory.h"
-#include "portageloader/packagescanner.h"
+#include "portageloader/portagepackageloader.h"
 #include "portageloader/portageinitialloader.h"
 
 namespace libpakt {

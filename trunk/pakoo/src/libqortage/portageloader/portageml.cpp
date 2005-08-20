@@ -23,7 +23,7 @@
 #include "../core/threadedjob.h"
 #include "../core/packageversion.h"
 #include "../core/package.h"
-#include "../core/portagetree.h"
+#include "../core/packagelist.h"
 #include "../core/portagecategory.h"
 
 #include <qfile.h>

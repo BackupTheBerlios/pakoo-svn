@@ -20,8 +20,8 @@
 
 #include "multiplepackageloader.h"
 
-#include "../core/portagetree.h"
-#include "packagescanner.h"
+#include "../core/packagelist.h"
+#include "packageloader.h"
 
 #include <klocale.h>
 #include <kdebug.h>

@@ -46,7 +46,7 @@
 
 
 Pakoo::Pakoo()
-    : KMainWindow( 0, "Pakoo" ),
+    : KMainWindow( 0, APPNAME ),
       m_view(new PakooView(this))
 {
 	// tell the KMainWindow that this is indeed the main widget
@@ -82,15 +82,23 @@ Pakoo::Pakoo()
 	// position, icon size, etc.
 	setAutoSaveSettings();
 
-	// allow the view to change the statusbar and caption
-	connect( m_view, SIGNAL(signalSetStatusbarText(const QString&)),
-	         this,     SLOT(setStatusbarText(const QString&))      );
-	connect( m_view, SIGNAL(signalSetCaption(const QString&)),
+	// allow the view to change the caption and status bar
+	connect( m_view, SIGNAL(windowCaptionChanged(const QString&)),
 	         this,     SLOT(setCaption(const QString&))      );
-	connect( m_view, SIGNAL(signalSetStatusbarProgress(int,int,bool)),
-	         this,     SLOT(setStatusbarProgress(int,int,bool))      );
-	connect( m_view, SIGNAL(signalShowStatusbarProgress(bool,bool)),
-	         this,     SLOT(showStatusbarProgress(bool,bool))      );
+	connect( m_view, SIGNAL(statusbarTextChanged(const QString&)),
+	         this,     SLOT(setStatusbarText(const QString&))      );
+
+	connect( m_view, SIGNAL(statusbarProgressShown()),
+	         this,     SLOT(showStatusbarProgress()) );
+	connect( m_view, SIGNAL(statusbarProgressHidden()),
+	         this,     SLOT(hideStatusbarProgress()) );
+	connect( m_view, SIGNAL(statusbarProgressButtonShown()),
+	         this,     SLOT(showStatusbarProgressButton()) );
+	connect( m_view, SIGNAL(statusbarProgressButtonHidden()),
+	         this,     SLOT(hideStatusbarProgressButton()) );
+	connect( m_view, SIGNAL(statusbarProgressChanged(int,int)),
+	         this,     SLOT(setStatusbarProgress(int,int))      );
+
 	connect( statusBarProgressButton, SIGNAL(clicked()),
 	         m_view,                    SLOT(abortProgress()) );
 
@@ -129,12 +137,6 @@ void Pakoo::setupActions()
 		             SLOT(actionsCleanUp()), actionCollection(), "cleanup"
 		           );
 
-	KAction *actionsAdvancedSearch =
-		new KAction( MENUTEXT_FIND, "find",
-		             KShortcut( CTRL + Key_F ), this,
-		             SLOT(actionsCleanUp()), actionCollection(), "find"
-		           );
-
 	KAction *actionsInstall =
 		new KAction( MENUTEXT_INSTALL, "button_ok",
 		             KShortcut( CTRL + Key_I ), this,
@@ -145,6 +147,12 @@ void Pakoo::setupActions()
 		new KAction( MENUTEXT_UNINSTALL, "button_cancel",
 		             KShortcut( CTRL + Key_N ), this,
 		             SLOT(actionsUninstall()), actionCollection(), "uninstall"
+		           );
+
+	KAction *actionsFind =
+		new KAction( MENUTEXT_FIND, "find",
+		             KShortcut( CTRL + Key_F ), this,
+		             SLOT(actionsCleanUp()), actionCollection(), "find"
 		           );
 
 	// File menu standard items
@@ -161,7 +169,7 @@ void Pakoo::setupActions()
 	actionsSync->setEnabled( false );
 	actionsUpdate->setEnabled( false );
 	actionsCleanUp->setEnabled( false );
-	actionsAdvancedSearch->setEnabled( false );
+	actionsFind->setEnabled( false );
 	actionsInstall->setEnabled( false );
 	actionsUninstall->setEnabled( false );
 
@@ -312,11 +320,10 @@ void Pakoo::setStatusbarText(const QString& text)
  * @param progress    The current amount of progress.
  * @param totalSteps  The total number of steps.
  */
-void Pakoo::setStatusbarProgress( int progress, int totalSteps,
-                                  bool showProgressButton )
+void Pakoo::setStatusbarProgress( int progress, int totalSteps )
 {
 	if( statusBarProgress->isHidden() ) {
-		showStatusbarProgress( true, showProgressButton );
+		showStatusbarProgress( true );
 	}
 
 	statusBarProgressBar->setTotalSteps( totalSteps );
@@ -325,25 +332,31 @@ void Pakoo::setStatusbarProgress( int progress, int totalSteps,
 
 /**
  * Define if the progress bar should be shown or hidden.
- * @param hide  If true, the progress bar will be hidden.
- *              If false, it will be shown.
- * @param showProgressButton  If this and the "hide" parameter are both true,
- *                            the button right next to the status bar will be
- *                            shown. Otherwise it will be hidden.
+ *
+ * @param show  If true, the progress bar will be shown.
+ *              If false, it will be hidden.
  */
-void Pakoo::showStatusbarProgress( bool show, bool showProgressButton )
+void Pakoo::showStatusbarProgress( bool show )
 {
-	if( show == false ) {
+	if( show == false )
 		statusBarProgress->hide();
-	}
-	else { // show == true
+	else
 		statusBarProgress->show();
+}
 
-		if( showProgressButton == true )
-			statusBarProgressButton->show();
-		else
-			statusBarProgressButton->hide();
-	}
+/**
+ * Define if the button next to the progress bar should be shown or hidden.
+ * If the progress bar itself is hidden then the button is never visible.
+ *
+ * @param showProgressButton  If true, the button will be shown.
+ *                            If false, it will be hidden.
+ */
+void Pakoo::showStatusbarProgressButton( bool showProgressButton )
+{
+	if( showProgressButton == true )
+		statusBarProgressButton->show();
+	else
+		statusBarProgressButton->hide();
 }
 
 /**

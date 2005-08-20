@@ -20,7 +20,7 @@
 
 #include "fileatomloaderbase.h"
 
-#include "../core/portagetree.h"
+#include "../core/packagelist.h"
 #include "../core/dependatom.h"
 
 #include <qfile.h>

@@ -26,11 +26,11 @@
 
 #include "core/packageversion.h"
 #include "core/package.h"
-#include "core/portagetree.h"
+#include "core/packagelist.h"
 #include "core/portagesettings.h"
 //#include "core/dependatom.h"
 #include "portageloader/portagetreescanner.h"
-#include "portageloader/packagescanner.h"
+#include "portageloader/packageloader.h"
 #include "portageloader/profileloader.h"
 #include "portageloader/portageml.h"
 #include "portageloader/filepackagemaskloader.h"

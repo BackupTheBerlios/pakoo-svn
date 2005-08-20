@@ -18,10 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "core/portagetree.h"
+#include "core/packagelist.h"
 #include "core/packageselector.h"
-//TODO: rename portageloader (directory) -> loader
-#include "portageloader/multiplepackageloader.h"
+#include "portageloader/multiplepackageloader.h" //TODO: rename portageloader (dir) -> loader
 
 #include "backendfactory.h"
 

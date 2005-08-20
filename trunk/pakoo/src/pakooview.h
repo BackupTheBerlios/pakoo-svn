@@ -28,18 +28,21 @@
 #include <khtml_part.h>
 #include <pakooiface.h>
 
-class PortageTreeView;
+
+namespace libpakt {
+
+// our interface to libpakt
+class BackendFactory;
+
+// libpakt classes
+class PackageList;
+
+// widgets (will maybe go into libpakt too)
+class PackageTreeView;
 class PackageView;
 class PackageInfoView;
 
-/* replace the member objects by pointers, then you can do:
-class PortageTreeScanner;
-class PackageScanner;
-class PortageML;
-instead of: */
-#include "libqortage/libqortage.h"
-
-class LoadingTreeCompleteEvent;
+} // end of libpakt declarations
 
 
 /**
@@ -54,59 +57,50 @@ class PakooView : public QWidget, public pakooIface
 public:
 	PakooView(QWidget *parent);
 
-	void loadPortageTree();
-	void customEvent( QCustomEvent *event );
 	void quit();
 
 	QSize sizeHint() const;
 
 public slots:
 	void initData();
-	void setStatusbarText( const QString& text );
-	void setTitle( const QString& title );
-	void setStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
-	void showStatusbarProgress( bool show, bool showProgressButton = false );
 	void abortProgress();
 
 signals:
-	//! Use this signal to change the content of the statusbar.
-	void signalSetStatusbarText(const QString& text);
-	//! Use this signal to change the content of the caption.
-	void signalSetCaption(const QString& text);
-	/**
-	 * Use this signal to set the progress of the main window's status bar.
-	 * If it's hidden, it will be set visible.
-	 */
-	void signalSetStatusbarProgress( int progress, int totalSteps, bool showProgressButton );
-	//! Use this signal to hide or show the main window's status bar.
-	void signalShowStatusbarProgress( bool show, bool showProgressButton );
+	/** Use this signal to change the content of the window caption. */
+	void windowCaptionChanged( const QString& text );
+	/** Use this signal to change the content of the statusbar. */
+	void statusbarTextChanged( const QString& text );
+	/** Use this signal to set the progress of the main window's status bar.
+	 * If it's hidden, it will be set visible. */
+	void statusbarProgressChanged( int progress, int totalSteps );
+	/** Use this signal to show the main window's status bar. */
+	void statusbarProgressShown();
+	/** Use this signal to hide the main window's status bar. */
+	void statusbarProgressHidden();
+	/** Use this signal to show the button next to the main window status bar. */
+	void statusbarProgressButtonShown();
+	/** Use this signal to hide the button next to the main window status bar. */
+	void statusbarProgressButtonHidden();
 
 protected:
 
-	PortageTreeView* treeView;
-	PackageView* packageView;
-	PackageInfoView* packageInfoView;
+	libpakt::PackageTreeView* treeView;
+	libpakt::PackageView* packageView;
+	libpakt::PackageInfoView* packageInfoView;
 	QSplitter* vSplitter;
 	QSplitter* hSplitter;
 
-	PortageTreeScanner portageTreeScanner;
-	PortageML portageML;
-	PortageTree portageTree;
-	PortageSettings settings;
-
-private slots:
-	void handleLoadingPackageInfo( int loadedPackageCount, int totalPackageCount );
-	void handleFinishedLoadingPackageInfo( int totalPackageCount );
-
 private:
 	void scanPortageTree();
-	void handleLoadingTreeComplete( LoadingTreeCompleteEvent* event );
 
-	QString message; // temp variable to store message texts
-	int packageCount;
-	int mainlineCount;
-	int overlayCount;
-	int installedPackageCount;
+	/** The factory creating all backend specific objects. */
+	libpakt::BackendFactory* m_backend;
+
+	/**
+	 * The complete list of packages in the tree.
+	 * It is filled in loadPortageTree().
+	 */
+	libpakt::PackageList* m_packages;
 };
 
 #endif // PAKOOVIEW_H

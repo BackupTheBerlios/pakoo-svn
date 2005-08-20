@@ -35,7 +35,6 @@
 #include <portageloader/multiplepackageloader.h>
 
 
-
 namespace libpakt {
 
 /**

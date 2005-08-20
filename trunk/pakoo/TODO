@@ -1,38 +1,62 @@
 List of TODO items for the Pakoo package manager frontend.
 
+Immediate:
+- Refactor libqortage:
+  * rename to libpakt (including folder renames)
+  * split Gentoo parts from the generic parts - in progress
+  * PortageBackend::settings as static variable?
+  * Package and PortageSettings: remove *Map (and the *Map() functions) in favour of begin() & Co.
+  * m_member everywhere - in progress
+  * replace debugOutput() with kdDebug() - in progress
+
+Reasons for switching libqortage to kdelibs (libpakt?):
+- Translations
+- K(Ext)Process
+- KShared
+- Consistent build system
+- Widgets
+
 Really Serious Bugs (TM):
-- Killed when scrolling down packages that have not yet been loaded.
+- (already fixed?) Killed when scrolling down packages that have not yet been loaded.
   Probably caused by heavy threading, although I don't know what could be wrong.
-  Solution: Create a scheduler for package scanning which obsoletes using multiple PackageScanners.
+  Solution:
+    - Semaphores, or
+    - Create a scheduler for package scanning which obsoletes using multiple PackageScanners?
 
 Not so serious bugs:
-- Fix search line when switching categories.
+- Doesn't load overlay package info?
+- Make search filter apply to newly selected categories
+- Skips package descriptions when scrolling down fast
+- Fix search line when switching categories. (? search line is cleared, isn't it?)
 
 Visible enhancements:
 - Version links in the info view should select version items.
+- "Not Installed" filter
 - "Updatable" or "Packages in world" filter (how to do that with delayed loading?)
 - Status bar enhancements (progressbar while loading the tree).
 
 Code enhancements:
+- iterator -> const_iterator
 - create an AllInOneLoader:
   * front end for specific loading stuff like TreeScanner, PackageScanner and ProfileLoader
   * feature-based loading ("provide names for all packages", "provide description for package xyz")
   * makes it easier to abstract out loading activities
 - a consistent interface for passing the Settings object
 - renames:
-  * PortageTreeView -> TreeView
   * PackageInfoView -> InfoView
   * consistent use of "Portage" prefixes
-- use namespaces
 - abstract out important classes and make a plugin-like interface
   (which would be the first step to the possibility of using multiple backends)
 
 UI Design:
 - Search folders in the tree view, together with the categories
   ("Refine Search" button instead of quick filter area)
+- Package Info folder in the tree view, which opens a detailed package info view
+  where the package list normally resides.
 - "Actions" tab: install, uninstall, revdep-rebuild, etc.
 - "Configure" tab: view/edit configuration files
 - How to handle very detailed package info (like use flags or dependencies)?
+  * Show as child items of the package (before the version items, if possible)
 - How to handle "late loading" package info (description, updatable) in the quick search?
 - Provide two (un)installing possibilites (immediate/queued):
   * "(Un)Install Selected" makes a queue containing one package and executes it
@@ -48,3 +72,25 @@ Feature set:
   * revdep-rebuild
 - searching
 - configuring
+
+
+
+
+Detailed drafts:
+
+- MessageType for installer objects:
+	enum MessageType {
+		InformationMessage,
+		WarningMessage,
+		ErrorMessage,
+		SuccessMessage,
+		UnspecifiedMessage
+	};
+
+	class MessageEvent : public QCustomEvent
+	{
+	public:
+		MessageEvent() : QCustomEvent( MessageEventType ) {};
+		QString message;
+		IJob::MessageType messageType;
+	};

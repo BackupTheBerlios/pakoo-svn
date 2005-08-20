@@ -3,7 +3,7 @@
   <general>
     <author>Jakob Petsovits</author>
     <email>jpetso@gmx.at</email>
-    <version>0.1</version>
+    <version>0.2</version>
     <projectmanagement>KDevKDEAutoProject</projectmanagement>
     <primarylanguage>C++</primarylanguage>
     <keywords>
@@ -21,13 +21,13 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>src/libqortage/portageloader/libportageloader.a</activetarget>
+      <activetarget>src/libqortage/core/libcore.a</activetarget>
       <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>src/pakoo</mainprogram>
       <terminal>false</terminal>
-      <directoryradio>executable</directoryradio>
+      <directoryradio>build</directoryradio>
       <customdirectory>/</customdirectory>
       <programargs/>
       <autocompile>true</autocompile>
@@ -42,7 +42,7 @@
         <envvar value="1" name="WANT_AUTOCONF_2_5" />
         <envvar value="1" name="WANT_AUTOMAKE_1_6" />
       </envvars>
-      <abortonerror>false</abortonerror>
+      <abortonerror>true</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
       <makebin/>
@@ -174,6 +174,7 @@
     <projectdoc>
       <docsystem>Doxygen Documentation Collection</docsystem>
       <docurl>pakoo.tag</docurl>
+      <usermanualurl/>
     </projectdoc>
   </kdevdocumentation>
   <substmap>
@@ -202,7 +203,6 @@
     </codecompletion>
     <references>
       <pcs>Qt</pcs>
-      <pcs>KDElibs</pcs>
     </references>
     <creategettersetter>
       <prefixGet/>

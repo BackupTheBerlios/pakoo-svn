@@ -9,12 +9,12 @@
 		<Action name="sync" />
 		<Action name="update" />
 		<Action name="cleanup" />
-		<Separator/>
-		<Action name="find" />
 	</Menu>
 	<Menu name="package"><text>&amp;Package</text>
 		<Action name="install" />
 		<Action name="uninstall" />
+		<Separator/>
+		<Action name="find" />
 	</Menu>
 </MenuBar>
 <ToolBar fullWidth="true" name="mainToolBar" iconText="icontextbottom">

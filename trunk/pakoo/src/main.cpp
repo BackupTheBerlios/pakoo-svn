@@ -27,19 +27,18 @@
 
 #include "pakoo.h"
 
+// APPNAME ("Pakoo")is defined in pakoo.h
+// PACKAGE ("pakoo") and VERSION (e.g. "0.1") are
+// set by configure.in.in and defined in config.h
 #define COPYRIGHT "(c) 2005 Jakob Petsovits\n(c) 2004 karye"
 #define HOMEPAGE "http://pakoo.berlios.de"
-
-static const char appname[] = I18N_NOOP("Pakoo");
-static const char description[] =
-I18N_NOOP("\nPakoo - Package management for Gentoo Linux");
-static const char version[] = "0.1";
-static const char disclaimer[] =
-I18N_NOOP( "   The name \"Gentoo\" and the \"g\" logo (as well as the derived\n"
-           "   Pakoo \"p\" logo) are trademarks of Gentoo Technologies, Inc.,\n"
-           "   and the Gentoo artwork is their copyright as well. Pakoo is\n"
-           "   neither part of the Gentoo project nor directed or managed\n"
-           "   by Gentoo Foundation, Inc." );
+#define DESCRIPTION I18N_NOOP("\nPakoo - Package management for Gentoo Linux")
+#define DISCLAIMER  I18N_NOOP( \
+   "   The name \"Gentoo\" and the \"g\" logo (as well as the derived\n" \
+   "   Pakoo \"p\" logo) are trademarks of Gentoo Technologies, Inc.,\n" \
+   "   and the Gentoo artwork is their copyright as well. Pakoo is\n" \
+   "   neither part of the Gentoo project nor directed or managed\n" \
+   "   by Gentoo Foundation, Inc." )
 
 //static KCmdLineOptions options[] =
 //{
@@ -49,9 +48,9 @@ I18N_NOOP( "   The name \"Gentoo\" and the \"g\" logo (as well as the derived\n"
 
 int main(int argc, char **argv)
 {
-	KAboutData about("pakoo", appname, version, description,
+	KAboutData about(PACKAGE, APPNAME, VERSION, DESCRIPTION,
                      KAboutData::License_GPL, COPYRIGHT,
-	                 disclaimer, HOMEPAGE,
+	                 DISCLAIMER, HOMEPAGE,
 	                 "https://developer.berlios.de/bugs/?group_id=3829"
 	                 /* the place for bug reports */ );
 

@@ -22,7 +22,7 @@
 
 #include "../core/packageversion.h"
 #include "../core/package.h"
-#include "../core/portagetree.h"
+#include "../core/packagelist.h"
 #include "../core/portagesettings.h"
 #include "../core/portagecategory.h"
 

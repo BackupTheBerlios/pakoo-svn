@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "packagescanner.h"
+#include "portagepackageloader.h"
 
 #include "../core/packageversion.h"
 #include "../core/package.h"
