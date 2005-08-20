@@ -33,7 +33,6 @@
 #include "portageloader/packagescanner.h"
 #include "portageloader/profileloader.h"
 #include "portageloader/portageml.h"
-#include "portageloader/loadingevent.h"
 #include "portageloader/filepackagemaskloader.h"
 #include "portageloader/filepackagekeywordsloader.h"
 

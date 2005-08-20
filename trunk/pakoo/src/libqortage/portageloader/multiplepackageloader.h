@@ -18,46 +18,65 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTPROFILELOADER_H
-#define LIBPAKTPROFILELOADER_H
+#ifndef LIBPAKTMULTIPLEPACKAGELOADER_H
+#define LIBPAKTMULTIPLEPACKAGELOADER_H
 
 #include "../core/threadedjob.h"
-
-class QString;
-class QDir;
 
 
 namespace libpakt {
 
-class PortageSettings;
+class PackageLoader;
+class PackageList;
 
 /**
- * ProfileLoader is responsible for reading the current profile configuration.
- * It supports cascading profiles and gets important settings like
- * the ACCEPT_KEYWORDS value (e.g. x86 or ~alpha) or Portage directories.
+ * MultiplePackageLoader is a threaded job which uses a PackageLoader
+ * object to scan a list of packages for package details.
+ * When scanning, the settings of the PackageLoader are used.
  *
- * Like all jobs derived from ThreadedJob, you can call start() or perform()
- * to execute it.
+ * After setting up the loader (using at least the setPackageLoader and
+ * setPackageList() member functions) you can call start() or perform()
+ * to begin loading the packages.
+ *
+ * You might want to connect to the PackageLoader's packageLoaded() signal
+ * if you want to know which packages now contain detailed package info.
+ *
+ * @short A threaded class for retrieving detail info of multiple packages.
  */
-class ProfileLoader : public ThreadedJob
+class MultiplePackageLoader : public ThreadedJob
 {
+	// By the way, don't even think of deriving this from any PackageLoader,
+	// because those loaders are backend-specific, and MultiplePackageLoader
+	// is NOT.
+
 	Q_OBJECT
 
 public:
-	ProfileLoader();
+	MultiplePackageLoader( PackageLoader* loader );
+	~MultiplePackageLoader();
 
-	void setSettingsObject( PortageSettings* settings );
+	PackageLoader* packageLoader();
+	void setPackageLoader( PackageLoader* loader );
+	void setAutoDeletePackageLoader( bool autoDelete );
 
-	IJob::JobResult performThread();
+	void setPackageList( PackageList* packages );
+
+signals:
+	/**
+	 * Emitted for untranslated debug output, like starting the scan
+	 * or error messages.
+	 */
+	void debugOutput( QString output );
+
+protected:
+	JobResult performThread();
 
 private:
-	bool goToStartDirectory( QDir& dir );
-	bool goToParentDirectory( QDir& currentDir );
-
-	//! The PortageSettings object that will be filled with configuration values.
-	PortageSettings* settings;
+	PackageLoader* loader;
+	PackageList* packages;
+	bool autoDeleteLoader;
 };
 
 }
 
-#endif // LIBPAKTPROFILELOADER_H
+#endif // LIBPAKTMULTIPLEPACKAGELOADER_H

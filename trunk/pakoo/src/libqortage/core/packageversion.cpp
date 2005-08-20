@@ -21,6 +21,8 @@
 #include "packageversion.h"
 
 
+namespace libpakt {
+
 /**
  * Initialize the version with its version string.
  */
@@ -381,3 +383,5 @@ bool PackageVersion::isOlderThan( const QString& otherVersion )
 	else
 		return true;
 }
+
+} // namespace

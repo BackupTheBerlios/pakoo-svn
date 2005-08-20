@@ -22,6 +22,7 @@
 
 #include "portagetree.h"
 #include "package.h"
+#include "portagecategory.h"
 #include "packageversion.h"
 
 // For more info on DEPEND atoms, see the DEPEND Atoms section of man 5 ebuild
@@ -37,12 +38,15 @@
 // The complete atom regexp in non-escaped form (for testing, or similar):
 // ^(!)?(~|(?:<|>|=|<=|>=))?((?:[a-z]|[0-9])+)-((?:[a-z]|[0-9])+)/((?:[a-z]|[A-Z]|[0-9]|-|\+|_)+)((?:\*$|-\d+(?:\.\d+)*[a-z]?(?:\*$)?)(?:_(?:alpha|beta|pre|rc|p)\d+)?(?:-r\d+)?)?$
 
+
+namespace libpakt {
+
 /**
  * Initialize this object.
- * @param portageTree  The portage tree which contains the packages
- *                     that will be filtered out.
+ * @param packages  The package list which contains the packages
+ *                  that will be filtered out.
  */
-DependAtom::DependAtom( PortageTree* portageTree )
+DependAtom::DependAtom( PackageList* packages )
 : rxAtom("^"    // Start of the string
          "(!)?" // "Block these packages" flag, only occurring in ebuilds
          "(~|(?:<|>|=|<=|>=))?" // greater-than/less-than/equal, or "all revisions" prefix
@@ -56,9 +60,15 @@ DependAtom::DependAtom( PortageTree* portageTree )
          ")?$"          // end of the (optional) version part and the atom string
          )
 {
-	tree = portageTree;
+	this->packages = packages;
 	matches = false;
 	callsign = false;
+	category = new PortageCategory;
+}
+
+DependAtom::~DependAtom()
+{
+	delete category;
 }
 
 /**
@@ -84,10 +94,10 @@ bool DependAtom::parse( const QString& atom )
 	// Get the captured strings
 	callsign    = rxAtom.cap( POS_CALLSIGN ).isEmpty() ? false : true;
 	prefix      = rxAtom.cap( POS_PREFIX );
-	category    = rxAtom.cap( POS_CATEGORY );
-	subcategory = rxAtom.cap( POS_SUBCATEGORY );
 	package     = rxAtom.cap( POS_PACKAGE );
 	version     = rxAtom.cap( POS_VERSION );
+	category->setCategory( rxAtom.cap(POS_CATEGORY),
+	                       rxAtom.cap(POS_SUBCATEGORY) );
 
 	// Additional check: If there is a version, there also must be a prefix
 	if( version.isEmpty() != prefix.isEmpty() ) {
@@ -107,20 +117,22 @@ bool DependAtom::parse( const QString& atom )
 
 /**
  * Retrieve the set of package versions that is matching the atom.
- * The searched packages are the ones from the portage tree.
+ * The searched packages are the ones from the package list.
  * If no matching package versions are found, an empty list is returned.
  */
 QValueList<PackageVersion*> DependAtom::matchingVersions()
 {
 	QValueList<PackageVersion*> matchingVersions;
 
-	if( tree == NULL || matches == false )
-		return matchingVersions;
+	if( packages == NULL || matches == false )
+		return matchingVersions; // return an empty list
 
-	if( tree->hasPackage(category, subcategory, package) == false )
-		return matchingVersions;
+	if( packages->contains(category, package) == false )
+		return matchingVersions; // return an empty list
 
-	Package* pkg = tree->package( category, subcategory, package );
+	Package* pkg = packages->package(
+		new PortageCategory(*category), package
+	);
 
 	bool matchAllVersions;
 	if( version.isEmpty() || version == "*" )
@@ -182,3 +194,5 @@ bool DependAtom::isBlocking()
 {
 	return callsign;
 }
+
+} // namespace

@@ -18,63 +18,42 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#ifndef LIBPAKTPORTAGECATEGORY_H
+#define LIBPAKTPORTAGECATEGORY_H
 
-#include "packageversion.h"
+#include "packagecategory.h"
 
 
 namespace libpakt {
 
 /**
- * Initialize this object.
+ * This is a QStringList with a few convenience functions regarding
+ * package categories. A category is viewed as part of the package tree,
+ * and follows a hierarchical model. An empty list means all packages
+ * (or: no category), a list containing one element (e.g. "app") is
+ * a subset of the "all packages" category, and a list containing more
+ * elements (e.g. "app"->"portage") is an even smaller subset and
+ * shows the tree structure of the package tree quite well.
  */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
-
-/**
- * Returns false for empty or comment lines.
- */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+class PortageCategory : public PackageCategory
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+public:
+	enum PortageCategoryIndex {
+		MainCategory = 0,
+		SubCategory = 1
+	};
+
+	PortageCategory() : PackageCategory() {};
+	PortageCategory( const QStringList& list ) : PackageCategory(list) {};
+	PortageCategory( const QString& mainCategory, const QString& subCategory );
+
+	void setCategory( const QString& mainCategory, const QString& subCategory );
+
+	QString userVisibleName() const;
+	QString uniqueName() const;
+	bool loadFromUniqueName( const QString& uniqueName );
+};
+
 }
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
-}
-
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
-{
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
-	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
-}
-
-} // namespace
+#endif // LIBPAKTPORTAGECATEGORY_H

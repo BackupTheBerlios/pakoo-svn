@@ -29,6 +29,9 @@
 #include "filemakeconfigloader.h"
 //#include "portagesettings.h"
 
+
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
@@ -38,40 +41,58 @@ ProfileLoader::ProfileLoader()
 }
 
 /**
- * Scan files and folders to retrieve the current profile settings.
- * The found values are applied to the given PortageTree object.
- *
- * @param settings  The PortageSettings object where retrieved configuration
- *                  values will be stored in.
- *
- * @return  PortageLoaderBase::NoError if the profile has successfully been loaded.
- *          PortageLoaderBase::NullObjectError if the given settings object is NULL.
- *          PortageLoaderBase::OpenFileError if there was an error opening files or directories.
+ * Set the PortageSettings object that will be
+ * filled with configuration values.
  */
-PortageLoaderBase::Error ProfileLoader::loadProfile(
-	PortageSettings* settings )
+void ProfileLoader::setSettingsObject( PortageSettings* settings )
 {
-	if( settings == NULL )
-		return NullObjectError;
-	else
-		this->settings = settings;
+	this->settings = settings;
+}
+
+/**
+ * Scan files and folders to retrieve the current profile settings.
+ * The found values are applied to the given PortageSettings object.
+ *
+ * @return  IJob::Success if the configuration values have been read
+ *          into the settings object. IJob::Failure if errors have occurred.
+ */
+IJob::JobResult ProfileLoader::performThread()
+{
+	if( settings == NULL ) {
+		emit debugOutput(
+			"Didn't start the profile loader because "
+			"the settings object has not been set"
+		);
+		return Failure;
+	}
 
 	// get the directory where we start reading
 	QDir dir;
-	if( goToStartDirectory(dir) == false )
-		return OpenFileError;
+	if( goToStartDirectory(dir) == false ) {
+		emit debugOutput( "Couldn't find the starting directory "
+		             "of the cascading profile" );
+		return Failure;
+	}
 
 	FileMakeConfigLoader makeConfigLoader;
+	makeConfigLoader.setSettingsObject( settings );
 
 	// beginning from the start directory,
 	// read all of the profile directories that the 'parent' files point to
 	while( true )
 	{
 		if( dir.exists() == false ) // should not happen
-			return OpenFileError;
+ 		{
+			emit debugOutput(
+				QString( "Directory %1 does not exist" )
+					.arg( dir.path() )
+			);
+			return Failure;
+		}
 
 		// load settings from the make.defaults file
-		makeConfigLoader.loadFile( settings, dir.filePath("make.defaults") );
+		makeConfigLoader.setFileName( dir.filePath("make.defaults") );
+		makeConfigLoader.perform();
 
 		// read other files (not implemented, don't need that for now)
 
@@ -81,10 +102,13 @@ PortageLoaderBase::Error ProfileLoader::loadProfile(
 	}
 
 	// get additional info from /etc/make.globals and /etc/make.conf
-	makeConfigLoader.loadFile( settings, "/etc/make.globals" );
-	makeConfigLoader.loadFile( settings, "/etc/make.conf" );
+	makeConfigLoader.setFileName( "/etc/make.globals" );
+	makeConfigLoader.perform();
+	makeConfigLoader.setFileName( "/etc/make.conf" );
+	makeConfigLoader.perform();
 
-	return NoError;
+	emit debugOutput( "Loaded the cascading profile's configuration values" );
+	return Success;
 }
 
 /**
@@ -146,3 +170,5 @@ bool ProfileLoader::goToParentDirectory( QDir& currentDir )
 	}
 	return false;
 }
+
+} // namespace

@@ -18,13 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef DEPENDATOM_H
-#define DEPENDATOM_H
+#ifndef LIBPAKTDEPENDATOM_H
+#define LIBPAKTDEPENDATOM_H
 
 #include <qregexp.h>
 #include <qvaluelist.h>
 
-class PortageTree;
+
+namespace libpakt {
+
+class PackageList;
+class PortageCategory;
 class PackageVersion;
 
 /**
@@ -38,7 +42,8 @@ class PackageVersion;
 class DependAtom
 {
 public:
-	DependAtom( PortageTree* portageTree );
+	DependAtom( PackageList* packages );
+	~DependAtom();
 
 	bool parse( const QString& atom );
 
@@ -48,7 +53,7 @@ public:
 
 protected:
 	//! A pointer to the portage tree from which the packages are retrieved.
-	PortageTree* tree;
+	PackageList* packages;
 
 private:
 	//! The regular expression for the whole atom.
@@ -63,7 +68,7 @@ private:
 	//! A compare sign (greater than / less than / equal) or the "all revisions" prefix ("~").
 	QString prefix;
 	//! The main category of the package.
-	QString category;
+	PortageCategory* category;
 	//! The subcategory of the package.
 	QString subcategory;
 	//! The package name.
@@ -72,4 +77,6 @@ private:
 	QString version;
 };
 
-#endif // DEPENDATOM_H
+}
+
+#endif // LIBPAKTDEPENDATOM_H

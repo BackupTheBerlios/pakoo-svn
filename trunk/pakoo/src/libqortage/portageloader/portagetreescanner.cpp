@@ -22,256 +22,171 @@
 
 #include "../core/packageversion.h"
 #include "../core/package.h"
-#include "packagescanner.h"
-#include "loadingevent.h"
+#include "../core/portagetree.h"
+#include "../core/portagesettings.h"
+#include "../core/portagecategory.h"
 
-#include <qevent.h>
 #include <qdatetime.h>
 #include <qapplication.h>
 
-#define DO_ABORT { finishProcessing(); return AbortedError; }
+#include <klocale.h>
+#include <kdebug.h>
+
+#define DO_ABORT { \
+	emitDebugOutput( "Aborting the tree scanner on request." ); \
+	return Failure; \
+}
 
 
-/**
- * Initialize this object, defining where to search for packages.
- *
- * @param treeDir       The mainline tree directory.
- * @param overlayDirs   The overlay tree directories.
- * @param installedDir  The installed packages database directory.
- * @param edbDepDir     The directory where the portage cache resides.
- */
-PortageTreeScanner::PortageTreeScanner(
-	QString treeDir, QStringList overlayDirs,
-	QString installedDir, QString edbDepDir )
-: portageTreeDir(treeDir), portageOverlayDirs(overlayDirs),
-  installedPackagesDir(installedDir), edbDir(edbDepDir),
+namespace libpakt {
+
+PortageTreeScanner::PortageTreeScanner()
+: ThreadedJob(),
   rxVersion("(-\\d+(?:\\.\\d+)*[a-z]?)")
 {
-	tree = NULL;
-	pkgScanner = new PackageScanner( treeDir, overlayDirs, installedDir );
+	packages = NULL;
+	scanAvailablePackages = true;
+	scanInstalledPackages = true;
 }
 
 /**
- * Deconstruct this object.
+ * Set the PortageSettings object that contains directory and cache info.
  */
-PortageTreeScanner::~PortageTreeScanner()
+void PortageTreeScanner::setSettingsObject( PortageSettings* settings )
 {
-	delete pkgScanner;
+	this->settings = settings;
 }
 
 /**
- * Set the portage tree search directory to a new value.
+ * Set the PackageList object that will be filled with packages.
  */
-void PortageTreeScanner::setMainlineTreeDirectory( QString directory )
+void PortageTreeScanner::setPackageList( PackageList* packages )
 {
-	portageTreeDir = directory;
-	pkgScanner->setMainlineTreeDirectory( directory );
+	this->packages = packages;
 }
 
 /**
- * Set the portage cache directory to a new value.
+ * Define if you'd like to scan the Portage tree for available packages,
+ * which are the packages in the mainline tree and the overlay ones.
+ * By default, this is set to true.
  */
-void PortageTreeScanner::setEdbDepDirectory( QString directory )
+void PortageTreeScanner::setScanAvailablePackages(
+	bool scanAvailablePackages )
 {
-	edbDir = directory;
-	pkgScanner->setEdbDepDirectory( directory );
+	this->scanAvailablePackages = scanAvailablePackages;
 }
 
 /**
- * Set the list of portage overlay directories to a new value.
+ * Define if you'd like to scan the Portage tree for installed packages.
+ * In most (but not all) cases, package versions found here will also be
+ * found when scanning for available packages - but the version's 'installed'
+ * flag will only be set when it is found in the installed packages database.
+ * By default, this is set to true.
  */
-void PortageTreeScanner::setOverlayTreeDirectories( QStringList directories )
+void PortageTreeScanner::setScanInstalledPackages(
+	bool scanInstalledPackages )
 {
-	portageOverlayDirs = directories;
-	pkgScanner->setOverlayTreeDirectories( directories );
-}
-
-/**
- * Set the installed packages database directory to a new value.
- */
-void PortageTreeScanner::setInstalledPackagesDirectory( QString directory )
-{
-	installedPackagesDir = directory;
-	pkgScanner->setInstalledPackagesDirectory( directory );
-}
-
-/**
- * Return a pointer to a PackageScanner object with same settings
- * (search folders, and stuff) like this PortageTreeScanner has.
- */
-PackageScanner* PortageTreeScanner::packageScanner()
-{
-	return pkgScanner;
+	this->scanInstalledPackages = scanInstalledPackages;
 }
 
 
 /**
- * Load a portage tree by scanning portage for packages.
- *
- * @param portageTree    The PortageTree object that will be filled with packages.
- * @param searchedTrees  Which ones of the trees will be searched.
- * @param preferEdb      If true, the edb/dep/ directory will be searched
- *                       instead of the mainline tree, which will probably
- *                       be much faster.
+ * Load a package list by scanning the portage tree for packages.
  */
-PortageLoaderBase::Error PortageTreeScanner::scanTrees(
-	PortageTree* portageTree, PortageTree::Trees searchedTrees, bool preferEdb
-)
+IJob::JobResult PortageTreeScanner::performThread()
 {
-	if( this->working == true)
-		return AlreadyRunningError;
-	else
-		initProcessing();
+	// load the settings
+	if( settings == NULL ) {
+		kdDebug() << i18n( "PortageTreeScanner debug output",
+			"PortageTreeScanner::performThread(): "
+			"Didn't start because the settings object is NULL" )
+			<< endl;
+		return Failure;
+	}
+	else {
+		preferCache = settings->preferCache();
+		mainlineTreeDir = settings->mainlineTreeDirectory();
+		overlayTreeDirs = settings->overlayTreeDirectories();
+		installedPackagesDir = settings->installedPackagesDirectory();
+		cacheDir = settings->cacheDirectory();
+	}
 
 	// initialize package count
-	installedPackageCount = 0;
+	packageCountAvailable = 0;
+	packageCountInstalled = 0;
 
-	if( portageTree == NULL ) {
-		finishProcessing();
-		return NullObjectError;
-	}
-
-	tree = portageTree;
-	this->preferEdb = preferEdb;
-
-	if( searchedTrees == PortageTree::All ) {
-		if( scanMainlineTree() == AbortedError ) DO_ABORT;
-		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
-		if( scanInstalledTree() == AbortedError ) DO_ABORT;
-	}
-	else if( searchedTrees == PortageTree::MainlineAndOverlay ) {
-		if( scanMainlineTree() == AbortedError ) DO_ABORT;
-		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
-	}
-	else if( searchedTrees == PortageTree::Mainline ) {
-		if( scanMainlineTree() == AbortedError ) DO_ABORT;
-	}
-	else if( searchedTrees == PortageTree::Overlay ) {
-		if( scanOverlayTrees() == AbortedError ) DO_ABORT;
-	}
-	else if( searchedTrees == PortageTree::Installed ) {
-		if( scanInstalledTree() == AbortedError ) DO_ABORT;
+	if( packages == NULL ) {
+		kdDebug() << i18n( "PortageTreeScanner debug output",
+			"PortageTreeScanner::performThread(): "
+			"Didn't start because the PackageList object is NULL" )
+			<< endl;
+		return Failure;
 	}
 
-	finishProcessing();
-	return PortageLoaderBase::NoError;
-}
-
-/**
- * Scan the mainline tree for packages.
- * @return  The result of the internal scanTree() call.
- */
-PortageLoaderBase::Error PortageTreeScanner::scanMainlineTree()
-{
 	QDateTime startTime = QDateTime::currentDateTime();
-	localTreeCount = 0;
-	Error result = scanTree(portageTreeDir, PortageTree::Mainline);
-	if( result != AbortedError ) {
-		postPartlyCompleteEvent( startTime, PortageTree::Mainline );
-	}
-	return result;
-}
+	emitDebugOutput( "Scanning the portage tree..." );
 
-/**
- * Scan the overlay trees for packages.
- * @return  PortageLoaderBase::AbortedError if the thread was aborted,
- *          PortageLoaderBase::NoError otherwise.
- */
-PortageLoaderBase::Error PortageTreeScanner::scanOverlayTrees()
-{
-	QDateTime startTime = QDateTime::currentDateTime();
-	localTreeCount = 0;
-
-	for( QStringList::iterator overlayIterator = portageOverlayDirs.begin();
-	     overlayIterator != portageOverlayDirs.end(); overlayIterator++ )
+	if( scanAvailablePackages == true )
 	{
-		Error result = scanTree( *overlayIterator, PortageTree::Overlay );
+		// scan the mainline tree
+		if( !scanTree(mainlineTreeDir, Mainline) )
+			DO_ABORT;
 
-		if( result != AbortedError )
-			postPartlyCompleteEvent( startTime, PortageTree::Overlay );
-		else
-			return AbortedError;
+		// scan the overlay trees
+		for( QStringList::iterator overlayIterator = overlayTreeDirs.begin();
+		     overlayIterator != overlayTreeDirs.end(); overlayIterator++ )
+		{
+			if( !scanTree(*overlayIterator, Overlay) )
+				DO_ABORT;
+		}
 	}
-	return NoError;
-}
-
-/**
- * Scan the installed packages tree for packages.
- * @return  The result of the internal scanTree() call.
- */
-PortageLoaderBase::Error PortageTreeScanner::scanInstalledTree()
-{
-	QDateTime startTime = QDateTime::currentDateTime();
-	localTreeCount = 0;
-	Error result = scanTree( installedPackagesDir, PortageTree::Installed );
-	if( result != AbortedError ) {
-		postPartlyCompleteEvent( startTime, PortageTree::Installed );
-	}
-	return result;
-}
-
-
-/**
- * Post a LoadingTreePartiallyCompleteEvent to the event receiver.
- * This is called every time when scanning for one of the search trees
- * has been completed.
- *
- * @param since  The time when searching started.
- *               This is used to calculate the elapsed time.
- * @param searchedTrees  The directory that has been searched. Must be one
- *                       of PortageTree::Mainline, PortageTree::Overlay
- *                       or PortageTree::Installed.
- */
-void PortageTreeScanner::postPartlyCompleteEvent(
-	QDateTime& since, PortageTree::Trees searchedTree )
-{
-	// only post if running as thread
-	if( this->running() == true )
+	if( scanInstalledPackages == true )
 	{
-		LoadingTreePartiallyCompleteEvent *event =
-			new LoadingTreePartiallyCompleteEvent();
-
-		event->packageCount = localTreeCount;
-		event->secondsElapsed = since.secsTo( QDateTime::currentDateTime() );
-		event->searchedTree = searchedTree;
-		QApplication::postEvent( receiver, event );
+		// scan the installed packages database
+		if( !scanTree(installedPackagesDir, Installed) )
+			DO_ABORT;
 	}
+
+
+	kdDebug() << i18n( "PortageTreeScanner debug output",
+		"PortageTreeScanner::performThread(): "
+		"Finished scanning the whole Portage tree in %1 seconds" )
+			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+		<< endl;
+	emitFinishedLoading();
+	return Success;
 }
 
 
 /**
- * Scan a search directory for packages. The searchedTree parameter defines
+ * Scan a search directory for packages. The treeType parameter defines
  * which ones of the tree directories is searched. This function assumes
- * that tree is a valid PortageTree object (especially not NULL).
+ * that this object's packages member is a valid PackageList object
+ * (especially not NULL).
  *
  * @param treeDir  The search directory containing package information
- * @param searchedTree  Defines which directory should be searched. This is
- *                      one of PortageTree::Mainline,
- *                      PortageTree::Overlay or
- *                      PortageTree::Installed.
- * @return PortageLoaderBase::NoError if the tree was scanned successful.
- *         PortageLoaderBase::AbortedError if the thread was aborted
- *         by setting this->stop to true.
- *         PortageLoaderBase::AlreadyRunningError if any thread is
- *         currently scanning (but there may only be one at a time).
- *         PortageLoaderBase::NullObjectError if the tree directory was
- *         either "" or could not be entered.
+ * @param treeType  Defines which directory should be searched.
+ *                  This is one of the Mainline, Overlay or Installed
+ *                  values of this class's TreeType enumeration.
+ *
+ * @return false if the thread is aborting, true otherwise. In case
+ *         of errors, a debug error message is emitted through debugOutput().
  */
-PortageLoaderBase::Error PortageTreeScanner::scanTree(
-	QString treeDir, PortageTree::Trees searchedTree
-)
+bool PortageTreeScanner::scanTree( const QString& treeDir,
+                                   TreeType treeType )
 {
+	QDateTime startTime = QDateTime::currentDateTime();
 	QDir d;
-	LoadingTreeProgressEvent* progressEvent;
 	int pos;
 
 	// set the d directory to the treeDir string
 	d.setPath( treeDir );
 	if( treeDir.isNull() || treeDir.isEmpty() || !d.exists() ) {
-		return NullObjectError;
+		emitDebugOutput( "Invalid tree directory." );
+		return true;
 	}
 
-	if( searchedTree == PortageTree::Installed ) {
+	if( treeType == Installed ) {
 		// Scan only folders, no files
 		// (the package name and version is contained in the folder name)
 		d.setFilter( QDir::Dirs | QDir::NoSymLinks );
@@ -287,8 +202,8 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 
 	// Iterate through the available categories (e.g. sys-kernel)
 	QStringList categories = d.entryList();
-	QStringList::Iterator categoryIteratorEnd = categories.end();
-	for ( QStringList::Iterator categoryIterator = categories.begin();
+	QStringList::iterator categoryIteratorEnd = categories.end();
+	for ( QStringList::iterator categoryIterator = categories.begin();
 	      categoryIterator != categoryIteratorEnd; ++categoryIterator )
 	{
 		pos = (*categoryIterator).find('-', 1);
@@ -299,23 +214,22 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 		}
 
 		// Extract the category and subcategory from the folder name
-		currentCategory  = (*categoryIterator).left(pos);
-		currentSubcategory = (*categoryIterator).mid(pos+1);
 
-		// If the edb database is searched, do this
-		if( (searchedTree == PortageTree::Mainline) && (preferEdb == true) )
+		currentCategory.setCategory( (*categoryIterator).left(pos),
+		                             (*categoryIterator).mid(pos+1) );
+
+		// If the Portage cache is searched, do this
+		if( (treeType == Mainline) && (preferCache == true) )
 		{
 			// Compose the folder name of the current category
-			d.setPath( edbDir + portageTreeDir + "/" + (*categoryIterator) );
+			d.setPath( cacheDir + mainlineTreeDir + "/" + (*categoryIterator) );
 			if( !d.exists() )
 				continue;
 
-			scanEdbCategory(d);
+			scanCacheCategory(d);
 
-			if( this->stop == true )
-				return AbortedError;
-			else
-				continue;
+			if( aborting() )
+				return false; // means: abort!
 		}
 		// If the normal portage tree is searched, do that
 		else
@@ -328,69 +242,82 @@ PortageLoaderBase::Error PortageTreeScanner::scanTree(
 
 			// Iterate through the available package dirs
 			// in the current category
-			QStringList packages = d.entryList();
-			QStringList::Iterator packageIteratorEnd = packages.end();
-			for ( QStringList::Iterator packageIterator = packages.begin();
-				packageIterator != packageIteratorEnd; ++packageIterator )
+			QStringList packageNames = d.entryList();
+			QStringList::iterator packageNameIterator = packageNames.begin();
+			QStringList::iterator packageNameIteratorEnd = packageNames.end();
+			for( ; packageNameIterator != packageNameIteratorEnd;
+			     ++packageNameIterator )
 			{
 				// no "." or ".." directories
-				if( (*packageIterator)[0] == '.' )
+				if( (*packageNameIterator)[0] == '.' )
 					continue;
 
 				// Compose the folder name of the current package and check it
 				d.setPath( treeDir + "/" + (*categoryIterator)
-				           + "/" + (*packageIterator) );
+				           + "/" + (*packageNameIterator) );
 				if ( !d.exists() ) {
 					continue;
 				}
 
-				if( searchedTree == PortageTree::Mainline )
+				if( treeType == Mainline )
 				{
-					currentPackage = tree->package(
-						currentCategory, currentSubcategory, *packageIterator
+					currentPackage = packages->package(
+						new PortageCategory(currentCategory),
+						*packageNameIterator
 					);
 					scanTreePackage( d, false );
 				}
-				else if( searchedTree == PortageTree::Overlay )
+				else if( treeType == Overlay )
 				{
-					currentPackage = tree->package(
-						currentCategory, currentSubcategory, *packageIterator
+					currentPackage = packages->package(
+						new PortageCategory(currentCategory),
+						*packageNameIterator
 					);
 					scanTreePackage( d, true );
 				}
-				else // if( searchedTree == PortageTree::Installed )
+				else // if( treeType == Installed )
 				{
 					scanInstalledPackage( d );
-					installedPackageCount++;
 				}
 
-				if( this->running() )
-				{
-					// increase package counter, and notify the event receiver
-					if ( (++localTreeCount % 20) == 0 ) {
-						progressEvent = new LoadingTreeProgressEvent();
-						progressEvent->packageCount = localTreeCount;
-						progressEvent->searchedTree = searchedTree;
-						progressEvent->method = LoadingTreeEvent::ScanPortageTree;
-						QApplication::postEvent( receiver, progressEvent );
-					}
+				// send a status update every 20 packages
+				if( (packageCountAvailable + packageCountInstalled) % 20 == 0 )
+					emitPackagesScanned();
 
-					if( this->stop == true ) {
-						return AbortedError;
-					}
-				}
+				if( aborting() )
+					return false; // means: abort!
+
 			} // end of package iteration
 		} // end of if( mainline/edb )
 	} // end of category iteration
-	return NoError;
-} // end of scanPortageTree()
+
+	// report success on this tree, using debug output
+	QString treeName;
+	switch( treeType )
+	{
+	case Mainline:
+		treeName = "mainline tree"; break;
+	case Overlay:
+		treeName = "overlay tree"; break;
+	case Installed:
+		treeName = "installed packages database"; break;
+	}
+	emitDebugOutput(
+		QString("Finished scanning %1 in %2... (%3 seconds)")
+			.arg( treeName )
+			.arg( treeDir )
+			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+	);
+
+	return true;
+} // end of scanPackageList()
 
 
 /**
  * Iterate through a directory's ebuild files and add the found
  * package versions to the currentPackage object.
  *
- * @param d        The directory containing the ebuilds.
+ * @param d        The directory containing the ebuilds
  * @param overlay  The value for version->overlay
  *                 (set true if it's an overlay directory)
  */
@@ -398,38 +325,39 @@ void PortageTreeScanner::scanTreePackage( QDir& d, bool overlay )
 {
 	// Iterate through all ebuild files of the current currentPackage
 	QStringList ebuilds = d.entryList( "*.ebuild" );
-	QStringList::Iterator ebuildIteratorEnd = ebuilds.end();
+	QStringList::iterator ebuildIteratorEnd = ebuilds.end();
 
-	for ( QStringList::Iterator ebuildIterator = ebuilds.begin();
+	for ( QStringList::iterator ebuildIterator = ebuilds.begin();
 	      ebuildIterator != ebuildIteratorEnd; ++ebuildIterator )
 	{
 		// add version info
 		currentVersion = currentPackage->version(
 			(*ebuildIterator).mid( // extract the package version string
-				(currentPackage->name).length() + 1,
-				(*ebuildIterator).length() - 7 - ((currentPackage->name).length() + 1)
+				(currentPackage->name()).length() + 1,
+				(*ebuildIterator).length() - 7
+					- ((currentPackage->name()).length() + 1)
 			)
 		);
 		currentVersion->overlay = overlay;
 	}
+	packageCountAvailable++;
 } // end of scanTreePackage()
 
 /**
- * Search a category in edb/dep/ and add the found packages and
- * package versions the tree's package list.
+ * Search a category in the installed packages database (edb/dep/...)
+ * and add the found packages and package versions the package list.
  *
- * @param d  The category directory containing the package files.
+ * @param d  The category directory containing the package files
  */
-void PortageTreeScanner::scanEdbCategory( QDir& d )
+void PortageTreeScanner::scanCacheCategory( QDir& d )
 {
 	QString packageName;
-	LoadingTreeProgressEvent* progressEvent;
 
 	// Iterate through all ebuild files of the current currentPackage
 	QStringList files = d.entryList();
-	QStringList::Iterator fileIteratorEnd = files.end();
+	QStringList::iterator fileIteratorEnd = files.end();
 
-	for ( QStringList::Iterator fileIterator = files.begin();
+	for ( QStringList::iterator fileIterator = files.begin();
 	      fileIterator != fileIteratorEnd; ++fileIterator )
 	{
 		// no "." or ".." directories
@@ -441,39 +369,34 @@ void PortageTreeScanner::scanEdbCategory( QDir& d )
 		packageName = (*fileIterator).left( packageNameEndIndex );
 
 		// See if it's a new package (if not, it's just another version)
-		if( (currentPackage == NULL) || (packageName != currentPackage->name) )
+		if( (currentPackage == NULL)
+		    || (packageName != currentPackage->name()) )
 		{
 			// Separate package name from version
-			currentPackage = tree->package(
-				currentCategory, currentSubcategory, packageName
+			currentPackage = packages->package(
+				new PortageCategory( currentCategory ),
+				packageName
 			);
+			packageCountAvailable++;
 
-			// in case we're running as thread, inform the receiver
-			if( this->running() )
-			{
-				if ( (++localTreeCount % 20) == 0 ) {
-					progressEvent = new LoadingTreeProgressEvent();
-					progressEvent->packageCount = localTreeCount;
-					progressEvent->searchedTree = PortageTree::Mainline;
-					progressEvent->method = LoadingTreeEvent::ScanPortageTree;
-					QApplication::postEvent( receiver, progressEvent );
-				}
-			}
+			// send a status update every 20 packages
+			if( (packageCountAvailable + packageCountInstalled) % 20 == 0 )
+				emitPackagesScanned();
 		}
 
 		// extract the package version string, and add version info
 		currentVersion = currentPackage->version(
-			(*fileIterator).mid( (currentPackage->name).length() + 1 )
+			(*fileIterator).mid( (currentPackage->name()).length() + 1 )
 		);
 		currentVersion->overlay = false;
 	}
-} // end of scanEdbCategory()
+} // end of scanCacheCategory()
 
 /**
  * Extract package name, version, and modification date from a directory name,
- * and add a corresponding package to the tree's package list.
+ * and add a corresponding package to the package list.
  *
- * @param d  The directory named after the (installed) package.
+ * @param d  The directory named after the (installed) package
  */
 void PortageTreeScanner::scanInstalledPackage( QDir& d )
 {
@@ -481,70 +404,62 @@ void PortageTreeScanner::scanInstalledPackage( QDir& d )
 	int packageNameEndIndex = dirName.findRev( rxVersion );
 
 	// Separate package name from version
-	currentPackage = tree->package(
-		currentCategory, currentSubcategory,
+	currentPackage = packages->package(
+		new PortageCategory( currentCategory ),
 		dirName.left( packageNameEndIndex ) // package name
 	);
 	currentVersion = currentPackage->version(
 		dirName.mid( packageNameEndIndex + 1 )
 	);
 	currentVersion->installed = true;
+
+	packageCountInstalled++;
 }
 
 
 /**
- * Start a thread that will be loading a portage tree by scanning portage
- * for packages. While loading packages, the thread will post
- * LoadingTreeProgressEvent objects to the receiver, and after each scanned
- * tree there will be a LoadingTreePartiallyCompleteEvent. When loading is
- * done, a LoadingTreeCompleteEvent will be posted and the thread exits.
- * The thread will not be started if it's already running.
- *
- * @param receiver     A QObject that receives loading status events.
- * @param portageTree  A pointer to an existing PortageTree object.
- *                     This tree will be cleared and filled with the
- *                     packages that are found in portage.
- * @param searchedTrees  Which ones of the trees will be searched.
- *
- * @returns  true if the thread was started, false if it's already running.
+ * From within the thread, emit a finishedLoading() signal to the main thread.
  */
-bool PortageTreeScanner::startScanningTrees( QObject* receiver,
-                                           PortageTree* portageTree,
-                                           PortageTree::Trees searchedTrees,
-                                           bool preferEdb )
+void PortageTreeScanner::emitFinishedLoading()
 {
-	if( this->running() == true )
-		return false;
-
-	this->receiver = receiver;
-	this->tree = portageTree;
-	this->searchedTrees = searchedTrees;
-	this->preferEdb = preferEdb;
-	this->start();
-	return true;
+	FinishedLoadingEvent* event = new FinishedLoadingEvent();
+	event->packages = this->packages;
+	QApplication::postEvent( this, event );
 }
 
 /**
- * The function that is called when a new thread is started.
- * It can not be called directly with portageScannerObject->start().
- * That's not necessary, because PortageTreeScanner has a convenient
- * member function to start the thread and set up the configuration
- * for it (which is startScanningPortage()).
+ * From within the thread, emit a packagesScanned() signal to the main thread.
  */
-void PortageTreeScanner::run()
+void PortageTreeScanner::emitPackagesScanned()
 {
-	PortageLoaderBase::Error result;
-	QDateTime startTime = QDateTime::currentDateTime();
-	QObject* receiver = this->receiver;
-
-	result = scanTrees( tree, searchedTrees, preferEdb );
-
-	// Inform main thread that scan is complete
-	LoadingTreeCompleteEvent *event = new LoadingTreeCompleteEvent();
-	event->error = result;
-	event->packageCount = tree->packageCount();
-	event->packageCountInstalled = installedPackageCount;
-	event->method = LoadingTreeEvent::ScanPortageTree;
-	event->secondsElapsed = startTime.secsTo( QDateTime::currentDateTime() );
-	QApplication::postEvent( receiver, event );
+	PackagesScannedEvent* event  = new PackagesScannedEvent();
+	event->packageCountAvailable = this->packageCountAvailable;
+	event->packageCountInstalled = this->packageCountInstalled;
+	QApplication::postEvent( this, event );
 }
+
+/**
+ * Translates QCustomEvents into signals. This function is called from Qt
+ * in the main thread, which guarantees safety for emitting signals.
+ */
+void PortageTreeScanner::customEvent( QCustomEvent* event )
+{
+	switch( event->type() )
+	{
+	case (int) PackagesScannedEventType:
+		emit packagesScanned(
+			((PackagesScannedEvent*)event)->packageCountAvailable,
+			((PackagesScannedEvent*)event)->packageCountInstalled
+		);
+		break;
+
+	case (int) FinishedLoadingEventType:
+		emit finishedLoading( packages );
+
+	default:
+		ThreadedJob::customEvent( event );
+		break;
+	}
+}
+
+} // namespace

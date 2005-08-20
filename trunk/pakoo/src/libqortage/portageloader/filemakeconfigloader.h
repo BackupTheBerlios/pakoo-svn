@@ -18,15 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef FILEMAKECONFIGLOADER_H
-#define FILEMAKECONFIGLOADER_H
+#ifndef LIBPAKTFILEMAKECONFIGLOADER_H
+#define LIBPAKTFILEMAKECONFIGLOADER_H
 
-#include "portageloaderbase.h"
+#include "../core/fileloaderbase.h"
 
 #include <qregexp.h>
 
-class PortageSettings;
 
+namespace libpakt {
+
+class PortageSettings;
 
 /**
  * This is a class that is able to load files like /etc/make.conf,
@@ -34,24 +36,27 @@ class PortageSettings;
  * Calling loadFile() retrieves the configuration values and stores them
  * into a given PortageSettings object.
  */
-class FileMakeConfigLoader : public PortageLoaderBase
+class FileMakeConfigLoader : public FileLoaderBase
 {
+	Q_OBJECT
+
 public:
 	FileMakeConfigLoader();
 
-	PortageLoaderBase::Error loadFile( PortageSettings* settings, const QString& filename );
+	void setSettingsObject( PortageSettings* settings );
 
-protected:
-	bool processLine( const QString& line );
+private:
+	bool check();
+	bool isLineProcessed( const QString& line );
+	void processLine( const QString& line );
 
 	//! The PortageSettings object that will be filled with configuration values.
 	PortageSettings* settings;
-
-private:
-	void run() {}; // inherited from PortageLoaderBase, but not used here
 
 	// Regexp for a configuration line, like ARCH="x86" or SUPPORT_ALSA=1
 	QRegExp rxConfigLine;
 };
 
-#endif // FILEMAKECONFIGLOADER_H
+}
+
+#endif // LIBPAKTFILEMAKECONFIGLOADER_H

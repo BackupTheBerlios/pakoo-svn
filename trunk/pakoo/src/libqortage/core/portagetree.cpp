@@ -22,19 +22,33 @@
 
 #include "packageversion.h"
 #include "package.h"
+#include "portagecategory.h"
 
+#include <klocale.h>
+#include <kdebug.h>
+
+
+namespace libpakt {
 
 /**
- * Initialize this object.
+ * Initialize this object with an empty package list.
  */
-PortageTree::PortageTree()
+PackageList::PackageList()
 {
+}
+
+/**
+ * Return the number of packages in the tree.
+ */
+int PackageList::count()
+{
+	return packages.count();
 }
 
 /**
  * Remove all packages from the tree.
  */
-void PortageTree::clear()
+void PackageList::clear()
 {
 	packages.clear();
 }
@@ -46,91 +60,117 @@ void PortageTree::clear()
  * @return  true if the package has been added to the tree.
  *          false if it has not been added because its name string was empty.
  */
-bool PortageTree::setPackage( Package& package )
+bool PackageList::insert( Package* package )
 {
-	if( package.name == "" )
+	if( package == NULL || package->name() == "" )
 		return false;
 
-	this->packages[
-		package.category + package.subcategory + package.name
-	] = package;
+	packages.insert(
+		package->category()->uniqueName() + package->name(),
+		KSharedPtr<Package>( package )
+	);
 
 	return true;
 }
 
 /**
  * Create a package object and add it to the tree. If a Package object with
- * same name, category and subcategory already exists, it is replaced.
+ * the same name and category already exists, it is replaced.
  *
- * @param category     The package category, e.g. "sys".
- * @param subcategory  The package subcategory, e.g. "kernel".
- * @param package      The package name string.
+ * @param category  The package category.
+ * @param name      The package name string.
  * @return  true if the package has been added to the tree.
  *          false if it has not been added because its name string was empty.
  */
-bool PortageTree::setPackage( const QString& category,
-                              const QString& subcategory,
-                              const QString& package )
+bool PackageList::insert( PackageCategory* category,
+                          const QString& name )
 {
-	Package pkg( category, subcategory, package );
-	return this->setPackage( pkg );
+	if( category == NULL )
+		return false;
+
+	Package* pkg = new Package( category, name );
+	return this->insert( pkg );
 }
 
 /**
  * See if the tree contains a specific package.
  *
- * @param category     The package category, e.g. "sys".
- * @param subcategory  The package subcategory, e.g. "kernel".
- * @param package      The requested package name string.
+ * @param category  The category containing the requested package.
+ * @param name      The requested package name string.
  * @return  true if the tree contains the package, false otherwise.
  */
-bool PortageTree::hasPackage( const QString& category,
-                              const QString& subcategory,
-                              const QString& package )
+bool PackageList::contains( PackageCategory* category,
+                            const QString& name )
 {
-	if( this->packages.contains( category + subcategory + package ) )
-		return true;
-	else
+	if( category == NULL )
 		return false;
+
+	return packages.contains( category->uniqueName() + name );
 }
 
 /**
- * Return a Package object for a given package name, category and subcategory.
+ * Return a Package object for a given package name and category.
  * If the Package object doesn't exist yet, it is created
  * (taking the arguments as default initialization values).
  *
- * @param category     The package category, e.g. "sys".
- * @param subcategory  The package subcategory, e.g. "kernel".
- * @param package      The requested package name string.
+ * By calling this function, you give up ownership and control of
+ * the given category, which is now owned and held by the new
+ * Package object. So, do not delete the category after calling this
+ * function. You can get this category by calling the category()
+ * function of the returned Package object.
+ *
+ * @param category  The category containing the requested package.
+ * @param name      The requested package name string.
  * @return  A Package object. If you change its values,
- *          they are also changed in this PortageTree object.
+ *          they are also changed in this PackageList object.
+ *
+ * @see Package::category()
  */
-Package* PortageTree::package( const QString& category,
-                               const QString& subcategory,
-                               const QString& package )
+Package* PackageList::package( PackageCategory* category,
+                               const QString& name )
 {
-	Package* pkg = &(this->packages[ category + subcategory + package ]);
-	if( pkg->name == "" ) { // empty package
-		pkg->category    = category;
-		pkg->subcategory = subcategory;
-		pkg->name        = package;
+	if( category == NULL ) {
+		kdDebug() << i18n( "PackageList debug output",
+			"PackageList::package(): "
+			"Didn't retrieve a Package because category is NULL" )
+			<< endl;
+		return NULL;
 	}
 
-	return pkg;
+	PackageMap::iterator packageIterator =
+		packages.find( category->uniqueName() + name );
+
+	// if there is no such package, then create one and retrieve again:
+	if( packageIterator == packages.end() ) {
+		this->insert(category, name);
+		packageIterator = packages.find( category->uniqueName() + name );
+	}
+	else { // The package already exists, delete the superfluous category
+		delete category;
+	}
+
+	return ( *packageIterator ).data();
 }
 
-/**
- * Return the list of packages in the tree.
- */
-PackageMap* PortageTree::packageMap()
+
+PackageList::iterator PackageList::begin()
 {
-	return &(this->packages);
+	return packages.begin();
 }
 
-/**
- * Return the number of packages in the tree.
- */
-int PortageTree::packageCount()
+PackageList::iterator PackageList::end()
 {
-	return this->packages.count();
+	return packages.end();
 }
+
+PackageList::const_iterator PackageList::begin() const
+{
+	return packages.begin();
+}
+
+PackageList::const_iterator PackageList::end() const
+{
+	return packages.end();
+}
+
+} // namespace

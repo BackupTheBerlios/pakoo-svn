@@ -18,63 +18,48 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#ifndef LIBPAKTIJOB_H
+#define LIBPAKTIJOB_H
 
-#include "packageversion.h"
+#include <qobject.h>
+#include <qstring.h>
 
 
 namespace libpakt {
 
 /**
- * Initialize this object.
+ * An interface for a job. It uses signals to communicate with the caller.
+ *
+ * @short  An interface for asynchronous background jobs.
  */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
-
-/**
- * Returns false for empty or comment lines.
- */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+class IJob : public QObject
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+	Q_OBJECT
+
+public:
+	enum JobResult {
+		Success, // in case of, well, success
+		Failure  // on errors, or when aborting the thread
+	};
+
+	IJob() {};
+
+	/**
+	 * The function that does the actual work and executes
+	 * synchronously until the job is done.
+	 */
+	virtual JobResult perform() = 0;
+
+signals:
+
+	/**
+	 * Emitted for untranslated textual output of this job.
+	 * This will most likely be the console output of the process
+	 * in behind, or maybe some debug messages, or may not be emitted at all.
+	 */
+	void debugOutput( const QString& output );
+};
+
 }
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
-}
-
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
-{
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
-	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
-}
-
-} // namespace
+#endif // LIBPAKTIJOB_H

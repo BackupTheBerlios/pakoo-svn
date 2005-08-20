@@ -23,6 +23,8 @@
 #include <qregexp.h>
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
@@ -104,6 +106,13 @@ void PortageSettings::addToValue( const QString& name, const QString& value )
 		     addedValueIterator != addedValueIteratorEnd;
 		     ++addedValueIterator )
 		{
+			//
+			// Portage has a special handling for adding and removing values.
+			// When a higher-priority file (to be read after the low-priority
+			// one) prepends "-" to the value, it is deleted no matter if
+			// it was there before or not. Values without that hyphen are
+			// simply added to the list.
+			//
 			if( (*addedValueIterator).startsWith("-") ) // to be removed
 			{
 				if( (*addedValueIterator) == "-*" ) { // remove all
@@ -186,12 +195,15 @@ QString PortageSettings::substituteShellVariables( const QString& value )
 /**
  * Convenience function to retrieve the directory string of the mainline
  * Portage tree. If there is no appropriate value, the function returns
- * QString::null.
+ * the Gentoo default.
  */
 QString PortageSettings::mainlineTreeDirectory()
 {
-	return value("PORTDIR");
-
+	QString directory = value("PORTDIR");
+	if( directory == QString::null )
+		return "/usr/portage";
+	else
+		return directory;
 }
 
 /**
@@ -201,9 +213,9 @@ QString PortageSettings::mainlineTreeDirectory()
  */
 QStringList PortageSettings::overlayTreeDirectories()
 {
-	if( configValues.contains("PORTDIR_OVERLAY") )
-	{
-		return QStringList::split( " ", value("PORTDIR_OVERLAY") );
+	QString dirs = value("PORTDIR_OVERLAY");
+	if( dirs == QString::null ) {
+		return QStringList::split( " ", dirs );
 	}
 	else {
 		return QStringList();
@@ -239,3 +251,83 @@ QString PortageSettings::acceptedKeyword()
 		return QString::null;
 	}
 }
+
+/**
+ * Set the directory where the installed packages reside.
+ * This is not a Portage setting and must therefore be set specifically.
+ */
+void PortageSettings::setInstalledPackagesDirectory(
+	const QString& directory )
+{
+	setValue( "libpakt:installedPackagesDir", directory );
+}
+
+/**
+ * Return the directory where the installed packages reside.
+ * This is not a Portage setting and must therefore be set specifically.
+ * If there is no appropriate value, the function returns the Gentoo default.
+ */
+QString PortageSettings::installedPackagesDirectory()
+{
+	QString directory = value("libpakt:installedPackagesDir");
+	if( directory == QString::null )
+		return "/var/db/pkg";
+	else
+		return directory;
+}
+
+/**
+ * Set the directory where the Portage cache resides.
+ * This is not a Portage setting and must therefore be set specifically.
+ */
+void PortageSettings::setCacheDirectory(
+	const QString& directory )
+{
+	setValue( "libpakt:cacheDir", directory );
+}
+
+/**
+ * Set the directory where the Portage cache resides.
+ * This is not a Portage setting and must therefore be set specifically.
+ * If there is no appropriate value, the function returns the Gentoo default.
+ */
+QString PortageSettings::cacheDirectory()
+{
+	QString directory = value("libpakt:cacheDir");
+	if( directory == QString::null )
+		return "/var/cache/edb/dep";
+	else
+		return directory;
+}
+
+/**
+ * Define if the Portage cache should be used. This should lead to
+ * faster reading of tree structure and package info, but can lead to
+ * wrong results if the cache isn't available (there are packages
+ * in Portage designed to replace the cache) or if it's outdated
+ * (which can be fixed by 'emerge metadata' and shouldn't normally happen).
+ *
+ * This is not a Portage setting and must therefore be set specifically.
+ */
+void PortageSettings::setPreferCache( bool preferCache )
+{
+	if( preferCache == true )
+		setValue( "libpakt:preferCache", "true" );
+	else
+		configValues.remove( "libpakt:preferCache" );
+}
+
+/**
+ * Determine if the Portage cache should be used.
+ * This is not a Portage setting and must therefore be set specifically.
+ * If there is no appropriate value, the function returns false.
+ */
+bool PortageSettings::preferCache()
+{
+	if( configValues.contains("libpakt:preferCache") )
+		return true;
+	else
+		return false;
+}
+
+} // namespace

@@ -18,63 +18,69 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#ifndef LIBPAKTINITIALLOADER_H
+#define LIBPAKTINITIALLOADER_H
 
-#include "packageversion.h"
+#include "../core/threadedjob.h"
 
 
 namespace libpakt {
 
-/**
- * Initialize this object.
- */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
+class PackageList;
 
 /**
- * Returns false for empty or comment lines.
+ * This is a job that initializes the package list with packages in the
+ * package tree, loads global settings from config files, and/or does other
+ * initialization work (depending on the specific backend). Please perform()
+ * or start() this job before attempting to work with the back end,
+ * because otherwise there won't be any packages that you can access.
  */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+class InitialLoader : public ThreadedJob
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
-}
+	Q_OBJECT
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
+public:
+	InitialLoader();
 
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
+	void setPackageList( PackageList* packages );
+
+signals:
+	/**
+	 * Emitted if the package tree has successfully been loaded from disk.
+	 * The PackageList object now contains all packages and package versions,
+	 * but without detailed package information.
+	 */
+	void finishedLoading( PackageList* packages );
+
+protected slots:
+	void emitFinishedLoading( PackageList* packages );
+
+protected:
+	void customEvent(QCustomEvent* event);
+
+	//! The PackageList object that will be filled with packages.
+	PackageList* packages;
+
+private:
+	enum InitialLoaderEventType
 	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
-}
+		FinishedLoadingEventType = QEvent::User + 14344
+	};
 
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
-{
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
+
+	//
+	// nested event classes
+	//
+
+	class FinishedLoadingEvent : public QCustomEvent
 	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
+	public:
+		FinishedLoadingEvent() : QCustomEvent( FinishedLoadingEventType ) {};
+		PackageList* packages;
+	};
+
+};
+
 }
 
-} // namespace
+#endif // LIBPAKTINITIALLOADER_H

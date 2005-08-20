@@ -22,13 +22,12 @@
 
 #include "../core/packageversion.h"
 #include "../core/package.h"
-#include "../core/portagetree.h"
-#include "loadingevent.h"
+#include "../core/portagesettings.h"
+#include "../core/portagecategory.h"
 
 #include <qdir.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
-#include <qapplication.h>
 
 // QRegExp regular expression strings
 #define RXDESCRIPTION "^DESCRIPTION=\"(.*)\"\\s*$"
@@ -39,210 +38,101 @@
 #define RXUSEFLAGS           "^IUSE=\"(.*)\"\\s*$"
 
 
+namespace libpakt {
+
 /**
- * Initialize this object, defining where to search for packages.
+ * Initialize this object. You still have to set the PortageSettings
+ * object containing directory and cache info.
+ *
+ * @see setSettingsObject
  */
-PackageScanner::PackageScanner( QString treeDir, QStringList overlayDirs,
-                                QString installedDir, QString edbDepDir )
-: PortageLoaderBase(),
-  portageTreeDir(treeDir), portageOverlayDirs(overlayDirs),
-  installedPackagesDir(installedDir), edbDir(edbDepDir),
+PortagePackageLoader::PortagePackageLoader()
+: PackageLoader(),
   rxDescription(RXDESCRIPTION), rxHomepage(RXHOMEPAGE),
   rxSlot(RXSLOT), rxLicenses(RXLICENSES),
   rxKeywords(RXKEYWORDS), rxUseflags(RXUSEFLAGS)
 {
-	package = NULL;
-	preferEdb = true;
-	doFilterInstalled = false;
-	scanInstalled = false;
+	settings = NULL;
 }
 
 /**
- * Initialize this object, copying the configuration from another
- * PackageScanner object.
+ * Set the PortageSettings object that contains directory and cache info.
  */
-PackageScanner::PackageScanner( PackageScanner* anotherScanner )
-: PortageLoaderBase(),
-  rxDescription(RXDESCRIPTION), rxHomepage(RXHOMEPAGE),
-  rxSlot(RXSLOT), rxLicenses(RXLICENSES),
-  rxKeywords(RXKEYWORDS), rxUseflags(RXUSEFLAGS)
+void PortagePackageLoader::setSettingsObject( PortageSettings* settings )
 {
-	package = NULL;
-	if( anotherScanner != NULL ) {
-		portageTreeDir = anotherScanner->portageTreeDir;
-		portageOverlayDirs = anotherScanner->portageOverlayDirs;
-		installedPackagesDir = anotherScanner->installedPackagesDir;
-		edbDir = anotherScanner->edbDir;
-		preferEdb = anotherScanner->preferEdb;
-		doFilterInstalled = anotherScanner->doFilterInstalled;
-		scanInstalled = anotherScanner->scanInstalled;
+	this->settings = settings;
+}
+
+
+/**
+ * The function that is called when a new thread is started.
+ * It should be called using start() after the scanner configuration
+ * has been set up, which is at least a call of setPackage().
+ */
+IJob::JobResult PortagePackageLoader::performThread()
+{
+	// load the settings
+	if( settings == NULL ) {
+		emit debugOutput(
+			"Didn't start the profile loader because "
+			"the settings object has not been set"
+		);
+		return Failure;
 	}
-}
-
-/**
- * Enable or disable filtering installed packages out or in.
- * Filtering is disabled by default.
- */
-void PackageScanner::setFilterInstalled( bool doFilter, bool scanInstalled )
-{
-	this->doFilterInstalled = doFilter;
-	this->scanInstalled = scanInstalled;
-}
-
-/**
- * Set the mainline tree search directory to a new value.
- */
-void PackageScanner::setMainlineTreeDirectory( QString directory )
-{
-	portageTreeDir = directory;
-}
-
-/**
- * Set the portage cache directory to a new value.
- */
-void PackageScanner::setEdbDepDirectory( QString directory )
-{
-	edbDir = directory;
-}
-
-/**
- * Set the portage overlay directories to a new value.
- */
-void PackageScanner::setOverlayTreeDirectories( QStringList directories )
-{
-	portageOverlayDirs = directories;
-}
-
-/**
- * Set the installed packages database directory to a new value.
- */
-void PackageScanner::setInstalledPackagesDirectory( QString directory )
-{
-	installedPackagesDir = directory;
-}
-
-/**
- * Perform scanPackage on all packages of the given tree that match
- * the category and subcategory filters.
- *
- * @param tree  The PortageTree object containing the packages.
- * @param category  The searched category. QString::null means
- *                  that there is no category filtering.
- * @param subcategory  The searched subcategory. QString::null means
- *                     that there is no subcategory filtering.
- * @param preferEdb  If true, the edb/dep/ directory will be searched instead
- *                   of the mainline tree, which will probably be much faster.
- *
- * @return  PortageLoaderBase::NoError if scanning was done.
- *          PortageLoaderBase::NullObjectError if the tree is NULL.
- *          PortageLoaderBase::AbortedError if the thread was aborted.
- */
-PortageLoaderBase::Error PackageScanner::scanCategory(
-	PortageTree* tree, QString category, QString subcategory, bool preferEdb )
-{
-	if( tree == NULL ) {
-		return NullObjectError;
+	else {
+		preferCache = settings->preferCache();
+		mainlineTreeDir = settings->mainlineTreeDirectory();
+		overlayTreeDirs = settings->overlayTreeDirectories();
+		installedPackagesDir = settings->installedPackagesDirectory();
+		cacheDir = settings->cacheDirectory();
 	}
 
-	PortageLoaderBase::Error result;
-
-	PackageMap* packages = tree->packageMap();
-	PackageMap::iterator packageIteratorEnd = packages->end();
-
-	if( category.isNull() ) // no category filter at all, process all
+	if( package() == NULL )
 	{
-		// Iterate through all packages
-		for( PackageMap::iterator packageIterator = packages->begin();
-		     packageIterator != packageIteratorEnd; ++packageIterator )
-		{
-			if( this->stop == true )
-				return AbortedError;
-
-			result = scanPackage( &(*packageIterator), preferEdb );
-
-			// Inform main thread , but only when running as thread
-			if( this->running() == true )
-			{
-				LoadingPackageCompleteEvent *event = new LoadingPackageCompleteEvent();
-				event->error = result;
-				event->action = ScanPackage;
-				event->package = &(*packageIterator);
-				event->packageScanner = this;
-				QApplication::postEvent( receiver, event );
-			}
-		}
+		// Happens if none of the set*Mode() functions have been called
+		emitDebugOutput( "Didn't start scanning because "
+		            "you didn't specify a package to scan." );
+		return Failure;
 	}
-	else // at least the main-category filter is set
+
+
+	QDateTime startTime = QDateTime::currentDateTime();
+
+	emitDebugOutput(
+		QString("Scanning the single package %1...")
+		.arg( package()->uniqueName() )
+	);
+
+	// scan the current package
+	if( scanPackage() == false )
 	{
-		// Iterate through all packages
-		for( PackageMap::iterator packageIterator = packages->begin();
-		     packageIterator != packageIteratorEnd; ++packageIterator )
-		{
-			// Only process categories that equal the given filter category.
-			if( category != (*packageIterator).category )
-				continue;
-
-			// Only process packages if no subcategory filter is set,
-			// or if the current package's subcategory equals the given one.
-			if( subcategory.isNull()
-			    || (*packageIterator).subcategory == subcategory )
-			{
-				if( this->stop == true )
-					return AbortedError;
-
-				result = scanPackage( &(*packageIterator), preferEdb );
-
-				// Inform main thread , but only when running as thread
-				if( this->running() == true )
-				{
-					LoadingPackageCompleteEvent *event = new LoadingPackageCompleteEvent();
-					event->error = result;
-					event->action = ScanPackage;
-					event->package = &(*packageIterator);
-					event->packageScanner = this;
-					QApplication::postEvent( receiver, event );
-				}
-			}
-		}
+		// any errors errors emitted with debugOutput()
+		return Failure;
 	}
-
-	return NoError;
+	else
+	{
+		// Success, inform main thread that the scan is complete
+		emitDebugOutput(
+			QString("Finished package scanning in %1 seconds.")
+			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+		);
+		return Success;
+	}
 }
-
 
 /**
  * Scan each package version's ebuild and digest files and
  * add the found information to the current package's PackageVersion objects.
- *
- * @param package  The package that will be filled with detailed info.
- * @param preferEdb  If true, the edb/dep/ directory will be searched instead
- *                   of the mainline tree, which will probably be much faster.
- *
- * @return  PortageLoaderBase::NoError if scanning was done.
- *          PortageLoaderBase::AbortedError if only installed packages
- *          are scanned (when the filter is enabled) and this package
- *          doesn't have any installed versions.
- *          PortageLoaderBase::NullObjectError if the package is NULL.
+ * This function assumes that the package member is a valid Package object,
+ * and especially not NULL.
  */
-PortageLoaderBase::Error PackageScanner::scanPackage(
-	Package* package, bool preferEdb )
+bool PortagePackageLoader::scanPackage()
 {
-	if( package == NULL ) {
-		return NullObjectError;
-	}
-
-	// filter installed packages out or in, if enabled
-	if( this->doFilterInstalled == true)
-	{
-		if( this->scanInstalled && package->hasInstalledVersion() == false )
-			return AbortedError;
-		else if( !this->scanInstalled && package->hasInstalledVersion() == true )
-			return AbortedError;
-	}
+	//TODO: static QMap<QString,QSemaphore> for restricting concurrent access
 
 	QString filename;
 
-	PackageVersionMap* versions = package->versionMap();
+	PackageVersionMap* versions = package()->versionMap();
 	PackageVersionMap::iterator versionIterator;
 
 	// Scan information for each package version
@@ -258,17 +148,17 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 		if( (*versionIterator).overlay == false ) // from the mainline tree
 		{
 			// Get package size from the digest
-			filename = this->portageTreeDir + "/" + package->category + "-"
-				+ package->subcategory + "/" + package->name
-				+ "/files/digest-" + package->name + "-"
-				+ (*versionIterator).version;
+			filename = this->mainlineTreeDir + "/"
+				+ package()->category()->uniqueName() + "/"
+				+ package()->name() + "/files/digest-" + package()->name()
+				+ "-" + (*versionIterator).version;
 			scanDigest( &(*versionIterator), filename );
 
-			if( preferEdb == true )
+			if( preferCache == true )
 			{
-				filename = this->edbDir + this->portageTreeDir + "/"
-					+ package->category + "-" + package->subcategory + "/"
-					+ package->name + "-" + (*versionIterator).version;
+				filename = this->cacheDir + this->mainlineTreeDir + "/"
+					+ package()->category()->uniqueName() + "/"
+					+ package()->name() + "-" + (*versionIterator).version;
 
 				// try to scan this edb file
 				if( scanEdbFile( &(*versionIterator), filename ) == true ) {
@@ -277,10 +167,10 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 			}
 			else
 			{
-				filename = this->portageTreeDir + "/" + package->category
-					+ "-" + package->subcategory + "/" + package->name + "/"
-					+ package->name + "-" + (*versionIterator).version
-					+ ".ebuild";
+				filename = this->mainlineTreeDir + "/"
+					+ package()->category()->uniqueName() + "/"
+					+ package()->name() + "/" + package()->name() + "-"
+					+ (*versionIterator).version + ".ebuild";
 
 				// try to scan this ebuild
 				if( scanEbuild( &(*versionIterator), filename ) == true ) {
@@ -290,23 +180,25 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
 		}
 		else  // from the overlay tree
 		{
-			if( scanOverlayPackage( package, &(*versionIterator) ) == true )
+			if( scanOverlayPackage( &(*versionIterator) ) == true )
 				continue; // no need to scan the installed package
 		}
 
 		// no luck, try the installed version (the ebuild in /var/db/pkg/*/*/)
 		if( (*versionIterator).installed == true )
 		{
-			filename = this->installedPackagesDir + "/" + package->category
-				+ "-" + package->subcategory + "/" + package->name + "-"
-				+ (*versionIterator).version + "/" + package->name + "-"
-				+ (*versionIterator).version + ".ebuild";
+			filename = this->installedPackagesDir + "/"
+				+ package()->category()->uniqueName() + "/"
+				+ package()->name() + "-" + (*versionIterator).version + "/"
+				+ package()->name() + "-" + (*versionIterator).version
+				+ ".ebuild";
 
 			scanEbuild( &(*versionIterator), filename );
 		}
 	}
 
-	return NoError;
+	emitPackageLoaded();
+	return true;
 }
 
 /**
@@ -315,29 +207,25 @@ PortageLoaderBase::Error PackageScanner::scanPackage(
  * scanDigest() and scanEbuild() for each possible overlay path
  * until it works.
  *
- * @param package  The package that will be filled with detailed info.
  * @param version  The package version of the ebuild and digest files.
  * @return  true if the files have been loaded, false otherwise.
  */
-bool PackageScanner::scanOverlayPackage( Package* package,
-                                         PackageVersion* version )
+bool PortagePackageLoader::scanOverlayPackage( PackageVersion* version )
 {
 	QString filename;
-	for( QStringList::iterator overlayIterator = portageOverlayDirs.begin();
-	     overlayIterator != portageOverlayDirs.end(); overlayIterator++ )
+	for( QStringList::iterator overlayIterator = overlayTreeDirs.begin();
+	     overlayIterator != overlayTreeDirs.end(); overlayIterator++ )
 	{
 		// Get package size from the digest
-		filename = (*overlayIterator) + "/" + package->category
-			+ "-" + package->subcategory + "/" + package->name
-			+ "/files/digest-" + package->name + "-"
-			+ version->version;
+		filename = (*overlayIterator) + "/"
+			+ package()->category()->uniqueName() + "/" + package()->name()
+			+ "/files/digest-" + package()->name() + "-" + version->version;
 		if( scanDigest( version, filename ) == false )
 			continue;
 
-		filename = (*overlayIterator) + "/" + package->category
-			+ "-" + package->subcategory + "/" + package->name + "/"
-			+ package->name + "-" + version->version
-			+ ".ebuild";
+		filename = (*overlayIterator) + "/"
+			+ package()->category()->uniqueName() + "/" + package()->name()
+			+ "/" + package()->name() + "-" + version->version + ".ebuild";
 
 		// try to scan this ebuild
 		if( scanEbuild( version, filename ) == true )
@@ -357,8 +245,8 @@ bool PackageScanner::scanOverlayPackage( Package* package,
  * @param filename  The path to the package's ebuild file.
  * @return  false if the file can't be opened, true otherwise.
  */
-bool PackageScanner::scanEbuild( PackageVersion* version,
-                                 const QString& filename )
+bool PortagePackageLoader::scanEbuild( PackageVersion* version,
+                                       const QString& filename )
 {
 	QFile file(filename);
 
@@ -425,8 +313,8 @@ bool PackageScanner::scanEbuild( PackageVersion* version,
  * @param filename  The path to the package's edb file.
  * @return  false if the file can't be opened, true otherwise.
  */
-bool PackageScanner::scanEdbFile( PackageVersion* version,
-                                  const QString& filename )
+bool PortagePackageLoader::scanEdbFile( PackageVersion* version,
+                                        const QString& filename )
 {
 	QFile file(filename);
 
@@ -498,8 +386,8 @@ bool PackageScanner::scanEdbFile( PackageVersion* version,
  * @param filename  The path to the package's digest file.
  * @return  false if the file can't be opened, true otherwise.
  */
-bool PackageScanner::scanDigest( PackageVersion* version,
-                                 const QString& filename )
+bool PortagePackageLoader::scanDigest( PackageVersion* version,
+                                       const QString& filename )
 {
 	QFile file(filename);
 
@@ -512,7 +400,8 @@ bool PackageScanner::scanDigest( PackageVersion* version,
 
 	while ( !stream.atEnd() ) {
 		line = stream.readLine();
-		version->size = line.section(' ', -1).toLong();
+		QString bla = line.section(' ', -1);
+		version->size = bla.toLong();
 	}
 	file.close();
 
@@ -529,8 +418,9 @@ bool PackageScanner::scanDigest( PackageVersion* version,
  * @param targetList  The QStringList that will be filled with matches.
  * @return  false if rx or targetList is NULL, true otherwise.
  */
-bool PackageScanner::extractStringList( const QString& string, QRegExp* rx,
-                                        QStringList* targetList )
+bool PortagePackageLoader::extractStringList( const QString& string,
+                                              QRegExp* rx,
+                                              QStringList* targetList )
 {
 	if( rx == NULL || targetList == NULL )
 		return false;
@@ -545,112 +435,4 @@ bool PackageScanner::extractStringList( const QString& string, QRegExp* rx,
 	return true;
 }
 
-
-/**
- * Start a thread that will be scanning the specified package for detailed
- * info. When loading is done, a LoadingTreeCompleteEvent will be posted
- * and the thread exits. The thread will not be started if it's already running.
- *
- * @param receiver  A QObject that receives loading status events.
- * @param package   The package that will be filled with detailed info.
- * @param preferEdb  If true, the edb/dep/ directory will be searched instead
- *                   of the mainline tree, which will probably be much faster.
- *
- * @returns  true if the thread was started, false if it's already running.
- */
-bool PackageScanner::startScanningPackage( QObject* receiver,
-                                           Package* package, bool preferEdb )
-{
-	if( this->running() == true )
-		return false;
-
-	this->action = ScanPackage;
-	this->receiver = receiver;
-	this->package = package;
-	this->preferEdb = preferEdb;
-	this->start();
-	return true;
-}
-
-/**
- * Start a thread that will be scanning all packages in the specified category
- * for detailed info. After each scanned package, a LoadingTreeCompleteEvent
- * will be posted and the thread exits. The thread will not be started
- * if it's already running.
- *
- * @param receiver  A QObject that receives loading status events.
- * @param tree      The PortageTree object containing the packages.
- * @param category  The searched category. QString::null means
- *                  that there is no category filtering.
- * @param subcategory  The searched subcategory. QString::null means
- *                     that there is no subcategory filtering.
- * @param preferEdb  If true, the edb/dep/ directory will be searched instead
- *                   of the mainline tree, which will probably be much faster.
- *
- * @returns  true if the thread was started, false if it's already running.
- */
-bool PackageScanner::startScanningCategory( QObject* receiver,
-	PortageTree* tree, QString category, QString subcategory, bool preferEdb )
-{
-	if( this->running() == true )
-		return false;
-
-	this->action = ScanCategory;
-	this->receiver = receiver;
-	this->tree = tree;
-	this->category = category;
-	this->subcategory = subcategory;
-	this->preferEdb = preferEdb;
-	this->start();
-	return true;
-}
-
-
-/**
- * The function that is called when a new thread is started.
- * It can not be called directly with packageScanner->start().
- * That's not necessary, because PackageScanner has convenient
- * member functions to start the thread and set up the configuration
- * for it (which is startScanningPackage()).
- */
-void PackageScanner::run()
-{
-	PortageLoaderBase::Error result;
-	QObject* receiver = this->receiver;
-
-	if( action == ScanPackage )
-	{
-		if( working == true )
-			return;
-		else
-			initProcessing();
-
-		result = scanPackage( this->package, preferEdb );
-		finishProcessing();
-
-		// Inform main thread that scan is complete
-		LoadingPackageCompleteEvent *event = new LoadingPackageCompleteEvent();
-		event->error = result;
-		event->action = ScanPackage;
-		event->package = package;
-		event->packageScanner = this;
-		QApplication::postEvent( receiver, event );
-	}
-	else if( action == ScanCategory )
-	{
-		if( working == true )
-			return;
-		else
-			initProcessing();
-
-		result = scanCategory( tree, category, subcategory, preferEdb );
-		finishProcessing();
-
-		LoadingPackageCompleteEvent *event = new LoadingPackageCompleteEvent();
-		event->error = result;
-		event->action = ScanCategory;
-		event->package = NULL;
-		event->packageScanner = this;
-		QApplication::postEvent( receiver, event );
-	}
-}
+} // namespace

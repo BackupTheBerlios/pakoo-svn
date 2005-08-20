@@ -18,63 +18,32 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#include "core/portagetree.h"
+#include "core/packageselector.h"
+//TODO: rename portageloader (directory) -> loader
+#include "portageloader/multiplepackageloader.h"
 
-#include "packageversion.h"
+#include "backendfactory.h"
 
 
 namespace libpakt {
 
-/**
- * Initialize this object.
- */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
+BackendFactory::BackendFactory()
 {}
 
-/**
- * Returns false for empty or comment lines.
- */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
-{
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+PackageList* BackendFactory::createPackageList() {
+	return new PackageList();
 }
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
+PackageSelector* BackendFactory::createPackageSelector() {
+	return new PackageSelector();
 }
 
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
+MultiplePackageLoader* BackendFactory::createMultiplePackageLoader(
+	PackageLoader* packageLoader )
 {
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
-	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
+	return new MultiplePackageLoader( packageLoader );
 }
+
 
 } // namespace

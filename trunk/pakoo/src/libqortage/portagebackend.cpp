@@ -18,63 +18,49 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#include "portagebackend.h"
 
-#include "packageversion.h"
-
+#include "core/portagesettings.h"
+#include "core/portagecategory.h"
+#include "portageloader/packagescanner.h"
+#include "portageloader/portageinitialloader.h"
 
 namespace libpakt {
 
-/**
- * Initialize this object.
- */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
-
-/**
- * Returns false for empty or comment lines.
- */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+PortageBackend::PortageBackend() : BackendFactory()
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+	// The settings object is used internally
+	// for all kinds of Portage settings
+	portageSettings = new PortageSettings();
+
+	// These settings can't be retrieved automatically
+	portageSettings->setPreferCache( true );
+	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
+	portageSettings->setCacheDirectory("/var/cache/edb/dep/");
 }
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
+PortageSettings* PortageBackend::settings()
 {
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
+	return portageSettings;
 }
 
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
+PackageCategory* PortageBackend::createPackageCategory()
 {
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
-	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
+	return new PortageCategory();
+}
+
+InitialLoader* PortageBackend::createInitialLoader()
+{
+	PortageInitialLoader* loader = new PortageInitialLoader();
+	loader->setSettingsObject( portageSettings );
+	return loader;
+}
+
+PackageLoader* PortageBackend::createPackageLoader()
+{
+	PortagePackageLoader* loader = new PortagePackageLoader();
+	loader->setSettingsObject( portageSettings );
+	return loader;
 }
 
 } // namespace

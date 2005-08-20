@@ -18,46 +18,78 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTPROFILELOADER_H
-#define LIBPAKTPROFILELOADER_H
+#ifndef LIBPAKTPORTAGEINITIALLOADER_H
+#define LIBPAKTPORTAGEINITIALLOADER_H
 
-#include "../core/threadedjob.h"
-
-class QString;
-class QDir;
+#include "initialloader.h"
 
 
 namespace libpakt {
 
 class PortageSettings;
+class ProfileLoader;
+class PortageTreeScanner;
 
 /**
- * ProfileLoader is responsible for reading the current profile configuration.
- * It supports cascading profiles and gets important settings like
- * the ACCEPT_KEYWORDS value (e.g. x86 or ~alpha) or Portage directories.
+ * This is a job that initializes the package list with packages
+ * in the Portage tree and loads global Portage settings from
+ * config files. Please perform() or start() this job before
+ * attempting to work with the Portage back end, because otherwise
+ * there won't be any packages that you can access.
  *
- * Like all jobs derived from ThreadedJob, you can call start() or perform()
- * to execute it.
+ * The PortageInitialLoader itself makes use of the ProfileLoader
+ * and the PortageTreeScanner.
  */
-class ProfileLoader : public ThreadedJob
+class PortageInitialLoader : public InitialLoader
 {
 	Q_OBJECT
 
 public:
-	ProfileLoader();
+	PortageInitialLoader();
 
-	void setSettingsObject( PortageSettings* settings );
+	void setSettingsObject( PortageSettings* settings ); // Portage specific
 
-	IJob::JobResult performThread();
+	bool progressEnabled() { return true; }
+
+public slots:
+	void abort();
+
+signals:
+	/** For internal use only. Emitted when abort() is called. */
+	void aborted();
+
+protected:
+    IJob::JobResult performThread();
+    void customEvent(QCustomEvent* event);
+
+private slots:
+	void emitFinishedLoading( PackageList* packages );
+	void emitPackagesScanned( int packageCountAvailable,
+	                          int packageCountInstalled );
 
 private:
-	bool goToStartDirectory( QDir& dir );
-	bool goToParentDirectory( QDir& currentDir );
+	enum PortageInitialLoaderEventType
+	{
+		PortageFinishedLoadingEventType = QEvent::User + 14345
+	};
 
-	//! The PortageSettings object that will be filled with configuration values.
+	//! The PortageTree object that will be filled with configuration values.
 	PortageSettings* settings;
+
+
+	//
+	// nested event classes
+	//
+
+	class PortageFinishedLoadingEvent : public QCustomEvent
+	{
+	public:
+		PortageFinishedLoadingEvent()
+			: QCustomEvent( PortageFinishedLoadingEventType ) {};
+	};
+
 };
 
 }
 
-#endif // LIBPAKTPROFILELOADER_H
+#endif

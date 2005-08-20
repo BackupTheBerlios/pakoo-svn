@@ -23,16 +23,56 @@
 #include "packageversion.h"
 
 
+namespace libpakt {
+
 /**
- * Initialize the package with name, category and subcategory.
+ * Initialize the package with name and category.
+ * Note that you mustn't delete the given category object,
+ * because it is now considered to be owned by this Package object.
  */
-Package::Package( const QString& category,
-                  const QString& subcategory,
-                  const QString& name )
+Package::Package( PackageCategory* category, const QString& name )
+	: m_name(name)
 {
-	this->category = category;
-	this->subcategory = subcategory;
-	this->name = name;
+	if( category == NULL )
+		m_category = new PackageCategory();
+	else
+		m_category = category;
+}
+
+/**
+ * Destructor. Deletes the category object.
+ */
+Package::~Package()
+{
+	delete m_category;
+}
+
+/**
+ * Get the short name of the package, not including the category name.
+ * It doesn't have to be unique. (For a unique name of the package, including
+ * the category name, rather use uniqueName().)
+ * For Portage, this will be something like "pakoo".
+ */
+const QString& Package::name() const
+{
+	return m_name;
+}
+
+/**
+ * Get the category of this package.
+ */
+PackageCategory* Package::category()
+{
+	return m_category;
+}
+
+/**
+ * Get the full, unique name of the package.
+ * For Portage, this will be something like "app-portage/pakoo".
+ */
+QString Package::uniqueName() const
+{
+	return m_category->uniqueName() + "/" + m_name;
 }
 
 /**
@@ -65,7 +105,7 @@ bool Package::setVersion( PackageVersion& version )
 	if( version.version == "" )
 		return false;
 
-	this->versions[ version.version ] = version;
+	this->versions.insert( version.version, version );
 	return true;
 }
 
@@ -357,3 +397,5 @@ QStringList Package::slotList()
 	}
 	return slotList;
 }
+
+} // namespace

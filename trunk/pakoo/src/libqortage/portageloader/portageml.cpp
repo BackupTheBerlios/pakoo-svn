@@ -20,10 +20,11 @@
 
 #include "portageml.h"
 
+#include "../core/threadedjob.h"
 #include "../core/packageversion.h"
 #include "../core/package.h"
 #include "../core/portagetree.h"
-#include "loadingevent.h"
+#include "../core/portagecategory.h"
 
 #include <qfile.h>
 #include <qdatetime.h>
@@ -35,140 +36,202 @@
 #define VERSIONELEMENTSTRING "version"
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
-PortageML::PortageML()
+PortageML::PortageML() : ThreadedJob()
 {
-	tree = NULL;
+	packages = NULL;
 	package = NULL;
+	action = LoadFile;
+	filename = QString::null;
 }
 
 
 /**
- * Load a portage tree from an XML file in portageML format.
- * Any previous Package objects in the PortageTree will be deleted.
- *
- * @param portageTree  The PortageTree object that will be filled with packages.
- * @param filename     The file that contains the stored tree structure.
- *
- * @return  PortageLoaderBase::NoError is the package list was successfully loaded.
- *          PortageLoaderBase::OpenFileError if there was an error opening the XML file.
- *          PortageLoaderBase::FileTypeError if the file doesn't have a portageML
- *          doctype header. PortageLoaderBase::RootElementError
- *          if the root element is named anything but "portagetree".
- *          PortageLoaderBase::NullObjectError if the given tree is NULL.
- *          PortageLoaderBase::AbortedError if the thread has been aborted.
- *          PortageLoaderBase::AlreadyRunningError if any thread is
- *          currently loading or saving (but there may only be one at a time).
+ * Set the PackageList object that will be filled with packages
+ * (in case of loading from a file) or used as source of
+ * package information (in case of saving to a file).
  */
-PortageLoaderBase::Error PortageML::loadFile( PortageTree* portageTree,
-                                                   const QString& filename )
+void PortageML::setPackageList( PackageList* packages )
 {
-	this->packageCount = 0;
-	this->packageCountInstalled = 0;
+	this->packages = packages;
+}
 
-	if( this->working == true )
-		return AlreadyRunningError;
-	else
-		initProcessing();
+/**
+ * Set the name of the file that is used for loading and saving
+ * the package list.
+ */
+void PortageML::setFileName( const QString& filename )
+{
+	this->filename = filename;
+}
 
-	// Check on a NULL tree, which would be bad
-	if( portageTree == NULL ) {
-		finishProcessing();
-		return NullObjectError;
+/**
+ * Specify if you want to load from the file or save to it.
+ * You can use one of the constants PortageML::LoadFile
+ * or PortageML::SaveFile as argument.
+ */
+void PortageML::setAction( Action action )
+{
+	this->action = action;
+}
+
+
+/**
+ * This function is called when a new thread is started,
+ * it initiates loading or saving the package list from/to the specified file.
+ */
+IJob::JobResult PortageML::performThread()
+{
+	// Check on a NULL list, which would be bad
+	if( packages == NULL ) {
+		emitDebugOutput(
+			QString( "Didn't start loading %1 because "
+			         "the PackageList object has not been set" )
+				.arg( filename )
+		);
+		return Failure;
 	}
-	tree = portageTree;
+
+	bool result;
+
+	// load or save the file
+	if( action == LoadFile )
+		result = loadFile();
+	else if( action == SaveFile )
+		result = saveFile();
+
+	if( result == true )
+		return Success;
+	else
+		return Failure;
+}
+
+/**
+ * Load a package list from an XML file in portageML format.
+ * Any previous Package objects in the PackageList will be deleted.
+ *
+ * @return  false if there were errors loading the file, true otherwise
+ */
+bool PortageML::loadFile()
+{
+	packageCountAvailable = 0;
+	packageCountInstalled = 0;
 
 	QDateTime startTime = QDateTime::currentDateTime();
 	QFile file( filename );
 
-	if( !file.open( IO_ReadOnly ) ) {
-		finishProcessing();
-		return OpenFileError;
+	if( !file.open( IO_ReadOnly ) )
+	{
+		emitDebugOutput(
+			QString("Aborting: Couldn't open the file %1 for reading")
+				.arg( filename )
+		);
+		return false;
 	}
 
 	QDomDocument doc( FILETYPESTRING );
 	if( !doc.setContent( &file ) ) {
 		// file doesn't have a portageML doctype
 		file.close();
-		finishProcessing();
-		return FileTypeError;
+		emitDebugOutput(
+			QString( "Aborting: The file %1 doesn't have "
+			         "an appropriate doctype" )
+				.arg( filename )
+		);
+		return false;
 	}
 	file.close();
 
 	QDomElement root = doc.documentElement();
-	PortageLoaderBase::Error result = loadTreeElement(root);
-
-	finishProcessing();
-	return result;
+	if( loadTreeElement(root) == false ) {
+		return false; // it will output an error message by itself then
+	}
+	else {
+		// Inform main thread that loading has finished
+		emitFinishedLoading();
+		emitDebugOutput(
+			QString("Finished loading the packages from %1 in %2 seconds")
+				.arg( filename )
+				.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+		);
+		return true;
+	}
 }
 
 /**
- * Load a portage tree from a XML data.
+ * Load a package tree from a XML data.
+ * This function assumes that this->packages is not NULL.
  *
- * @param element  The element containing portage tree data.
- * @return  PortageLoaderBase::NoError is the package list was
- *          successfully loaded.
- *          PortageLoaderBase::NullObjectError if the given tree is NULL.
- *          PortageLoaderBase::AbortedError if the thread is being aborted.
+ * @param element  The element containing package tree data
+ * @return  false if there are errors loading the tree element, true otherwise
  */
-PortageLoaderBase::Error PortageML::loadTreeElement( const QDomElement& element )
+bool PortageML::loadTreeElement( const QDomElement& element )
 {
-	if( element.isNull() || element.tagName() != TREEELEMENTSTRING ) {
-		return PortageLoaderBase::NullObjectError;
+	if( element.isNull() || element.tagName() != TREEELEMENTSTRING )
+	{
+		emitDebugOutput(
+			QString( "Aborting: The file %1 doesn't contain "
+			         "an appropriate tree element" )
+				.arg( filename )
+		);
+		return false;
 	}
 
-	tree->clear();
+	packages->clear();
 
 	QDomNodeList packageElements =
 		element.elementsByTagName( PACKAGEELEMENTSTRING );
 
 	for( uint i = 0; i < packageElements.count(); i++ )
 	{
-		if( this->stop == true ) {
-			return AbortedError;
+		if( aborting() ) {
+			emitDebugOutput("Aborting the file loading job on request");
+			return false;
 		}
 		loadPackageElement( packageElements.item(i).toElement() );
-		packageCount++;
+		packageCountAvailable++;
 
-		// don't post events if not running as thread
-		if( (packageCount % 500) == 0 && this->running() == true )
-		{
-			// send a progress event
-			LoadingTreeProgressEvent *event = new LoadingTreeProgressEvent();
-			event->packageCount = packageCount;
-			event->method = LoadingTreeEvent::LoadFile;
-			event->searchedTree = PortageTree::Mainline;
-			QApplication::postEvent( receiver, event );
-		}
+		// send a progress event
+		if( (packageCountAvailable % 500) == 0 )
+			emitPackagesScanned();
 	}
-	return NoError;
+	return true;
 }
 
 /**
- * Load a package from a XML data and add it to the tree object.
- * This function assumes that this->tree is not NULL.
+ * Load a package from a XML data and add it to the package list.
+ * This function assumes that this->packages is not NULL.
  *
- * @param element  The element containing package data.
- * @return  true if the package was valid and has been added, false otherwise.
+ * @param element  The element containing package data
+ * @return  true if the package was valid and has been added, false otherwise
  */
 bool PortageML::loadPackageElement( const QDomElement& element )
 {
 	if( element.isNull() || element.tagName() != PACKAGEELEMENTSTRING )
-		return false;
-
-	if( ! ( element.hasAttribute("category")
-	        && element.hasAttribute("subcategory")
-	        && element.hasAttribute("name")
-	      ) )
 	{
+		emitDebugOutput( "Error that shouldn't happen (TM): "
+		            "PortageML::loadPackageElement(): "
+		            "The function parameter is not a package element" );
 		return false;
 	}
 
-	package = tree->package( element.attribute( "category", "" ),
-								element.attribute( "subcategory", "" ),
-								element.attribute( "name", "" ) );
+	if( !element.hasAttribute("category")
+	    || !element.hasAttribute("name") )
+	{
+		emitDebugOutput( "Error: The package element is missing one of the "
+		            "'name' or 'category' attributes. "
+		            "Continuing with the next package element." );
+		return false;
+	}
+
+	PortageCategory* category = new PortageCategory;
+	category->loadFromUniqueName( element.attribute("category", "") );
+
+	package = packages->package( category, element.attribute( "name", "" ) );
 	package->clear();
 
 	QDomNodeList versionElements =
@@ -190,10 +253,19 @@ bool PortageML::loadPackageElement( const QDomElement& element )
 bool PortageML::loadVersionElement( const QDomElement& element )
 {
 	if( element.isNull() || element.tagName() != VERSIONELEMENTSTRING )
+	{
+		emitDebugOutput( "Error that shouldn't happen (TM): "
+		            "PortageML::loadVersionElement(): "
+		            "The function parameter is not a version element" );
 		return false;
+	}
 
 	if( !element.hasAttribute("version") )
+	{
+		emitDebugOutput( "Error: The version element is missing the 'version' "
+		            "attribute. Continuing with the next version element." );
 		return false;
+	}
 
 	QString versionString = element.attribute( "version", "" );
 
@@ -224,58 +296,46 @@ bool PortageML::loadVersionElement( const QDomElement& element )
 /**
  * Save the portage tree to an XML file in portageML format.
  *
- * @param portageTree  The PortageTree object whose packages will be written.
- * @param filename     The file that contains the stored tree structure.
- *
- * @return  PortageLoaderBase::NoError is the package list was
- *          successfully saved. PortageLoaderBase::OpenFileError if
- *          there was an error opening the XML file.
- *          PortageLoaderBase::NullObjectError if the given tree is NULL.
- *          PortageLoaderBase::AbortedError if the thread has been aborted.
- *          PortageLoaderBase::AlreadyRunningError if any thread is
- *          currently loading or saving (but there may only be one at a time).
+ * @return  false if there were errors saving the file, true otherwise.
  */
-PortageLoaderBase::Error PortageML::saveFile( PortageTree* portageTree,
-                                                   const QString& filename )
+bool PortageML::saveFile()
 {
-	if( working == true )
-		return AlreadyRunningError;
-	else
-		initProcessing();
-
-	// Check on a NULL tree, which would be bad
-	if( portageTree == NULL ) {
-		finishProcessing();
-		return NullObjectError;
-	}
-	tree = portageTree;
-
+	QDateTime startTime = QDateTime::currentDateTime();
 	QDomDocument doc( FILETYPESTRING );
 	QDomElement root = this->createTreeElement( doc );
-	if( root.isNull() ) {
-		finishProcessing();
-		return AbortedError;
-	}
+
+	if( root.isNull() )
+		return false;
 
 	doc.appendChild( root );
 
 	QFile file( filename );
-	if( !file.open( IO_WriteOnly ) ) {
-		finishProcessing();
-		return OpenFileError;
+	if( !file.open( IO_WriteOnly ) )
+	{
+		emitDebugOutput(
+			QString("Aborting: Couldn't open the file %1 for writing")
+				.arg( filename )
+		);
+		return false;
 	}
 
 	QTextStream ts( &file );
 	ts << doc.toString();
 	file.close();
 
-	finishProcessing();
-	return NoError;
+	// Inform main thread that saving has finished
+	emitFinishedSaving();
+	emitDebugOutput(
+		QString("Finished saving the tree to %1 in %2 seconds")
+			.arg( filename )
+			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+	);
+	return true;
 }
 
 /**
- * Create a DOM element that contains all information about a portage tree
- * and its packages. This function assumes that this->tree is not NULL.
+ * Create a DOM element that contains all information about a package tree
+ * and its packages. This function assumes that this->packages is not NULL.
  *
  * @param doc  The node will be created using
  *             this document's createElement() function.
@@ -287,18 +347,19 @@ QDomElement PortageML::createTreeElement( QDomDocument& doc )
 {
 	QDomElement element = doc.createElement( TREEELEMENTSTRING );
 
-	PackageMap* packages = tree->packageMap();
-	PackageMap::iterator packageIterator;
+	//QValueList<Package*> packageValues = packages->values();
 	QDomElement packageNode;
-	for( packageIterator = packages->begin();
+
+	for( PackageList::iterator packageIterator = packages->begin();
 	     packageIterator != packages->end(); packageIterator++ )
 	{
-		if( this->stop == true ) {
+		if( aborting() ) {
 			// return QDomElement::null; but there is no such constant
+			emitDebugOutput("Aborting the file saving job on request");
 			return element.toDocument().toElement();
 		}
 
-		package = &(*packageIterator);
+		package = *packageIterator;
 		packageNode = createPackageElement( doc );
 		element.appendChild( packageNode );
 	}
@@ -319,15 +380,11 @@ QDomElement PortageML::createPackageElement( QDomDocument& doc )
 	QDomElement element = doc.createElement( PACKAGEELEMENTSTRING );
 
 	QDomAttr attr = doc.createAttribute( "category" );
-	attr.setValue( package->category );
-	element.setAttributeNode( attr );
-
-	attr = doc.createAttribute( "subcategory" );
-	attr.setValue( package->subcategory );
+	attr.setValue( package->category()->uniqueName() );
 	element.setAttributeNode( attr );
 
 	attr = doc.createAttribute( "name" );
-	attr.setValue( package->name );
+	attr.setValue( package->name() );
 	element.setAttributeNode( attr );
 
 	PackageVersionMap* versions = package->versionMap();
@@ -372,95 +429,66 @@ QDomElement PortageML::createPackageElement( QDomDocument& doc )
 
 
 /**
- * Start a thread that will be loading a portage tree from an XML file
- * in portageML format. While loading packages, the thread will post
- * LoadingTreeProgressEvent objects to the receiver, and when loading is
- * done, a LoadingTreeCompleteEvent will be posted and the thread exits.
- * The thread will not be started if it's already running.
- *
- * @param receiver     A QObject that receives loading status events.
- * @param portageTree  A pointer to an existing PortageTree object.
- *                     This tree will be cleared and filled with the
- *                     packages that are found in the XML file.
- * @param filename     The path of the file that shall be loaded.
- *
- * @returns  true if the thread was started, false if it's already running.
+ * From within the thread, emit a finishedLoading() signal to the main thread.
  */
-bool PortageML::startLoadingFile( QObject* receiver,
-                                  PortageTree* portageTree, const QString& filename )
+void PortageML::emitFinishedLoading()
 {
-	if( this->running() == true )
-		return false;
-
-	this->receiver = receiver;
-	this->tree = portageTree;
-	this->filename = filename;
-	this->action = LoadFile;
-	this->start();
-	return true;
+	FinishedFileEvent* event = new FinishedFileEvent();
+	event->action = LoadFile;
+	event->packages = this->packages;
+	event->filename = this->filename;
+	QApplication::postEvent( this, event );
 }
 
 /**
- * Start a thread that will be saving a portage tree from an XML file
- * in portageML format. When saving is done, a SavingTreeCompleteEvent
- * will be posted and the thread then exits. The thread will not be
- * started if it's already running.
- *
- * @param receiver     A QObject that receives loading status events.
- * @param portageTree  A pointer to an existing PortageTree object.
- *                     This tree will be cleared and filled with the
- *                     packages that are found in the XML file.
- * @param filename     The path of the file that shall be loaded.
- *
- * @returns  true if the thread was started, false if it's already running.
+ * From within the thread, emit a finishedSaving() signal to the main thread.
  */
-bool PortageML::startSavingFile( QObject* receiver,
-                                 PortageTree* portageTree, const QString& filename )
+void PortageML::emitFinishedSaving()
 {
-	if( this->running() == true )
-		return false;
-
-	this->receiver = receiver;
-	this->tree = portageTree;
-	this->filename = filename;
-	this->action = SaveFile;
-	this->start();
-	return true;
+	FinishedFileEvent* event = new FinishedFileEvent();
+	event->action = SaveFile;
+	event->packages = this->packages;
+	event->filename = this->filename;
+	QApplication::postEvent( this, event );
 }
 
 /**
- * The function that is called when a new thread is started.
- * It can not be called directly with portageMLObject->start().
- * That's not necessary, because PortageML has convenient
- * member functions to start the thread and set up the configuration
- * for it (these are startLoadingFile() and startSavingFile()).
+ * From within the thread, emit a packagesScanned() signal to the main thread.
  */
-void PortageML::run()
+void PortageML::emitPackagesScanned()
 {
-	PortageLoaderBase::Error result;
-	QDateTime startTime = QDateTime::currentDateTime();
-	QObject* receiver = this->receiver;
+	PackagesScannedEvent* event  = new PackagesScannedEvent();
+	event->packageCountAvailable = this->packageCountAvailable;
+	event->packageCountInstalled = this->packageCountInstalled;
+	QApplication::postEvent( this, event );
+}
 
-	// load or save the file
-	if( this->action == LoadFile ) {
-		result = this->loadFile( this->tree, this->filename );
+/**
+ * Translates QCustomEvents into signals. This function is called from Qt
+ * in the main thread, which guarantees safety for emitting signals.
+ */
+void PortageML::customEvent( QCustomEvent* event )
+{
+	switch( event->type() )
+	{
+	case (int) PackagesScannedEventType:
+		emit packagesScanned(
+			((PackagesScannedEvent*)event)->packageCountAvailable,
+			((PackagesScannedEvent*)event)->packageCountInstalled
+		);
+		break;
 
-		// Inform main thread that loading has finished
-		LoadingTreeCompleteEvent *event = new LoadingTreeCompleteEvent();
-		event->error = result;
-		event->packageCount = tree->packageCount();
-		event->packageCountInstalled = packageCountInstalled;
-		event->method = LoadingTreeEvent::LoadFile;
-		event->secondsElapsed = startTime.secsTo( QDateTime::currentDateTime() );
-		QApplication::postEvent( receiver, event );
-	}
-	else if( this->action == SaveFile ) {
-		result = this->saveFile( this->tree, this->filename );
+	case (int) FinishedFileEventType:
+		if( ((FinishedFileEvent*)event)->action == LoadFile )
+			emit finishedLoading( packages, filename );
+		else if( ((FinishedFileEvent*)event)->action == SaveFile )
+			emit finishedSaving( packages, filename );
+		break;
 
-		// Inform main thread that saving has finished
-		SavingTreeCompleteEvent *event = new SavingTreeCompleteEvent();
-		event->error = result;
-		event->secondsElapsed = startTime.secsTo( QDateTime::currentDateTime() );
-		QApplication::postEvent( receiver, event );
+	default:
+		ThreadedJob::customEvent( event );
+		break;
 	}
 }
+
+} // namespace

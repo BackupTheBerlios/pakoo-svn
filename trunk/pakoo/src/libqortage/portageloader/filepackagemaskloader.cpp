@@ -23,11 +23,12 @@
 #include "../core/packageversion.h"
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
-FilePackageMaskLoader::FilePackageMaskLoader()
- : FileAtomLoaderBase()
+FilePackageMaskLoader::FilePackageMaskLoader() : FileAtomLoaderBase()
 {
 	mask = true;
 }
@@ -46,18 +47,23 @@ void FilePackageMaskLoader::setMode( FilePackageMaskLoader::Mode mode )
 }
 
 /**
- * If the line is a comment then false is returned.
- * Otherwise the atomString is set to the whole line.
+ * Returns false for empty or comment lines.
  */
-bool FilePackageMaskLoader::processLine( const QString& line )
+bool FilePackageMaskLoader::isLineProcessed( const QString& line )
 {
-	if( line.startsWith("#") ) {
+	if( line.isEmpty() || line.startsWith("#") )
 		return false;
-	}
-	else {
-		atomString = line;
+	else
 		return true;
-	}
+}
+
+/**
+ * Set the atomString to the whole line, always returning true.
+ */
+bool FilePackageMaskLoader::setAtomString( const QString& line )
+{
+	atomString = line;
+	return true;
 }
 
 /**
@@ -68,3 +74,5 @@ void FilePackageMaskLoader::processVersion( PackageVersion* version )
 {
 	version->isHardMasked = mask;
 }
+
+} // namespace

@@ -18,10 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef FILEPACKAGEMASKLOADER_H
-#define FILEPACKAGEMASKLOADER_H
+#ifndef LIBPAKTFILEPACKAGEMASKLOADER_H
+#define LIBPAKTFILEPACKAGEMASKLOADER_H
 
 #include "fileatomloaderbase.h"
+
+
+namespace libpakt {
 
 /**
  * This is a class that is able to load hardmasking files, such as
@@ -32,6 +35,8 @@
  */
 class FilePackageMaskLoader : public FileAtomLoaderBase
 {
+	Q_OBJECT
+
 public:
 	enum Mode {
 		Mask,
@@ -42,11 +47,14 @@ public:
 	void setMode( FilePackageMaskLoader::Mode mode );
 
 protected:
-	bool processLine( const QString& line );
+	bool isLineProcessed( const QString& line );
+	bool setAtomString( const QString& line );
     void processVersion( PackageVersion* version );
 
 private:
 	bool mask;
 };
 
-#endif
+}
+
+#endif // LIBPAKTFILEPACKAGEMASKLOADER_H

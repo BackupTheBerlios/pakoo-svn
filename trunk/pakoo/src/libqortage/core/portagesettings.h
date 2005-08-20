@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PORTAGESETTINGS_H
-#define PORTAGESETTINGS_H
+#ifndef LIBPAKTPORTAGESETTINGS_H
+#define LIBPAKTPORTAGESETTINGS_H
 
 #include <qstring.h>
 #include <qstringlist.h>
@@ -30,6 +30,8 @@
 // and beginning with a letter or underscore.
 #define RXSHELLVARIABLE "(?:[a-z]|[A-Z]|_)+(?:[a-z]|[A-Z]|[0-9]|_)*"
 
+
+namespace libpakt {
 
 typedef QMap<QString,QString> ConfigValueMap;
 
@@ -60,10 +62,21 @@ public:
 	QStringList overlayTreeDirectories();
 	QString acceptedKeyword();
 
+	// not in the Portage settings but good to have in this object
+	void setInstalledPackagesDirectory( const QString& directory );
+	QString installedPackagesDirectory();
+	void setCacheDirectory( const QString& directory );
+	QString cacheDirectory();
+	void setPreferCache( bool preferCache );
+	bool preferCache();
+
 protected:
 	QString substituteShellVariables( const QString& value );
 
+private:
 	ConfigValueMap configValues;
 };
 
-#endif
+}
+
+#endif // LIBPAKTPORTAGESETTINGS_H

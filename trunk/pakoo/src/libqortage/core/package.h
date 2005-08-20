@@ -18,18 +18,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PACKAGE_H
-#define PACKAGE_H
+#ifndef LIBPAKTPACKAGE_H
+#define LIBPAKTPACKAGE_H
 
 #include <qstring.h>
 #include <qmap.h>
 #include <qvaluelist.h>
 #include <qstringlist.h>
 
+#include <ksharedptr.h>
+
+#include "portagecategory.h"
+
+
+namespace libpakt {
+
 class PackageVersion;
-
 typedef QMap<QString,PackageVersion> PackageVersionMap;
-
 
 /**
  * Package is a class to store information about a package.
@@ -38,21 +43,21 @@ typedef QMap<QString,PackageVersion> PackageVersionMap;
  *
  * @short Representation of a package in the portage tree (containing PackageVersion objects).
  */
-class Package
+class Package : public KShared
 {
 public:
-	QString category, subcategory, name;
+	Package( PackageCategory* category, const QString& name );
+	~Package();
 
-	Package( const QString& category = "",
-	         const QString& subcategory = "",
-	         const QString& name = "" );
+	// core functionality
+	const QString& name() const;
+	PackageCategory* category();
 
-	// modifying functions
+	// version clearing functions
 	void clear();
 	void removeVersion( const QString& version );
 	bool setVersion( PackageVersion& version );
 	bool setVersion( const QString& versionString );
-	PackageVersion* Package::version( const QString& version );
 
 	// info functions
 	bool hasVersions();
@@ -62,17 +67,26 @@ public:
 	bool hasUpdate( PackageVersion* version, const QString& arch );
 
 	// version retrieval functions
+	PackageVersion* version( const QString& version );
 	PackageVersionMap* versionMap();
 	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
 	QValueList<PackageVersion*> sortedVersionList();
 	PackageVersion* latestVersion();
 	PackageVersion* latestStableVersion( const QString& arch );
 
+	// other retrieval functions
+	QString uniqueName() const;
 	QStringList slotList();
 
 protected:
+	//! The name of the package, e.g. "pakoo"
+	const QString m_name;
+	//! The package category, e.g. app-portage
+	PackageCategory* m_category;
 	//! The internal list of package versions.
 	PackageVersionMap versions;
 };
 
-#endif // PACKAGE_H
+}
+
+#endif // LIBPAKTPACKAGE_H

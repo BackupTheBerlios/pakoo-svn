@@ -18,105 +18,132 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PORTAGETREESCANNER_H
-#define PORTAGETREESCANNER_H
+#ifndef LIBPAKTPORTAGETREESCANNER_H
+#define LIBPAKTPORTAGETREESCANNER_H
 
-#include "portageloaderbase.h"
-#include "../core/portagetree.h"
+#include "../core/threadedjob.h"
+#include "../core/portagecategory.h"
 
 #include <qstringlist.h>
 #include <qdir.h>
 #include <qregexp.h>
 
+
+namespace libpakt {
+
 class PackageVersion;
 class Package;
-class PortageTree;
-class PackageScanner;
+class PackageList;
+class PortageSettings;
 
 /**
  * PortageTreeScanner is an optionally threaded class for scanning the portage
- * tree for packages. In opposition to PackageScanner, this class only
- * scans the folder structure, so it will find packages without versions
- * in the mainline and overlay trees, and packages containing versions
- * in the installed packages database.
+ * tree for packages. After scanning, the given PackageList object will
+ * contain all packages and package versions, with no extra info except
+ * if the package is installed or not.
+ *
+ * After setting up the scanner (using the setPackageList member function)
+ * you can call start() or perform() to begin scanning.
  *
  * @short  A threaded class for scanning the portage tree for packages.
  */
-class PortageTreeScanner : public PortageLoaderBase
+class PortageTreeScanner : public ThreadedJob
 {
+	Q_OBJECT
+
 public:
-	PortageTreeScanner( QString treeDir = "/usr/portage/",
-	                    QStringList overlayDirs = QStringList(),
-	                    QString installedDir = "/var/db/pkg/",
-	                    QString edbDepDir = "/var/cache/edb/dep/" );
+	PortageTreeScanner();
 
-	~PortageTreeScanner();
+	// settings
+	void setSettingsObject( PortageSettings* settings );
+	void setPackageList( PackageList* packages );
 
-	PortageLoaderBase::Error scanTrees(
-		PortageTree* portageTree,
-		PortageTree::Trees searchedTrees = PortageTree::All,
-		bool preferEdb = true
-	);
+	// filters
+	void setScanAvailablePackages( bool scanAvailablePackages );
+	void setScanInstalledPackages( bool scanInstalledPackages );
 
-	bool startScanningTrees( QObject* receiver, PortageTree* portageTree,
-	                         PortageTree::Trees searchedTrees = PortageTree::All,
-	                         bool preferEdb = true );
+signals:
+	/**
+	 * Emitted every once in a while when packages have been added to the
+	 * PortageTree object. The arguments specify the number of available
+	 * packages and the number of installed ones. (Note: The number of
+	 * available packages is perhaps not the total number of packages in the
+	 * resulting tree object, because it's possible that there are packages
+	 * that are installed but not available in the tree anymore. For
+	 * retrieving the total number of packages, please make use of the
+	 * appropriate member function of the tree object, and use this signal
+	 * just for displaying the current scan status.)
+	 */
+	void packagesScanned( int packageCountAvailable,
+	                      int packageCountInstalled );
 
-	void setMainlineTreeDirectory( QString directory );
-	void setOverlayTreeDirectories( QStringList directories );
-	void setInstalledPackagesDirectory( QString directory );
-	void setEdbDepDirectory( QString directory );
+	/**
+	 * Emitted if the package tree has successfully been loaded from disk.
+	 * The PackageList object now contains all packages and package versions,
+	 * but without detailed package information.
+	 */
+	void finishedLoading( PackageList* packages );
 
-	PackageScanner* packageScanner();
+	/**
+	 * Emitted for debug output, like starting the scan,
+	 * finishing part of the job, or error messages.
+	 */
+	void debugOutput( QString output );
 
 protected:
-	void run();
+	JobResult performThread();
+	void customEvent( QCustomEvent* event );
 
-	PortageLoaderBase::Error scanMainlineTree();
-	PortageLoaderBase::Error scanOverlayTrees();
-	PortageLoaderBase::Error scanInstalledTree();
+private:
+	enum TreeType
+	{
+		Mainline,
+		Overlay,
+		Installed
+	};
+	enum PortageTreeScannerEventType
+	{
+		PackagesScannedEventType = QEvent::User + 14340,
+		FinishedLoadingEventType = QEvent::User + 14341
+	};
 
-	PortageLoaderBase::Error scanTree(
-		QString treeDir, PortageTree::Trees searchedTree
-	);
+	bool scanTree( const QString& treeDir, PortageTreeScanner::TreeType searchedTree );
 	void scanTreePackage( QDir& d, bool overlay );
-	void scanEdbCategory( QDir& d );
+	void scanCacheCategory( QDir& d );
 	void scanInstalledPackage( QDir& d );
-	void postPartlyCompleteEvent( QDateTime& since, PortageTree::Trees searchedTrees );
 
-	//! The PortageTree object that will be filled.
-	PortageTree* tree;
-	//! A PackageScanner object with settings synchronized to this PortageTreeScanner.
-	PackageScanner* pkgScanner;
+	void emitPackagesScanned();
+	void emitFinishedLoading();
+
+	//! The PackageList object that will be filled.
+	PackageList* packages;
+	//! The PortageSettings object used for retrieving directories and cache info.
+	PortageSettings* settings;
 
 	//! The directory where PortageTreeScanner tries to find packages.
-	QString portageTreeDir;
+	QString mainlineTreeDir;
 	//! The list of portage overlay directories.
-	QStringList portageOverlayDirs;
+	QStringList overlayTreeDirs;
 	//! The directory where the database of installed packages resides.
 	QString installedPackagesDir;
 	//! The directory where the portage cache resides.
-	QString edbDir;
+	QString cacheDir;
 
-	//! Set true if the edb/dep/ directory should be searched instead of the mainline tree.
-	bool preferEdb;
+	//! Set true if the Portage cache should be scanned instead of the mainline tree.
+	bool preferCache;
 
-	//! Defines which package directories are searched.
-	PortageTree::Trees searchedTrees;
+	//! Defines if mainline and overlay trees are searched.
+	bool scanAvailablePackages;
+	//! Defines if the installed packages database is searched.
+	bool scanInstalledPackages;
 
-	/**
-	 * A counter, incremented with each found package,
-	 * but counting only the packages from the currently searched tree.
-	 */
-	int localTreeCount;
+	//! A counter, incremented with each found available package.
+	int packageCountAvailable;
 	//! A counter, incremented with each found installed package.
-	int installedPackageCount;
+	int packageCountInstalled;
 
-private:
 	//! The name of the current category
-	QString currentCategory;
-	//! The name of the current subcategory
-	QString currentSubcategory;
+	PortageCategory currentCategory;
 
 	//! An object used for temporarily storing package information.
 	Package* currentPackage;
@@ -125,6 +152,28 @@ private:
 
 	//! Regexp for ebuild names (the part before the version string)
 	QRegExp rxVersion;
+
+
+	//
+	// nested event classes
+	//
+
+	class PackagesScannedEvent : public QCustomEvent
+	{
+	public:
+		PackagesScannedEvent() : QCustomEvent( PackagesScannedEventType ) {};
+		int packageCountAvailable;
+		int packageCountInstalled;
+	};
+
+	class FinishedLoadingEvent : public QCustomEvent
+	{
+	public:
+		FinishedLoadingEvent() : QCustomEvent( FinishedLoadingEventType ) {};
+		PackageList* packages;
+	};
 };
 
-#endif // PORTAGETREESCANNER_H
+}
+
+#endif // LIBPAKTPORTAGETREESCANNER_H

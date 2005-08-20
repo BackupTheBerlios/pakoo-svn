@@ -18,111 +18,77 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PACKAGESCANNER_H
-#define PACKAGESCANNER_H
+#ifndef LIBPAKTPORTAGEPACKAGELOADER_H
+#define LIBPAKTPORTAGEPACKAGELOADER_H
 
-#include "portageloaderbase.h"
+#include "packageloader.h"
 
+#include <qstringlist.h>
 #include <qregexp.h>
 
-class Package;
-class PackageVersion;
-class PortageTree;
 
+namespace libpakt {
+
+class PortageSettings;
 
 /**
- * PackageScanner is an optionally threaded class able to retrieve
- * package detail information. In opposition to PortageTreeScanner, this class
- * is responsible for scanning files (namely: ebuilds and digests) to
- * fill versions of a package with detailed info.
+ * PortagePackageLoader is a threaded job which is able to retrieve package
+ * detail information. In this implementation for Portage, this class
+ * loads file contents (for example, of ebuilds or digests) to fill in
+ * PackageVersion info that has not been read yet.
  *
- * @short A threaded class for retrieving package detail info.
+ * After setting up the scanner (using at least the setPackage()
+ * member function) you can call start() or perform() to begin scanning.
+ *
+ * @short A threaded class for retrieving detail info of a single package.
  */
-class PackageScanner : public PortageLoaderBase
+class PortagePackageLoader : public PackageLoader
 {
+	Q_OBJECT
+
 public:
-	enum Action {
-		ScanPackage,
-		ScanCategory
-	};
+	PortagePackageLoader();
 
-	PackageScanner( QString     treeDir = "/usr/portage/",
-	                QStringList overlayDirs = QStringList(),
-	                QString     installedDir = "/var/db/pkg/",
-	                QString     edbDepDir = "/var/cache/edb/dep/" );
-	PackageScanner( PackageScanner* anotherScanner );
-
-	PortageLoaderBase::Error scanPackage( Package* package,
-	                                      bool preferEdb = true );
-	PortageLoaderBase::Error scanCategory(
-		PortageTree* tree, QString category,
-		QString subcategory, bool preferEdb = true
-	);
-
-	bool startScanningPackage( QObject* receiver,
-	                           Package* package, bool preferEdb = true );
-	bool startScanningCategory( QObject* receiver, PortageTree* tree,
-	                            QString category, QString subcategory,
-	                            bool preferEdb = true );
-
-	void setFilterInstalled( bool doFilter, bool scanInstalled = true );
-
-	void setMainlineTreeDirectory( QString directory );
-	void setOverlayTreeDirectories( QStringList directories );
-	void setInstalledPackagesDirectory( QString directory );
-	void setEdbDepDirectory( QString directory );
+	// settings
+	void setSettingsObject( PortageSettings* settings );
 
 protected:
-	void run();
+	JobResult performThread();
+
+private:
+
+	bool scanPackage();
 
 	bool scanEbuild( PackageVersion* version, const QString& filename );
 	bool scanEdbFile( PackageVersion* version, const QString& filename );
+	bool scanOverlayPackage( PackageVersion* version );
 	bool scanDigest( PackageVersion* version, const QString& filename );
 
-	//! The currently processed package.
-	Package* package;
+	bool extractStringList( const QString& string, QRegExp* rx, QStringList* targetList );
 
-	//! The directory where PackageScanner tries to find packages.
-	QString portageTreeDir;
-	//! The overlay directories for finding additional packages.
-	QStringList portageOverlayDirs;
-	//! The directory where the database of installed packages resides.
-	QString installedPackagesDir;
-	//! The directory where the portage cache resides.
-	QString edbDir;
-
-	//! Set true if the edb/dep/ directory should be searched instead of the mainline tree.
-	bool preferEdb;
+	//! The PortageSettings object used for retrieving directories and cache info.
+	PortageSettings* settings;
 
 	//! An object used for temporarily storing package version information.
 	PackageVersion* version;
-	//! The portage tree which is currently scanned by category.
-	PortageTree* tree;
-	//! The currently processed category.
-	QString category;
-	//! The currently processed subcategory.
-	QString subcategory;
 
-	//! Specifies if a single package or a whole category is searched.
-	Action action;
-	//! true if filtering installed packages out or in is enabled.
-	bool doFilterInstalled;
-	/**
-	 * true if only packages with installed versions should be scanned,
-	 * false to scan only packages without installed versions.
-	 * This is only used if doFilter == true.
-	 */
-	bool scanInstalled;
+	//! The directory where PortagePackageLoader tries to find packages.
+	QString mainlineTreeDir;
+	//! The overlay directories for finding additional packages.
+	QStringList overlayTreeDirs;
+	//! The directory where the database of installed packages resides.
+	QString installedPackagesDir;
+	//! The directory where the portage cache resides.
+	QString cacheDir;
 
-private:
-	// Helper function for scanPackage().
-	bool scanOverlayPackage( Package* package, PackageVersion* version );
-	// Helper function for extracting tokens from a string
-	bool extractStringList( const QString& string, QRegExp* rx, QStringList* targetList );
+	//! Set true if the Portage cache should be scanned instead of the mainline tree.
+	bool preferCache;
 
 	// Regexps for various line strings inside an ebuild.
 	QRegExp rxDescription, rxHomepage, rxSlot;
 	QRegExp rxLicenses, rxKeywords, rxUseflags;
 };
 
-#endif // PACKAGESCANNER_H
+}
+
+#endif // LIBPAKTPORTAGEPACKAGELOADER_H

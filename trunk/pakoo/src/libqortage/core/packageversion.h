@@ -18,13 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PACKAGEVERSION_H
-#define PACKAGEVERSION_H
+#ifndef LIBPAKTPACKAGEVERSION_H
+#define LIBPAKTPACKAGEVERSION_H
 
 #include <qstring.h>
 #include <qstringlist.h>
 #include <qregexp.h>
 
+
+namespace libpakt {
 
 /**
  * PackageVersion is a class for managing package version information,
@@ -103,4 +105,6 @@ private:
 	int trailingCharNumber( const QString& versionString, int* foundPos = NULL );
 };
 
-#endif // PACKAGEVERSION_H
+}
+
+#endif // LIBPAKTPACKAGEVERSION_H

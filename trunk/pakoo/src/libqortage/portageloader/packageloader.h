@@ -18,63 +18,70 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#ifndef LIBPAKTPACKAGELOADER_H
+#define LIBPAKTPACKAGELOADER_H
 
-#include "packageversion.h"
+#include "../core/threadedjob.h"
 
 
 namespace libpakt {
 
-/**
- * Initialize this object.
- */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
+class Package;
+class PackageVersion;
 
 /**
- * Returns false for empty or comment lines.
+ * PackageLoader is a threaded job which is able to retrieve package
+ * detail information. This class is responsible for filling in
+ * package and version infos which were not loaded by @class InitialLoader
+ * (because it would have been too resource- or time-expensive to load
+ * all the info at once).
+ *
+ * After setting up the scanner (using at least the setPackage()
+ * member function) you can call start() or perform() to begin scanning.
+ *
+ * @short A threaded class for retrieving detail info of a single package.
  */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+class PackageLoader : public ThreadedJob
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
-}
+	Q_OBJECT
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
+public:
+	PackageLoader();
+	void setPackage( Package* package );
+	Package* package();
 
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
+signals:
+	/** Emitted every time when a package has successfully been scanned.
+	 * The scanned package is given as argument. */
+	void packageLoaded( Package* package );
+
+protected:
+	void emitPackageLoaded();
+	void customEvent( QCustomEvent* event );
+
+private:
+
+	enum PackageLoaderEventType
 	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
-}
+		PackageLoadedEventType = QEvent::User + 14346
+	};
 
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
-{
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
+	//! The package that will be scanned.
+	Package* m_package;
+
+
+	//
+	// nested event classes
+	//
+
+	class PackageLoadedEvent : public QCustomEvent
 	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
+	public:
+		PackageLoadedEvent() : QCustomEvent( PackageLoadedEventType ) {};
+		Package* package;
+	};
+};
+
 }
 
-} // namespace
+#endif // LIBPAKTPACKAGELOADER_H

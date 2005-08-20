@@ -27,77 +27,90 @@
 #include <qtextstream.h>
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
-FileAtomLoaderBase::FileAtomLoaderBase()
-: PortageLoaderBase()
+FileAtomLoaderBase::FileAtomLoaderBase() : FileLoaderBase()
 {
+	packages = NULL;
+}
+
+
+/**
+ * Set the PackageList object that will be filled with packages
+ * (in case of loading from a file) or used as source of
+ * package information (in case of saving to a file).
+ */
+void FileAtomLoaderBase::setPackageList( PackageList* packages )
+{
+	this->packages = packages;
+}
+
+/**
+ * Check for a valid package list before processing the file.
+ */
+bool FileAtomLoaderBase::check()
+{
+	// Check for an invalid list, which would be bad
+	if( packages == NULL ) {
+		emit debugOutput(
+			QString( "Didn't start loading %1 because "
+			         "the PackageList object has not been set" )
+				.arg( filename )
+		);
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+/**
+ * Initialize the 'atom' member variable.
+ */
+bool FileAtomLoaderBase::init()
+{
+	atom = new DependAtom( packages );
+	return true;
+}
+
+/**
+ * Destroy the 'atom' member variable and return Success.
+ */
+IJob::JobResult FileAtomLoaderBase::finish()
+{
+	delete atom;
+	return Success;
 }
 
 /**
  * Scan and process the file, which most probably means modifying
- * some properties of packages inside the given tree. For each line
- * of the given file, processLine() is called. processLine() extracts
+ * some properties of packages inside the package list. For each line
+ * of the given file, setAtomString() is called. setAtomString() extracts
  * the atom string from the line so that matching versions of this
  * DEPEND atom can be retrieved. Then processVersion() is called
  * for each version matching the DEPEND atom.
- *
- * @param portageTree  The PortageTree object whose packages will be modified.
- * @param filename     The file that contains masking information.
- *
- * @return  PortageLoaderBase::NoError if the file has successfully been handled.
- *          PortageLoaderBase::OpenFileError if there was an error opening the file.
- *          PortageLoaderBase::NullObjectError if the given tree is NULL.
  */
-PortageLoaderBase::Error FileAtomLoaderBase::loadFile(
-	PortageTree* portageTree, const QString& filename )
+void FileAtomLoaderBase::processLine( const QString& line )
 {
-	// Check on a NULL tree, which would be bad
-	if( portageTree == NULL ) {
-		return NullObjectError;
-	}
-	tree = portageTree;
+	// call preprocess(), to set atomString (if it doesn't return false)
+	if( setAtomString(line) == false )
+		return;
 
-	// Open the file for reading
-	QFile file( filename );
+	if( atom->parse(atomString) == false )
+		return;
 
-	if( !file.open( IO_ReadOnly ) ) {
-		return OpenFileError;
-	}
+	// get the matching versions, and call process() on each of them
+	QValueList<PackageVersion*> versions = atom->matchingVersions();
+	QValueList<PackageVersion*>::iterator versionIterator;
 
-	QString line;
-	QTextStream stream( &file );
-
-	atom = new DependAtom( tree );
-
-	// Process each line
-	while ( !stream.atEnd() )
+	for( versionIterator = versions.begin();
+			versionIterator != versions.end(); versionIterator++ )
 	{
-		line = stream.readLine();
-
-		if( line.isEmpty() == true )
-			continue;
-
-		// call preprocess(), to set atomString (if it doesn't return false)
-		if( processLine(line) == false )
-			continue;
-
-		if( atom->parse(atomString) == false )
-			continue;
-
-		// get the matching versions, and call process() on each of them
-		QValueList<PackageVersion*> versions = atom->matchingVersions();
-		QValueList<PackageVersion*>::iterator versionIterator;
-
-		for( versionIterator = versions.begin();
-		     versionIterator != versions.end(); versionIterator++ )
-		{
-			processVersion( *versionIterator );
-		}
+		processVersion( *versionIterator );
 	}
-
-	delete atom;
-
-	return NoError;
 }
+
+} // namespace

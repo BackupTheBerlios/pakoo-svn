@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PORTAGELOADERBASE_H
-#define PORTAGELOADERBASE_H
+#ifndef LIBPAKTPORTAGELOADERBASE_H
+#define LIBPAKTPORTAGELOADERBASE_H
 
 #include <qthread.h>
 
@@ -85,4 +85,4 @@ protected:
 	bool working;
 };
 
-#endif // PORTAGELOADERBASE_H
+#endif // LIBPAKTPORTAGELOADERBASE_H

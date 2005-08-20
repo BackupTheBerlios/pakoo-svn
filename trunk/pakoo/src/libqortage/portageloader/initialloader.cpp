@@ -18,62 +18,56 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#include "initialloader.h"
 
-#include "packageversion.h"
+#include <qapplication.h>
 
 
 namespace libpakt {
 
 /**
- * Initialize this object.
+ * Initialize this object. The package list receiving the loaded packages
+ * still has to be set using setPackageList().
+ *
+ * @see setPackageList
  */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
-
-/**
- * Returns false for empty or comment lines.
- */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+InitialLoader::InitialLoader() : ThreadedJob()
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+	packages = NULL;
 }
 
 /**
- * Set the atomString to the whole line, always returning true.
+ * Set the PackageList object that will be filled with packages.
  */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
+void InitialLoader::setPackageList( PackageList* packages )
 {
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
+	this->packages = packages;
 }
 
 /**
- * Set additional keywords for the found package version.
+ * From within the thread, emit a finishedLoading() signal to the main thread.
  */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
+void InitialLoader::emitFinishedLoading( PackageList* packages )
 {
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
+	FinishedLoadingEvent* event = new FinishedLoadingEvent();
+	event->packages = packages;
+	QApplication::postEvent( this, event );
+}
+
+/**
+ * Translates QCustomEvents into signals. This function is called from Qt
+ * in the main thread, which guarantees safety for emitting signals.
+ */
+void InitialLoader::customEvent( QCustomEvent* event )
+{
+	switch( event->type() )
 	{
-		version->acceptedKeywords.prepend( *keywordIterator );
+	case (int) FinishedLoadingEventType:
+		emit finishedLoading( ((FinishedLoadingEvent*)event)->packages );
+
+	default:
+		ThreadedJob::customEvent( event );
+		break;
 	}
 }
 

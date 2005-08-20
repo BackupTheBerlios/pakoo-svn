@@ -18,12 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef FILEPACKAGEKEYWORDSLOADER_H
-#define FILEPACKAGEKEYWORDSLOADER_H
+#ifndef LIBPAKTFILEPACKAGEKEYWORDSLOADER_H
+#define LIBPAKTFILEPACKAGEKEYWORDSLOADER_H
 
 #include "fileatomloaderbase.h"
 
 #include <qstringlist.h>
+
+
+namespace libpakt {
 
 /**
  * Using this class, you're able to load additional keywords from
@@ -33,14 +36,19 @@
  */
 class FilePackageKeywordsLoader : public FileAtomLoaderBase
 {
+	Q_OBJECT
+
 public:
     FilePackageKeywordsLoader();
 
-protected:
-    bool processLine(const QString& line);
-    void processVersion(PackageVersion* version);
+private:
+	bool isLineProcessed( const QString& line );
+	bool setAtomString( const QString& line );
+	void processVersion( PackageVersion* version );
 
 	QStringList keywords;
 };
 
-#endif
+}
+
+#endif // LIBPAKTFILEPACKAGEKEYWORDSLOADER_H

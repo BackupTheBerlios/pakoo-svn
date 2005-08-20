@@ -18,58 +18,58 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PORTAGETREE_H
-#define PORTAGETREE_H
+#ifndef LIBPAKTPACKAGELIST_H
+#define LIBPAKTPACKAGELIST_H
 
 #include <qstring.h>
 #include <qmap.h>
 #include <qvaluelist.h>
 
-class Package;
+#include <ksharedptr.h>
 
-typedef QMap<QString,Package> PackageMap;
+#include "package.h"
 
+
+namespace libpakt {
+
+class PackageCategory;
 
 /**
- * PortageTree is a class for managing Package objects.
- * Changes in here don't affect the real portage tree, of course.
+ * PackageList is a class for managing Package objects.
+ * It can be used as a representation of the package tree,
+ * or to store package search results, or whatever.
  *
- * @short Representation of the portage tree (containing Package objects).
+ * @short  A list of Package objects.
  */
-class PortageTree
+class PackageList
 {
 public:
-	//! Portage trees and reasonable combinations.
-	enum Trees {
-		All,
-		Installed,
-		MainlineAndOverlay,
-		Mainline,
-		Overlay
-	};
+	typedef QMapIterator<QString,KSharedPtr<Package> > iterator;
+	typedef QMapConstIterator<QString,KSharedPtr<Package> > const_iterator;
 
-	PortageTree();
+	PackageList();
 
+	int count();
 	void clear();
 
-	bool setPackage( Package& package );
-	bool setPackage( const QString& category,
-	                 const QString& subcategory,
-	                 const QString& package );
+	bool insert( Package* package );
+	bool insert( PackageCategory* category, const QString& name );
 
-	bool hasPackage( const QString& category,
-	                 const QString& subcategory,
-	                 const QString& package );
-	Package* package( const QString& category,
-	                  const QString& subcategory,
-	                  const QString& package );
+	bool contains( PackageCategory* category, const QString& name );
+	Package* package( PackageCategory* category, const QString& name );
 
-	PackageMap* packageMap();
-	int packageCount();
+	iterator begin();
+	iterator end();
+	const_iterator begin() const;
+	const_iterator end() const;
 
-protected:
+private:
+	typedef QMap<QString,KSharedPtr<Package> > PackageMap;
+
 	//! The internal list of packages in the tree.
 	PackageMap packages;
 };
 
-#endif // PORTAGETREE_H
+}
+
+#endif // LIBPAKTPACKAGELIST_H

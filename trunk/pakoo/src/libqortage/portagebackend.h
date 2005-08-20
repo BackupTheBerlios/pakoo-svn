@@ -18,63 +18,40 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "filepackagekeywordsloader.h"
+#ifndef LIBPAKTPORTAGEBACKEND_H
+#define LIBPAKTPORTAGEBACKEND_H
 
-#include "packageversion.h"
+#include <backendfactory.h>
 
 
 namespace libpakt {
 
-/**
- * Initialize this object.
- */
-FilePackageKeywordsLoader::FilePackageKeywordsLoader() : FileAtomLoaderBase()
-{}
+class PortageSettings;
 
 /**
- * Returns false for empty or comment lines.
+ * A concrete BackendFactory implementation returning objects
+ * specific to Gentoo's Portage package management system.
  */
-bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
+class PortageBackend : public BackendFactory
 {
-	if( line.isEmpty() || line.startsWith("#") )
-		return false;
-	else
-		return true;
+public:
+	PortageBackend();
+
+	//! Return the PortageSettings object containing the global configuration.
+	PortageSettings* settings();
+
+	bool hasLoaderClasses()    { return true; }
+	bool hasInstallerClasses() { return false; }
+	bool hasConfigClasses()    { return false; }
+
+	PackageCategory* createPackageCategory();
+	InitialLoader* createInitialLoader();
+	PackageLoader* createPackageLoader();
+
+private:
+	PortageSettings* portageSettings;
+};
+
 }
 
-/**
- * Set the atomString to the whole line, always returning true.
- */
-bool FilePackageKeywordsLoader::setAtomString( const QString& line )
-{
-	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
-
-	QStringList::iterator tokenIterator = tokens.begin();
-	tokenIterator++;
-	while( tokenIterator != tokens.end() )
-	{
-		keywords.prepend( *tokenIterator );
-		tokenIterator++;
-	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
-	}
-	return true;
-}
-
-/**
- * Set additional keywords for the found package version.
- */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
-{
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
-	{
-		version->acceptedKeywords.prepend( *keywordIterator );
-	}
-}
-
-} // namespace
+#endif

@@ -26,72 +26,66 @@
 #include "../core/portagesettings.h"
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
 FileMakeConfigLoader::FileMakeConfigLoader()
-: rxConfigLine("(" RXSHELLVARIABLE ")=([^#]*)")
+: FileLoaderBase(),
+  rxConfigLine("(" RXSHELLVARIABLE ")=([^#]*)")
 // RXSHELLVARIABLE is defined in portagesettings.h
 {
+	settings = NULL;
 }
 
 /**
- * Scan and process a configuration file, and store the retrieved
- * configuration values into the PortageSettings object.
- *
- * @param settings  The PortageSettings object that will be filled
- *                  with configuration values.
- * @param filename  Path of the configuration file.
- *
- * @return  PortageLoaderBase::NoError if the file has successfully been handled.
- *          PortageLoaderBase::OpenFileError if there was an error opening the file.
- *          PortageLoaderBase::NullObjectError if the given settings object is NULL.
+ * Set the PortageSettings object that will be
+ * filled with configuration values.
  */
-PortageLoaderBase::Error FileMakeConfigLoader::loadFile(
-	PortageSettings* settings, const QString& filename )
+void FileMakeConfigLoader::setSettingsObject( PortageSettings* settings )
 {
-	// Check on a NULL settings object, which would be bad
-	if( settings == NULL )
-		return NullObjectError;
-	else
-		this->settings = settings;
-
-	// Open the file for reading
-	QFile file( filename );
-
-	if( !file.open( IO_ReadOnly ) ) {
-		return OpenFileError;
-	}
-
-	QString line;
-	QTextStream stream( &file );
-
-	// Process each line
-	while ( !stream.atEnd() )
-	{
-		line = stream.readLine();
-
-		if( line.isEmpty() == true )
-			continue;
-
-		processLine( line );
-	}
-
-	return NoError;
+	this->settings = settings;
 }
 
 /**
- * Process one single line of the file.
- * If it contains a configuration value, it will be stored
- * in this object's 'settings' member.
- * Returns false if the line is a comment, true otherwise.
+ * Check for a valid settings object before processing the file.
  */
-bool FileMakeConfigLoader::processLine( const QString& line )
+bool FileMakeConfigLoader::check()
 {
-	if( line.stripWhiteSpace().startsWith("#") ) {
+	// Check for an invalid settings object, which would be bad
+	if( settings == NULL ) {
+		emit debugOutput(
+			QString( "Didn't start loading %1 because "
+			         "the settings object has not been set" )
+				.arg( filename )
+		);
 		return false;
 	}
+	else {
+		return true;
+	}
+}
 
+/**
+ * Returns false for empty or comment lines.
+ */
+bool FileMakeConfigLoader::isLineProcessed( const QString& line )
+{
+	if( line.isEmpty() || line.stripWhiteSpace().startsWith("#") )
+		return false;
+	else
+		return true;
+}
+
+/**
+ * Process one single line of the file. If it contains a configuration value,
+ * it will be stored in this object's 'settings' member.
+ *
+ * @param line  The current line that has been read from the file.
+ */
+void FileMakeConfigLoader::processLine( const QString& line )
+{
 	if( rxConfigLine.search(line) > -1 ) // found a configuration value
 	{
 		QString name = rxConfigLine.cap(1);
@@ -110,5 +104,6 @@ bool FileMakeConfigLoader::processLine( const QString& line )
 			settings->setValue( name, value );
 		}
 	}
-	return true;
 }
+
+} // namespace

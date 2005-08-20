@@ -18,57 +18,63 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef FILEATOMLOADERBASE_H
-#define FILEATOMLOADERBASE_H
+#ifndef LIBPAKTFILEATOMLOADERBASE_H
+#define LIBPAKTFILEATOMLOADERBASE_H
 
 #include <qstring.h>
 
-class PortageTree;
+#include "../core/fileloaderbase.h"
+
+
+namespace libpakt {
+
+class PackageList;
 class PackageVersion;
 class DependAtom;
-
-#include "portageloaderbase.h"
-
 
 /**
  * This is a base class for derived ones that read files with one
  * DEPEND atom per line, like the config files in /etc/portage/.
+ *
+ * To use it, set it up calling the setPackageList and setFileName
+ * member functions, then call perform to process the file.
  */
-class FileAtomLoaderBase : public PortageLoaderBase
+class FileAtomLoaderBase : public FileLoaderBase
 {
-public:
-    FileAtomLoaderBase();
+	Q_OBJECT
 
-	PortageLoaderBase::Error loadFile( PortageTree* portageTree,
-	                                   const QString& filename );
+public:
+	FileAtomLoaderBase();
+
+	void setPackageList( PackageList* packages );
 
 protected:
 	//! A DEPEND atom validator / package version retriever
 	DependAtom* atom;
-	//! The string of the current line's DEPEND atom, to be set by preprocess().
+	//! The string of the current line's DEPEND atom, to be set by setAtomString().
 	QString atomString;
 
-	//! The PortageTree object whose packages will be modified.
-	PortageTree* tree;
+	//! The PackageList object whose packages will be modified.
+	PackageList* packages;
 
 	/**
-	 * This purely virtual function is called by loadFile() for every line
-	 * in the file and has to extract the DEPEND atom string from there
+	 * This purely virtual function is called by processLine() for every
+	 * non-empty line and has to extract the DEPEND atom string from there
 	 * and store it in the 'atomString' member variable.
 	 *
 	 * If the matching versions should not be processed (like when it's a
 	 * comment, or if you just need the line string) this function can return
-	 * false to tell loadFile to continue to the next line instead of calling
-	 * processVersion() for matching versions.
+	 * false to tell processLine() to continue to the next line instead of
+	 * calling processVersion() for matching versions.
 	 *
 	 * If there is additional information inside the line (like keywords)
 	 * you might want to save them into a member variable, so that you can
 	 * access it when process() is called.
 	 *
-	 * Further, you can assume that atom is a valid DependAtom object,
-	 * so use it if you like.
+	 * Further, you can assume that the 'atom' member variable is a valid
+	 * DependAtom object, so use it if you need to.
 	 */
-	virtual bool processLine( const QString& line ) = 0;
+	virtual bool setAtomString( const QString& line ) = 0;
 
 	/**
 	 * This purely virtual function is called for every package version
@@ -82,7 +88,12 @@ protected:
 	virtual void processVersion( PackageVersion* version ) = 0;
 
 private:
-	void run() {}; // inherited from PortageLoaderBase, but not used here
+	bool check();
+	bool init();
+	void processLine( const QString& line );
+	JobResult finish();
 };
 
-#endif // FILEATOMLOADERBASE_H
+}
+
+#endif // FLIBPAKTILEATOMLOADERBASE_H
