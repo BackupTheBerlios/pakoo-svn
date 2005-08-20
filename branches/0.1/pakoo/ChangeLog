@@ -1,0 +1,25 @@
+2005-07-12 Jakob Petsovits <jpetso@gmx.at>
+	* release of Pakoo 0.1
+	* user interface changes
+	* make the /usr/portage scanner work again
+
+2005-07-11 Jakob Petsovits <jpetso@gmx.at>
+	* button for aborting the package scanner
+	* disable the buttons that don't work (ahem, that's nearly all ;-)
+	* better app icons, from a modified high-res g-logo
+
+2005-07-05 Jakob Petsovits <jpetso@gmx.at>
+	* support for cascading profiles, including automatic ARCH, PORTDIR & Co. retrieval
+	* fixes for the PackageVersion compare algorithm
+	  (which now handles trailing characters and "_beta" without number)
+
+2005-06-06 Jakob Petsovits <jpetso@gmx.at>
+	* more and prettier infos in the package info view
+	* fixed some semi-serious bug with package displaying, dropping some multithreading
+
+2005-06-02 Jakob Petsovits <jpetso@gmx.at>
+	* fix in the DEPEND atom regexp
+	* fix for loading version items in the list view
+
+2005-06-01 Jakob Petsovits <jpetso@gmx.at>
+	* initial import to the Subversion repository

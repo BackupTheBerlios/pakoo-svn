@@ -1,0 +1,6 @@
+# Code generation options for kconfig_compiler
+File=pakooconfig.kcfg
+ClassName=PakooConfig
+Singleton=true
+Mutators=true
+MemberVariables=private
