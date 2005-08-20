@@ -27,6 +27,9 @@
 #include "../libqortage/libqortage.h"
 #include "portagehtmlgenerator.h"
 
+
+namespace libpakt {
+
 /**
  * A KHTMLPart with additional functions to display package info.
  *
@@ -57,5 +60,7 @@ protected:
 protected slots:
 	void openURLRequest( const KURL& url, const KParts::URLArgs& args );
 };
+
+}
 
 #endif // PACKAGEINFOVIEW_H

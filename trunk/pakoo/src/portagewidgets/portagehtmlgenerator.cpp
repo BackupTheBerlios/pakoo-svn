@@ -20,6 +20,9 @@
 
 #include "portagehtmlgenerator.h"
 
+
+namespace libpakt {
+
 /**
  * Initialize this object.
  *
@@ -113,8 +116,8 @@ QString PortageHTMLGenerator::fromPackage( Package* package,
 		"<html><body style=\"margin-top: 0px; margin-left: 0.5em;\">"
 		"<span style=\"font-size:x-small;\">"
 		"<p style=\"margin-top: 0.5em;\">"
-		+ package->category + "-" + package->subcategory + " / <strong>"
-		+ package->name + versionSuffix + "</strong> " + notes
+		+ package->category()->userVisibleName() + " / <strong>"
+		+ package->name() + versionSuffix + "</strong> " + notes
 		+ packageDescription() + "</p><p style=\"margin-top: -0.2em;\">"
 		+ packageVersions() + "</p></span></body></html>";
 
@@ -292,3 +295,5 @@ QString PortageHTMLGenerator::packageVersions( const QString& slot )
 	}
 	return output;
 }
+
+} // namespace

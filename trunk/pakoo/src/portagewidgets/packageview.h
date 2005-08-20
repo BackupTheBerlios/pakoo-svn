@@ -30,22 +30,23 @@
 #include "packagesearchline.h"
 
 
+namespace libpakt {
+
 /**
- * PackageView is a combination of a PakooPackageListView and an
+ * PackageView is a combination of a PackageListView and an
  * associated PakooPackageSearchLine.
  *
- * @short A KListViewSearchLine customized to work with a PakooPackageListView.
+ * @short A KListViewSearchLine customized to work with a PackageListView.
  */
 class PackageView : public QVBox
 {
 	Q_OBJECT
 public:
-	PackageView( QWidget* parent, const char* name, PackageScanner* scanner );
+	PackageView( QWidget* parent, const char* name, BackendFactory* backend );
 	~PackageView();
-	void quit();
 
-	PakooPackageListView* listView;
-	PakooPackageSearchLine* searchLine;
+	PackageListView* listView;
+	PackageSearchLine* searchLine;
 
 public slots:
 	void resetSearchLine();
@@ -54,5 +55,7 @@ public slots:
 protected:
 	QComboBox* filterCombo;
 };
+
+}
 
 #endif // PAKOOPACKAGEVIEW_H

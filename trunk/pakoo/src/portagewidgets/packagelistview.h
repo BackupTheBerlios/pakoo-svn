@@ -27,51 +27,72 @@
 #include <qstring.h>
 #include <qpixmap.h>
 
-#include "../libqortage/libqortage.h"
 
+namespace libpakt {
+
+class BackendFactory;
+class PackageList;
+class Package;
+class PackageVersion;
+class PackageCategory;
+class PackageSelector;
+class PackageLoader;
+class MultiplePackageLoader;
 
 /**
  * A KListView with additional functions to handle portage tree packages.
  *
  * @short Widget to display a list of packages and versions.
  */
-class PakooPackageListView : public KListView
+class PackageListView : public KListView
 {
 	Q_OBJECT
 public:
-	PakooPackageListView( QWidget* parent, const char* name,
-	                      PackageScanner* packageScanner );
-	~PakooPackageListView();
-	void quit();
+	PackageListView( QWidget* parent, const char* name,
+	                 BackendFactory* backend );
+	~PackageListView();
 
-	const QString& currentCategory();
-	const QString& currentSubcategory();
+	PackageSelector* packageSelector();
+
 	int installedPackageCount();
 	int totalPackageCount();
 
 	bool hasInstalledVersion( const QListViewItem* item );
 
+public slots:
+	void setPackageList( PackageList& package );
+	void setPackageSelector( PackageSelector& selector );
+	void refreshView();
+
+	void emitSelectionChanged( QListViewItem* item );
+
+	void abortLoadingPackageDetails();
+
+
 signals:
-	//! Emitted if the list view is cleared, so it doesn't contain any items anymore.
+	/** Emitted if the list view is cleared,
+	 * so it doesn't contain any items anymore. */
 	void cleared();
-	//! Emitted if a package item is selected.
+	/** Emitted if a package item is selected. */
 	void selectionChanged( Package* package );
-	//! Emitted if a package version item is selected.
+	/** Emitted if a package version item is selected. */
 	void selectionChanged( Package* package, PackageVersion* version );
-	//! Emitted if a category item is selected.
-	void selectionChanged( const QString& category, const QString& subcategory );
-	//! Emitted if the list of packages has changed.
+	/** Emitted if a category item is selected. */
+	void selectionChanged( PackageCategory* category );
+	/** Emitted if the list of packages has changed. */
 	void contentsChanged();
-	//! Emitted if the details (description, hasUpdates) of a package have been loaded.
+	/** Emitted if the details (description, hasUpdates)
+	 * of a package have been loaded. */
 	void loadingPackageInfo( int loadedPackageCount, int totalPackageCount );
-	//! Emitted if all package details of the displayed packages have been loaded.
-	void finishedLoadingPackageInfo( int totalPackageCount );
+	/** Emitted if all package details of the displayed packages
+	 * have been loaded. */
+	void finishedLoadingPackageDetails( PackageList& packages );
 	/**
-	 * Emitted if all installed packages of the current category have been loaded.
-	 * This also means that the list view knows if there are updates for the
-	 * installed packages or not.
+	 * Emitted if all installed packages of the current category
+	 * have been loaded. This also means that the list view knows
+	 * if there are updates for the installed packages or not.
 	 */
-	void finishedLoadingInstalledPackageInfo();
+	void finishedLoadingInstalledPackageDetails();
 	/**
 	 * Emitted if an upgradable package has been found.
 	 * This happens while scanning the packages for detailed info
@@ -79,17 +100,12 @@ signals:
 	 */
 	void foundUpgradablePackage( Package* package );
 
-public slots:
-	void displayPackages(
-		PortageTree* tree,
-		PortageSettings* settings,
-		const QString& categoryName = QString::null,
-		const QString& subcategoryName = QString::null
-	);
-	void emitSelectionChanged( QListViewItem* item );
-	void abortLoadingPackageDetails();
 
-protected:
+private slots:
+	void insertVersionItems( QListViewItem* packageItem );
+	void displayPackageDetails( Package* package );
+
+private:
 
 	struct PackageViewPackage {
 		QListViewItem* item;
@@ -103,49 +119,49 @@ protected:
 		QMap<QString,PackageViewPackage> packageItems;
 	};
 
-	//! A map of category structs, containing additional info about the item.
-	QMap<QString,PackageViewCategory> categories;
-	//! A pointer to the portage tree where the displayed packages come from.
-	PortageTree* portageTree;
-	//! Accepted keyword for the system architecture, e.g. "x86" or "~alpha"
-	QString arch;
-	//! A PackageScanner object that retrieves missing package information for the whole package list.
-	PackageScanner* packageCategoryScanner;
-	//! A PackageScanner object that retrieves missing package information for all installed packages.
-	PackageScanner* packageInstalledScanner;
-	//! A PackageScanner object that retrieves missing package information for one single package.
-	PackageScanner* packageScanner;
-
-	QPixmap pxCategoryItem,
-	        pxPackageItem, pxPackageItemInstalled, pxPackageItemUpdatable,
-	        pxVersionItem, pxVersionItemInstalled, pxVersionItemNotAvailable;
-
-protected slots:
-	void insertVersionItems( QListViewItem* packageItem );
-	void displayPackageDetails( Package* package );
-
-private:
-	void updateSettings( PortageSettings* settings );
 	void insertPackageItem( QListViewItem* parent, Package& package );
 
-	void customEvent( QCustomEvent* event );
+	/**
+	 * The backend factory that creates some objects that are used here.
+	 */
+	BackendFactory* m_backend;
 
-	//! The main category that's currently displayed.
-	QString category;
-	//! The subcategory that's currently displayed.
-	QString subcategory;
-	//! The currently selected package.
-	Package* currentPackage;
+	/** TODO: get arch outta here */
+	QString m_arch;
 
-	//! A counter used for detailed package info progress.
-	int loadedPackages;
-	//! The number of installed packages in the list view.
-	int installedPackages;
-	//! The overall number of packages in the list view.
-	int totalPackages;
+	/** A map of category structs, containing
+	 * additional info about the item. */
+	QMap<QString,PackageViewCategory> m_categories;
+	/** The list of all available packages. */
+	PackageList* m_allPackages;
+	/** The list of all packages that are shown in the ListView. */
+	PackageList* m_shownPackages;
+	/** The object that filters out the shown packages from the
+	 * complete package list. */
+	PackageSelector* m_packageSelector;
 
-	//! Enables or disables parallel scanning (installed and not-installed at the same time)
-	bool parallelScanning;
+	/** A MultiplePackageLoader object that retrieves missing
+	 * package information for all installed packages. */
+	MultiplePackageLoader* m_multiplePackageLoader;
+	/** A PackageScanner object that retrieves missing
+	 * package information for one single package. */
+	PackageLoader* m_packageLoader;
+
+	/** The currently selected package. */
+	Package* m_currentPackage;
+
+	/** A counter used for detailed package info progress. */
+	int m_loadedPackageCount;
+	/** The number of installed packages in the list view. */
+	int m_installedPackageCount;
+	/** The overall number of packages in the list view. */
+	int m_totalPackageCount;
+
+	QPixmap pxCategoryItem,
+		pxPackageItem, pxPackageItemInstalled, pxPackageItemUpdatable,
+		pxVersionItem, pxVersionItemInstalled, pxVersionItemNotAvailable;
 };
+
+}
 
 #endif // PACKAGELISTVIEW_H

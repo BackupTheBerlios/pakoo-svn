@@ -22,6 +22,8 @@
 #include "pixmapnames.h"
 #include "i18n.h"
 
+#include <core/packageselector.h>
+
 #include <qvbox.h>
 #include <qlabel.h>
 #include <qlayout.h>
@@ -30,14 +32,16 @@
 #include <ktoolbar.h>
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  *
- * @param scanner  A copy of this scanner will be kept
- *                 to retrieve detailed package info.
+ * @param backend  The package management backend which can create
+ *                 backend specific objects.
  */
 PackageView::PackageView( QWidget* parent, const char* name,
-                          PackageScanner* scanner )
+                          BackendFactory* backend )
 : QVBox( parent, name )
 {
 	QString qname = name;
@@ -54,7 +58,7 @@ PackageView::PackageView( QWidget* parent, const char* name,
 
 	// Label and SearchLine
 	QLabel* searchLabel = new QLabel( SEARCHTEXT, searchToolBar, qname + "_searchLabel" );
-	searchLine = new PakooPackageSearchLine( searchToolBar, NULL, qname + "_searchLine" );
+	searchLine = new PackageSearchLine( searchToolBar, NULL, qname + "_searchLine" );
 	searchToolBar->setStretchableWidget( searchLine );
 	searchLabel->setBuddy( searchLine );
 
@@ -63,10 +67,11 @@ PackageView::PackageView( QWidget* parent, const char* name,
 	filterCombo = new QComboBox( searchToolBar, qname + "_filterCombo" );
 	filterCombo->insertItem( ALLPACKAGESTEXT );
 	filterCombo->insertItem( ONLYINSTALLEDTEXT );
+	filterCombo->insertItem( ONLYNOTINSTALLEDTEXT );
 	statusLabel->setBuddy( filterCombo );
 
 	// The list view containing the packages of the current category
-	listView = new PakooPackageListView( this, qname + "_listView", scanner );
+	listView = new PackageListView( this, qname + "_listView", backend );
 	searchLine->setListView( listView );
 
 	QValueList<int> searchColumns;
@@ -90,16 +95,7 @@ PackageView::PackageView( QWidget* parent, const char* name,
  */
 PackageView::~PackageView()
 {
-	this->quit();
 	searchLine->setListView( NULL );
-}
-
-/**
- * Prepare for deconstructing. Involves stopping threads and stuff.
- */
-void PackageView::quit()
-{
-	listView->quit();
 }
 
 /**
@@ -110,11 +106,26 @@ void PackageView::updateFilter( int comboIndex )
 	switch( comboIndex )
 	{
 	case 0: // "All Packages"
-		searchLine->setFilter( PakooPackageSearchLine::All );
+		listView->packageSelector()->clearIsInstalledFilters();
+		listView->refreshView();
+		//searchLine->setFilter( PackageSearchLine::All );
 		break;
-	case 1: // "Installed"
-		searchLine->setFilter( PakooPackageSearchLine::Installed );
+	case 1: {// "Installed"
+		PackageSelector* selector = listView->packageSelector();
+		selector->clearIsInstalledFilters();
+		selector->addIsInstalledFilter( PackageSelector::Exclude, false );
+		selector->addIsInstalledFilter( PackageSelector::Include, true );
+		listView->refreshView();
+		//searchLine->setFilter( PackageSearchLine::Installed );
 		break;
+	}
+	case 2: {
+		PackageSelector* selector = listView->packageSelector();
+		selector->clearIsInstalledFilters();
+		selector->addIsInstalledFilter( PackageSelector::Exclude, true );
+		selector->addIsInstalledFilter( PackageSelector::Include, false );
+		listView->refreshView();
+	}
 	}
 	searchLine->updateSearch();
 }
@@ -128,3 +139,4 @@ void PackageView::resetSearchLine()
 	searchLine->updateSearch();
 }
 
+} // namespace

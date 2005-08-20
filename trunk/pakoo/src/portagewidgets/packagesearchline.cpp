@@ -23,11 +23,13 @@
 #include <qlistview.h>
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  */
-PakooPackageSearchLine::PakooPackageSearchLine(
-	QWidget* parent, PakooPackageListView* listView, const char* name )
+PackageSearchLine::PackageSearchLine(
+	QWidget* parent, PackageListView* listView, const char* name )
 : KListViewSearchLine(parent, listView, name)
 {
 	filter = All;
@@ -36,7 +38,7 @@ PakooPackageSearchLine::PakooPackageSearchLine(
 /**
  * Overloaded for stricter type checking.
  */
-void PakooPackageSearchLine::setListView( PakooPackageListView* lv )
+void PackageSearchLine::setListView( PackageListView* lv )
 {
 	KListViewSearchLine::setListView( lv );
 }
@@ -44,8 +46,8 @@ void PakooPackageSearchLine::setListView( PakooPackageListView* lv )
 /**
  * Set the filter for package items.
  */
-void PakooPackageSearchLine::setFilter(
-	PakooPackageSearchLine::Filter packageFilter )
+void PackageSearchLine::setFilter(
+	PackageSearchLine::Filter packageFilter )
 {
 	filter = packageFilter;
 }
@@ -53,7 +55,7 @@ void PakooPackageSearchLine::setFilter(
 /**
  * Overloaded to include version items and to filter for package properties.
  */
-bool PakooPackageSearchLine::itemMatches(
+bool PackageSearchLine::itemMatches(
 	const QListViewItem* item, const QString& s ) const
 {
 	switch( item->depth() )
@@ -66,10 +68,12 @@ bool PakooPackageSearchLine::itemMatches(
 	default: // search in package items, optionally with filter
 		if( filter == Installed )
 		{
-			PakooPackageListView* view = (PakooPackageListView*) this->listView();
+			PackageListView* view = (PackageListView*) this->listView();
 			if( view->hasInstalledVersion(item) == false )
 				return false;
 		}
 		return KListViewSearchLine::itemMatches( item, s );
 	}
 }
+
+} // namespace

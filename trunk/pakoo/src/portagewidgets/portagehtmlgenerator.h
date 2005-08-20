@@ -28,6 +28,8 @@
 #include "../libqortage/libqortage.h"
 
 
+namespace libpakt {
+
 /**
  * A class providing functions to generate HTML sources from items
  * in a portage tree.
@@ -55,5 +57,7 @@ protected:
 	//! The system architecture, like "x86" or "~alpha".
 	QString arch;
 };
+
+}
 
 #endif // PORTAGEHTMLGENERATOR_H

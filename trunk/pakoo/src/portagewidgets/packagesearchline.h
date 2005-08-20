@@ -18,22 +18,24 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PAKOOPACKAGESEARCHLINE_H
-#define PAKOOPACKAGESEARCHLINE_H
+#ifndef PACKAGESEARCHLINE_H
+#define PACKAGESEARCHLINE_H
 
 #include <klistviewsearchline.h>
 
 #include "packagelistview.h"
 
 
+namespace libpakt {
+
 /**
- * A KListViewSearchLine customized to work with a PakooPackageListView.
+ * A KListViewSearchLine customized to work with a PackageListView.
  * It mainly overloads the item matching function to display the right
  * items (always show version items, filtering capabilities).
  *
- * @short A KListViewSearchLine customized to work with a PakooPackageListView.
+ * @short A KListViewSearchLine customized to work with a PackageListView.
  */
-class PakooPackageSearchLine : public KListViewSearchLine
+class PackageSearchLine : public KListViewSearchLine
 {
 	Q_OBJECT
 public:
@@ -41,17 +43,19 @@ public:
 		All,
 		Installed
 	};
-	PakooPackageSearchLine( QWidget* parent, PakooPackageListView* listView, const char* name );
+	PackageSearchLine( QWidget* parent, PackageListView* listView, const char* name );
 
 public slots:
-	void setFilter( PakooPackageSearchLine::Filter packageFilter );
-	void setListView( PakooPackageListView* lv );
+	void setFilter( PackageSearchLine::Filter packageFilter );
+	void setListView( PackageListView* lv );
 
 protected:
 	bool itemMatches(const QListViewItem *item, const QString &s) const;
 
 private:
-	PakooPackageSearchLine::Filter filter;
+	Filter filter;
 };
 
-#endif // PAKOOPACKAGESEARCHLINE_H
+}
+
+#endif // PACKAGESEARCHLINE_H

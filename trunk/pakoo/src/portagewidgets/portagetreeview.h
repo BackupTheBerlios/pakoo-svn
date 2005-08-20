@@ -18,51 +18,79 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PORTAGETREEVIEW_H
-#define PORTAGETREEVIEW_H
+#ifndef PACKAGETREEVIEW_H
+#define PACKAGETREEVIEW_H
 
 #include <klistview.h>
+#include <ksharedptr.h>
 
 #include <qmap.h>
 #include <qstring.h>
 #include <qpixmap.h>
 
-#include "../libqortage/libqortage.h"
+
+namespace libpakt {
+
+class BackendFactory;
+class PackageList;
+class PackageSelector;
 
 /**
  * A KListView with additional functions to handle portage tree categories.
  *
  * @short Widget to display categories and subcategories of the portage tree.
  */
-class PortageTreeView : public KListView
+class PackageTreeView : public KListView
 {
 	Q_OBJECT
-public:
-	PortageTreeView( QWidget* parent, const char* name );
 
-	void displayTree( PortageTree* portageTree, PortageSettings* settings );
+public:
+	PackageTreeView( QWidget* parent, const char* name,
+	                 BackendFactory* backend );
+
+public slots:
+	void setPackageList( PackageList* packages );
+	void clear();
 
 signals:
-	void selectionChanged( PortageTree* tree, PortageSettings* settings,
-		const QString& categoryName, const QString& subcategoryName
-	);
+	/**
+	 * Emitted when setPackageList is called.
+	 * @see setPackageList
+	 */
+	void packageListChanged( PackageList& packages );
 
-protected slots:
+	/**
+	 * Emitted when a category item is selected.
+	 * The given PackageSelector object is set up so that it can
+	 * filter the packages of the selected category.
+	 */
+	void selectionChanged( PackageSelector& packageSelector );
+
+private slots:
 	void emitSelectionChanged( QListViewItem* item );
 
-protected:
-	struct TreeViewCategory {
+private:
+	class ParentItem : public KShared {
+	public:
 		QListViewItem* item;
-		QMap<QString,QListViewItem*> subcategories;
+		QMap<QString,KSharedPtr<ParentItem> > children;
 	};
 
-	QListViewItem* rootItem;
-	QMap<QString,TreeViewCategory> categories;
-	PortageTree* portageTree;
-	PortageSettings* portageSettings;
+	QListViewItem* rootItem( QListViewItem* item );
 
-	QPixmap pxRootItem, pxCategoryItem;
-	int width;
+	/**
+	 * The backend that creates PackageCategories
+	 * and PackageSelectors for this object.
+	 */
+	BackendFactory* backend;
+
+	/** The top-level category item ("All Packages") and its children. */
+	ParentItem categoryRootItem;
+
+	// Icons for the QListViewItems
+	QPixmap pxCategoryRootItem, pxCategoryItem;
 };
 
-#endif // PORTAGETREEVIEW_H
+}
+
+#endif // PACKAGETREEVIEW_H

@@ -25,6 +25,8 @@
 #include <krun.h>
 
 
+namespace libpakt {
+
 /**
  * Initialize this object.
  * @param arch  The architecture for which the info view should be specialized
@@ -125,3 +127,5 @@ void PackageInfoView::openURLRequest( const KURL& url, const KParts::URLArgs& )
 	lst.append( url );
 	KRun::run( *ptr, lst );
 }
+
+} // namespace

@@ -28,8 +28,13 @@
 
 // PackageView stuff
 #define SEARCHTEXT i18n("Text in front of the search line.", "Search:")
-#define STATUSTEXT i18n("Text in front of the search filter combobox.", "Status:")
-#define CLEARTEXT i18n("Tooltip over the 'Clear search line' button.", "Clear search line")
-#define ONLYINSTALLEDTEXT i18n("'Installed' option in the search filter combobox.", "Installed")
+#define STATUSTEXT \
+	i18n("Text in front of the search filter combobox.", "Status:")
+#define CLEARTEXT \
+	i18n("Tooltip over the 'Clear search line' button.", "Clear search line")
+#define ONLYINSTALLEDTEXT \
+	i18n("'Installed' option in the search filter combobox.", "Installed")
+#define ONLYNOTINSTALLEDTEXT \
+	i18n("'Not Installed' option in the search filter combobox.", "Not Installed")
 
 #endif // PORTAGEWIDGETS_I18N_H
