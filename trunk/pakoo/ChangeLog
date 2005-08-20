@@ -11,7 +11,7 @@
     > libpakt: backendfactory.[h|cpp], portagebackend.[h|cpp]
     > core:    ijob.h, iasyncjob.h, threadedjob.[h|cpp],
                packagecategory.[h|cpp], portagecategory.[h|cpp],
-               packageselector.[h|cpp]
+               packageselector.[h|cpp], fileloaderbase.[h|cpp]
     > loader:  packageloader.[h|cpp], multiplepackageloader.[h|cpp],
                initialloader.[h|cpp], portageinitialloader.[h|cpp]
   - removed files:
