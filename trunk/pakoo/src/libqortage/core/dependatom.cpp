@@ -20,7 +20,7 @@
 
 #include "dependatom.h"
 
-#include "portagetree.h"
+#include "packagelist.h"
 #include "package.h"
 #include "portagecategory.h"
 #include "packageversion.h"

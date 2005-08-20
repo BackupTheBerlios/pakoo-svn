@@ -21,7 +21,7 @@
 #include "packageselector.h"
 
 #include "../core/package.h"
-#include "../core/portagetree.h"
+#include "../core/packagelist.h"
 
 #include <klocale.h>
 #include <kdebug.h>
