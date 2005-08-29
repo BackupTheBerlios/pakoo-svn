@@ -50,7 +50,8 @@ public:
 
 public slots:
 	void resetSearchLine();
-	void updateFilter( int comboIndex );
+	void updateFilter();
+	void updatePackageSelector( PackageSelector* selector );
 
 protected:
 	QComboBox* filterCombo;

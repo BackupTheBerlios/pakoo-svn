@@ -209,6 +209,7 @@ void PackageListView::setPackageList( PackageList& allPackages )
 void PackageListView::setPackageSelector( PackageSelector& packageSelector )
 {
 	*m_packageSelector = packageSelector;
+	emit packageSelectorChanged( m_packageSelector );
 	refreshView();
 }
 
@@ -445,8 +446,10 @@ void PackageListView::insertVersionItems( QListViewItem* packageItem )
 	m_packageLoader->perform();
 	this->displayPackageDetails( package );
 
+	PackageViewCategory& pvcategory =
+		m_categories[package->category()->uniqueName()];
 	PackageViewPackage& pkg =
-		m_categories[category->uniqueName()].packageItems[package->name()];
+		pvcategory.packageItems[package->name()];
 
 	if( pkg.hasVersions == true )
 		return;

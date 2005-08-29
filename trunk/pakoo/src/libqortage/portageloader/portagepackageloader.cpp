@@ -128,8 +128,6 @@ IJob::JobResult PortagePackageLoader::performThread()
  */
 bool PortagePackageLoader::scanPackage()
 {
-	//TODO: static QMap<QString,QSemaphore> for restricting concurrent access
-
 	QString filename;
 
 	PackageVersionMap* versions = package()->versionMap();

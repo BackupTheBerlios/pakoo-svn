@@ -79,6 +79,8 @@ signals:
 	void selectionChanged( Package* package, PackageVersion* version );
 	/** Emitted if a category item is selected. */
 	void selectionChanged( PackageCategory* category );
+	/** Emitted if a new package selector is set. */
+	void packageSelectorChanged( PackageSelector* selector );
 	/** Emitted if the list of packages has changed. */
 	void contentsChanged();
 	/** Emitted if the details (description, hasUpdates)

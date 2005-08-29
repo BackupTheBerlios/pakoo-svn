@@ -214,7 +214,7 @@ QString PortageSettings::mainlineTreeDirectory()
 QStringList PortageSettings::overlayTreeDirectories()
 {
 	QString dirs = value("PORTDIR_OVERLAY");
-	if( dirs == QString::null ) {
+	if( dirs != QString::null ) {
 		return QStringList::split( " ", dirs );
 	}
 	else {

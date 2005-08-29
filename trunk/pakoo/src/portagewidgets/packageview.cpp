@@ -78,7 +78,9 @@ PackageView::PackageView( QWidget* parent, const char* name,
 	searchColumns.append( 0 );
 	searchLine->setSearchColumns( searchColumns );
 
-	connect( filterCombo, SIGNAL(activated(int)), this, SLOT(updateFilter(int)) );
+	connect( filterCombo, SIGNAL(activated(int)), this, SLOT(updateFilter()) );
+	connect( listView, SIGNAL(packageSelectorChanged(PackageSelector*)),
+	         this, SLOT(updatePackageSelector(PackageSelector*))  );
 	connect( listView, SIGNAL(cleared()), searchLine, SLOT(clear())  );
 	connect( listView, SIGNAL(contentsChanged()),
 	         searchLine, SLOT(updateSearch())   );
@@ -101,33 +103,35 @@ PackageView::~PackageView()
 /**
  * Set the searchLine's filter to the new value of the filter combo box.
  */
-void PackageView::updateFilter( int comboIndex )
+void PackageView::updateFilter()
 {
-	switch( comboIndex )
+	updatePackageSelector( listView->packageSelector() );
+	searchLine->updateSearch();
+	listView->refreshView();
+}
+
+/**
+ * Ensure that the ListView's PackageSelector follows the search filter combo.
+ */
+void PackageView::updatePackageSelector( PackageSelector* selector )
+{
+	switch( filterCombo->currentItem() )
 	{
 	case 0: // "All Packages"
-		listView->packageSelector()->clearIsInstalledFilters();
-		listView->refreshView();
-		//searchLine->setFilter( PackageSearchLine::All );
+		selector->clearIsInstalledFilters();
 		break;
-	case 1: {// "Installed"
-		PackageSelector* selector = listView->packageSelector();
+	case 1: { // "Installed"
 		selector->clearIsInstalledFilters();
 		selector->addIsInstalledFilter( PackageSelector::Exclude, false );
 		selector->addIsInstalledFilter( PackageSelector::Include, true );
-		listView->refreshView();
-		//searchLine->setFilter( PackageSearchLine::Installed );
 		break;
 	}
-	case 2: {
-		PackageSelector* selector = listView->packageSelector();
+	case 2: { // "Not Installed"
 		selector->clearIsInstalledFilters();
 		selector->addIsInstalledFilter( PackageSelector::Exclude, true );
 		selector->addIsInstalledFilter( PackageSelector::Include, false );
-		listView->refreshView();
 	}
 	}
-	searchLine->updateSearch();
 }
 
 /**

@@ -180,7 +180,7 @@ void PackageSelector::clearCategoryFilters()
  * @see Package::hasInstalledVersion()
  */
 void PackageSelector::addIsInstalledFilter( FilterType filterType,
-                                                  bool installed )
+                                            bool installed )
 {
 	if( filterType == Include ) {
 		ENSURE_EXISTANCE( includeInstalledPackages, bool );
@@ -304,17 +304,17 @@ bool PackageSelector::inclusionFilterMatches( Package* package )
 	{
 		FOREACH( categoryIterator, includedCategories, PackageCategory )
 		{
-			if( package->category()->isContainedIn(*categoryIterator) )
-				return true;
+			if( !package->category()->isContainedIn(*categoryIterator) )
+				return false;
 		}
 	}
 	// include packages with 'package.installed == given value' filter
 	if( includeInstalledPackages != NULL )
 	{
-		if( package->hasInstalledVersion() == *includeInstalledPackages )
-			return true;
+		if( !package->hasInstalledVersion() == *includeInstalledPackages )
+			return false;
 	}
-	return false;
+	return true;
 }
 
 /**

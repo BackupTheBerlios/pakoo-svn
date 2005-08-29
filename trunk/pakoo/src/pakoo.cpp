@@ -178,16 +178,17 @@ void Pakoo::setupActions()
 	//m_statusbarAction = KStdAction::showStatusbar(
 	//	this, SLOT(optionsShowStatusbar()), actionCollection() );
 
-	#ifdef DEVELOPMENT_VERSION
-		// load the XMLGUI definition file even if it's not installed
-		QString appPath( QString(KApplication::kApplication()->argv()[0]) );
-		appPath = appPath.left( appPath.findRev("pakoo") );
-		QDir appDir( appPath );
-		appPath = appDir.absPath().remove("debug/") + "/pakooui.rc";
-		createGUI( appPath );
-	#else
-		createGUI();
-	#endif
+#ifdef DEVELOPMENT_VERSION  // which is defined in pakoo.h
+	// load the XMLGUI definition file even if it's not installed
+	QString appPath( QString(KApplication::kApplication()->argv()[0]) );
+	appPath = appPath.left( appPath.findRev("pakoo") );
+	QDir appDir( appPath );
+	appPath = appDir.absPath() + "/pakooui.rc";
+	appPath.remove("debug/");
+	createGUI( appPath );
+#else
+	createGUI();
+#endif
 }
 
 void Pakoo::actionsSync()
