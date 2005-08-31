@@ -81,13 +81,6 @@ public:
 	                           bool isPackageInstalled );
 	void clearIsInstalledFilters();
 
-signals:
-	/**
-	 * Emitted for untranslated debug output, like starting the scan
-	 * or error messages.
-	 */
-	void debugOutput( QString output );
-
 protected:
 	JobResult performThread();
 
@@ -98,20 +91,20 @@ private:
 	bool exclusionFilterMatches( Package* package );
 
 	//! The list from where the packages are taken.
-	PackageList* sourceList;
+	PackageList* m_sourceList;
 	//! The list where matching packages are inserted.
-	PackageList* destList;
+	PackageList* m_destList;
 
 	//! Defines if all packages are normally included or excluded.
-	FilterType allPackagesFilter;
+	FilterType m_allPackagesFilter;
 
 	//
 	// Filters.
 	// If set to NULL, it means that this filter is not set.
 	// Otherwise the value is used by the specific filter code.
 	//
-	QValueList<PackageCategory> *includedCategories, *excludedCategories;
-	bool *includeInstalledPackages, *excludeInstalledPackages;
+	QValueList<PackageCategory> *m_includedCategories, *m_excludedCategories;
+	bool *m_includeInstalledPackages, *m_excludeInstalledPackages;
 };
 
 }

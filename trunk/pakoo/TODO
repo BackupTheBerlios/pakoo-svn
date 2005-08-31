@@ -3,18 +3,17 @@ List of TODO items for the Pakoo package manager frontend.
 Immediate:
 - Refactor libqortage:
   * rename to libpakt (including folder renames)
-  * split Gentoo parts from the generic parts - in progress
   * PortageBackend::settings as static variable?
   * Package and PortageSettings: remove *Map (and the *Map() functions) in favour of begin() & Co.
-  * m_member everywhere - in progress
-  * replace debugOutput() with kdDebug() - in progress
+  * m_member everywhere (in progress)
+    - missing: Package (versions member) and PackageVersion (clean up the API mess),
 
 Reasons for switching libqortage to kdelibs (libpakt?):
 - Translations
 - K(Ext)Process
 - KShared
 - Consistent build system
-- Widgets
+- Widgets?
 
 Really Serious Bugs (TM):
 - none at this moment
@@ -30,7 +29,6 @@ Code enhancements:
 - iterator -> const_iterator
 - renames:
   * PackageInfoView -> InfoView
-  * consistent use of "Portage" prefixes
 
 UI Design:
 - Search folders in the tree view, together with the categories
@@ -41,7 +39,6 @@ UI Design:
 - "Configure" tab: view/edit configuration files
 - How to handle very detailed package info (like use flags or dependencies)?
   * Show as child items of the package (before the version items, if possible)
-- How to handle "late loading" package info (description, updatable) in the quick search?
 - Provide two (un)installing possibilites (immediate/queued):
   * "(Un)Install Selected" makes a queue containing one package and executes it
   * "Add To Queue" adds the item to the install/uninstall queue

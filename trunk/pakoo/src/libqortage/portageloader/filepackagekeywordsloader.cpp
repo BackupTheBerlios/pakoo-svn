@@ -43,24 +43,30 @@ bool FilePackageKeywordsLoader::isLineProcessed( const QString& line )
 }
 
 /**
- * Set the atomString to the whole line, always returning true.
+ * Extract and set m_atomString as well as package keywords
+ * from the given line. The package keywords are stored internally
+ * so that they can be retrieved by processVersion afterwards.
+ *
+ * @return Always true
  */
 bool FilePackageKeywordsLoader::setAtomString( const QString& line )
 {
+	// set the atom string
 	QStringList tokens = QStringList::split( ' ', line );
-	atomString = tokens[0];
-	keywords.clear();
+	m_atomString = tokens[0];
+	m_keywords.clear();
 
+	// extract this line's keywords
 	QStringList::iterator tokenIterator = tokens.begin();
 	tokenIterator++;
 	while( tokenIterator != tokens.end() )
 	{
-		keywords.prepend( *tokenIterator );
+		m_keywords.prepend( *tokenIterator );
 		tokenIterator++;
 	}
-	if( keywords.empty() ) {
-		keywords.prepend("~*");
-		// in fact, it would be: keywords.prepend("~" + arch), but anyways
+	if( m_keywords.empty() ) {
+		m_keywords.prepend("~*");
+		// in fact, it would be: m_keywords.prepend("~" + arch), but anyways
 	}
 	return true;
 }
@@ -70,8 +76,8 @@ bool FilePackageKeywordsLoader::setAtomString( const QString& line )
  */
 void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
 {
-	for( QStringList::iterator keywordIterator = keywords.begin();
-	     keywordIterator != keywords.end(); keywordIterator++ )
+	for( QStringList::iterator keywordIterator = m_keywords.begin();
+	     keywordIterator != m_keywords.end(); keywordIterator++ )
 	{
 		version->acceptedKeywords.prepend( *keywordIterator );
 	}

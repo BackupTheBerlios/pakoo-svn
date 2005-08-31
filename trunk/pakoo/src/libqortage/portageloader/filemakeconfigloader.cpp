@@ -20,10 +20,13 @@
 
 #include "filemakeconfigloader.h"
 
+#include "../core/portagesettings.h"
+
 #include <qfile.h>
 #include <qtextstream.h>
 
-#include "../core/portagesettings.h"
+#include <kdebug.h>
+#include <klocale.h>
 
 
 namespace libpakt {
@@ -33,10 +36,10 @@ namespace libpakt {
  */
 FileMakeConfigLoader::FileMakeConfigLoader()
 : FileLoaderBase(),
-  rxConfigLine("(" RXSHELLVARIABLE ")=([^#]*)")
+	m_rxConfigLine("(" RXSHELLVARIABLE ")=([^#]*)")
 // RXSHELLVARIABLE is defined in portagesettings.h
 {
-	settings = NULL;
+	m_settings = NULL;
 }
 
 /**
@@ -45,7 +48,7 @@ FileMakeConfigLoader::FileMakeConfigLoader()
  */
 void FileMakeConfigLoader::setSettingsObject( PortageSettings* settings )
 {
-	this->settings = settings;
+	m_settings = settings;
 }
 
 /**
@@ -54,12 +57,13 @@ void FileMakeConfigLoader::setSettingsObject( PortageSettings* settings )
 bool FileMakeConfigLoader::check()
 {
 	// Check for an invalid settings object, which would be bad
-	if( settings == NULL ) {
-		emit debugOutput(
-			QString( "Didn't start loading %1 because "
-			         "the settings object has not been set" )
-				.arg( filename )
-		);
+	if( m_settings == NULL ) {
+		kdDebug() << i18n( "FileMakeConfigLoader debug output. "
+		                   "%1 is the file that was about to load.",
+			"FileMakeConfigLoader::check(): Didn't start loading %1 because "
+			"the settings object has not been set" )
+				.arg( fileName() )
+			<< endl;
 		return false;
 	}
 	else {
@@ -80,28 +84,28 @@ bool FileMakeConfigLoader::isLineProcessed( const QString& line )
 
 /**
  * Process one single line of the file. If it contains a configuration value,
- * it will be stored in this object's 'settings' member.
+ * it will be stored in this object's 'm_settings' member.
  *
  * @param line  The current line that has been read from the file.
  */
 void FileMakeConfigLoader::processLine( const QString& line )
 {
-	if( rxConfigLine.search(line) > -1 ) // found a configuration value
+	if( m_rxConfigLine.search(line) > -1 ) // found a configuration value
 	{
-		QString name = rxConfigLine.cap(1);
+		QString name = m_rxConfigLine.cap(1);
 
-		QString value = rxConfigLine.cap( 2 ).stripWhiteSpace();
+		QString value = m_rxConfigLine.cap( 2 ).stripWhiteSpace();
 		if( value.startsWith("\"") && value.endsWith("\"") ) {
 			value = value.mid( 1, value.length() - 2 );
 		}
 
 		// don't replace incremental variables, rather sum them up
-		if( settings->isIncremental(name) == true )
+		if( m_settings->isIncremental(name) == true )
 		{
-			settings->addToValue( name, value );
+			m_settings->addToValue( name, value );
 		}
 		else {
-			settings->setValue( name, value );
+			m_settings->setValue( name, value );
 		}
 	}
 }

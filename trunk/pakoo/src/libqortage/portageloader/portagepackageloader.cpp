@@ -29,6 +29,9 @@
 #include <qfileinfo.h>
 #include <qdatetime.h>
 
+#include <klocale.h>
+#include <kdebug.h>
+
 // QRegExp regular expression strings
 #define RXDESCRIPTION "^DESCRIPTION=\"(.*)\"\\s*$"
 #define RXHOMEPAGE       "^HOMEPAGE=\"(.*)\"\\s*$"
@@ -47,12 +50,12 @@ namespace libpakt {
  * @see setSettingsObject
  */
 PortagePackageLoader::PortagePackageLoader()
-: PackageLoader(),
-  rxDescription(RXDESCRIPTION), rxHomepage(RXHOMEPAGE),
-  rxSlot(RXSLOT), rxLicenses(RXLICENSES),
-  rxKeywords(RXKEYWORDS), rxUseflags(RXUSEFLAGS)
+	: PackageLoader(),
+	m_rxDescription(RXDESCRIPTION), m_rxHomepage(RXHOMEPAGE),
+	m_rxSlot(RXSLOT), m_rxLicenses(RXLICENSES),
+	m_rxKeywords(RXKEYWORDS), m_rxUseflags(RXUSEFLAGS)
 {
-	settings = NULL;
+	m_settings = NULL;
 }
 
 /**
@@ -60,7 +63,7 @@ PortagePackageLoader::PortagePackageLoader()
  */
 void PortagePackageLoader::setSettingsObject( PortageSettings* settings )
 {
-	this->settings = settings;
+	m_settings = settings;
 }
 
 
@@ -72,50 +75,53 @@ void PortagePackageLoader::setSettingsObject( PortageSettings* settings )
 IJob::JobResult PortagePackageLoader::performThread()
 {
 	// load the settings
-	if( settings == NULL ) {
-		emit debugOutput(
+	if( m_settings == NULL ) {
+		kdDebug() << i18n( "PortagePackageLoader debug output.",
 			"Didn't start the profile loader because "
-			"the settings object has not been set"
-		);
+			"the settings object has not been set" )
+			<< endl;
 		return Failure;
 	}
 	else {
-		preferCache = settings->preferCache();
-		mainlineTreeDir = settings->mainlineTreeDirectory();
-		overlayTreeDirs = settings->overlayTreeDirectories();
-		installedPackagesDir = settings->installedPackagesDirectory();
-		cacheDir = settings->cacheDirectory();
+		m_preferCache = m_settings->preferCache();
+		m_mainlineTreeDir = m_settings->mainlineTreeDirectory();
+		m_overlayTreeDirs = m_settings->overlayTreeDirectories();
+		m_installedPackagesDir = m_settings->installedPackagesDirectory();
+		m_cacheDir = m_settings->cacheDirectory();
 	}
 
 	if( package() == NULL )
 	{
 		// Happens if none of the set*Mode() functions have been called
-		emitDebugOutput( "Didn't start scanning because "
-		            "you didn't specify a package to scan." );
+		kdDebug() << i18n( "PortagePackageLoader debug output.",
+			"PortagePackageLoader::performThread(): Didn't start scanning "
+			"because you didn't specify a package to scan." )
+			<< endl;
 		return Failure;
 	}
 
 
 	QDateTime startTime = QDateTime::currentDateTime();
 
-	emitDebugOutput(
-		QString("Scanning the single package %1...")
-		.arg( package()->uniqueName() )
-	);
+	kdDebug() << i18n( "PortagePackageLoader debug output. "
+	                   "%1 is the package name.",
+		"PortagePackageLoader::performThread(): "
+		"Scanning the single package %1..." )
+			.arg( package()->uniqueName() )
+		<< endl;
 
 	// scan the current package
-	if( scanPackage() == false )
-	{
-		// any errors errors emitted with debugOutput()
+	if( scanPackage() == false ) {
 		return Failure;
 	}
 	else
 	{
 		// Success, inform main thread that the scan is complete
-		emitDebugOutput(
-			QString("Finished package scanning in %1 seconds.")
-			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
-		);
+		kdDebug() << i18n( "PortagePackageLoader debug output.",
+			"PortagePackageLoader::performThread(): "
+			"Finished package scanning in %1 seconds." )
+				.arg( startTime.secsTo(QDateTime::currentDateTime()) )
+			<< endl;
 		return Success;
 	}
 }
@@ -146,15 +152,15 @@ bool PortagePackageLoader::scanPackage()
 		if( (*versionIterator).overlay == false ) // from the mainline tree
 		{
 			// Get package size from the digest
-			filename = this->mainlineTreeDir + "/"
+			filename = m_mainlineTreeDir + "/"
 				+ package()->category()->uniqueName() + "/"
 				+ package()->name() + "/files/digest-" + package()->name()
 				+ "-" + (*versionIterator).version;
 			scanDigest( &(*versionIterator), filename );
 
-			if( preferCache == true )
+			if( m_preferCache == true )
 			{
-				filename = this->cacheDir + this->mainlineTreeDir + "/"
+				filename = m_cacheDir + m_mainlineTreeDir + "/"
 					+ package()->category()->uniqueName() + "/"
 					+ package()->name() + "-" + (*versionIterator).version;
 
@@ -165,7 +171,7 @@ bool PortagePackageLoader::scanPackage()
 			}
 			else
 			{
-				filename = this->mainlineTreeDir + "/"
+				filename = m_mainlineTreeDir + "/"
 					+ package()->category()->uniqueName() + "/"
 					+ package()->name() + "/" + package()->name() + "-"
 					+ (*versionIterator).version + ".ebuild";
@@ -185,7 +191,7 @@ bool PortagePackageLoader::scanPackage()
 		// no luck, try the installed version (the ebuild in /var/db/pkg/*/*/)
 		if( (*versionIterator).installed == true )
 		{
-			filename = this->installedPackagesDir + "/"
+			filename = m_installedPackagesDir + "/"
 				+ package()->category()->uniqueName() + "/"
 				+ package()->name() + "-" + (*versionIterator).version + "/"
 				+ package()->name() + "-" + (*versionIterator).version
@@ -211,8 +217,8 @@ bool PortagePackageLoader::scanPackage()
 bool PortagePackageLoader::scanOverlayPackage( PackageVersion* version )
 {
 	QString filename;
-	for( QStringList::iterator overlayIterator = overlayTreeDirs.begin();
-	     overlayIterator != overlayTreeDirs.end(); overlayIterator++ )
+	for( QStringList::iterator overlayIterator = m_overlayTreeDirs.begin();
+	     overlayIterator != m_overlayTreeDirs.end(); overlayIterator++ )
 	{
 		// Get package size from the digest
 		filename = (*overlayIterator) + "/"
@@ -260,41 +266,41 @@ bool PortagePackageLoader::scanEbuild( PackageVersion* version,
 	{
 		line = stream.readLine();
 
-		if( rxDescription.search(line) > -1 ) // found a description
+		if( m_rxDescription.search(line) > -1 ) // found a description
 		{
 			// store the first (and, most probably, only) match
-			version->description = rxDescription.cap( 1 );
+			version->description = m_rxDescription.cap( 1 );
 			continue;
 		}
-		if( rxHomepage.search(line) > -1 ) // found a homepage string
+		if( m_rxHomepage.search(line) > -1 ) // found a homepage string
 		{
-			version->homepage = rxHomepage.cap( 1 );
+			version->homepage = m_rxHomepage.cap( 1 );
 			continue;
 		}
-		if( rxSlot.search(line) > -1 ) // found a slot string
+		if( m_rxSlot.search(line) > -1 ) // found a slot string
 		{
-			version->slot = rxSlot.cap( 1 );
+			version->slot = m_rxSlot.cap( 1 );
 			continue;
 		}
-		if( this->extractStringList( line, &rxLicenses, &(version->licenses) )
-			== true )
-		{
-			continue;
-		}
-		if( this->extractStringList( line, &rxKeywords, &(version->keywords) )
-			== true )
+		if( this->extractStringList( line, &m_rxLicenses,
+		                             &(version->licenses) ) == true )
 		{
 			continue;
 		}
-		if( this->extractStringList( line, &rxUseflags, &(version->useflags) )
-			== true )
+		if( this->extractStringList( line, &m_rxKeywords,
+		                             &(version->keywords) ) == true )
+		{
+			continue;
+		}
+		if( this->extractStringList( line, &m_rxUseflags,
+		                             &(version->useflags) ) == true )
 		{
 			continue;
 		}
 	}
 	file.close();
 
-	QFileInfo fileInfo(filename);
+	QFileInfo fileInfo( filename );
 	QDateTime date = fileInfo.created();
 	version->date = date.toString("yyyy MM dd");
 

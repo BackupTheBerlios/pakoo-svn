@@ -26,6 +26,9 @@
 #include <qfile.h>
 #include <qtextstream.h>
 
+#include <kdebug.h>
+#include <klocale.h>
+
 
 namespace libpakt {
 
@@ -34,7 +37,7 @@ namespace libpakt {
  */
 FileAtomLoaderBase::FileAtomLoaderBase() : FileLoaderBase()
 {
-	packages = NULL;
+	m_packages = NULL;
 }
 
 
@@ -45,7 +48,7 @@ FileAtomLoaderBase::FileAtomLoaderBase() : FileLoaderBase()
  */
 void FileAtomLoaderBase::setPackageList( PackageList* packages )
 {
-	this->packages = packages;
+	m_packages = packages;
 }
 
 /**
@@ -54,12 +57,13 @@ void FileAtomLoaderBase::setPackageList( PackageList* packages )
 bool FileAtomLoaderBase::check()
 {
 	// Check for an invalid list, which would be bad
-	if( packages == NULL ) {
-		emit debugOutput(
-			QString( "Didn't start loading %1 because "
-			         "the PackageList object has not been set" )
-				.arg( filename )
-		);
+	if( m_packages == NULL ) {
+		kdDebug() << i18n( "FileAtomLoaderBase debug output. "
+		                   "%1 is the file that was about to load.",
+			"FileAtomLoaderBase::check(): Didn't start loading %1 because "
+			"the PackageList object has not been set" )
+				.arg( fileName() )
+			<< endl;
 		return false;
 	}
 	else {
@@ -72,7 +76,7 @@ bool FileAtomLoaderBase::check()
  */
 bool FileAtomLoaderBase::init()
 {
-	atom = new DependAtom( packages );
+	m_atom = new DependAtom( m_packages );
 	return true;
 }
 
@@ -81,7 +85,7 @@ bool FileAtomLoaderBase::init()
  */
 IJob::JobResult FileAtomLoaderBase::finish()
 {
-	delete atom;
+	delete m_atom;
 	return Success;
 }
 
@@ -99,11 +103,11 @@ void FileAtomLoaderBase::processLine( const QString& line )
 	if( setAtomString(line) == false )
 		return;
 
-	if( atom->parse(atomString) == false )
+	if( m_atom->parse(m_atomString) == false )
 		return;
 
 	// get the matching versions, and call process() on each of them
-	QValueList<PackageVersion*> versions = atom->matchingVersions();
+	QValueList<PackageVersion*> versions = m_atom->matchingVersions();
 	QValueList<PackageVersion*>::iterator versionIterator;
 
 	for( versionIterator = versions.begin();

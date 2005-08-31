@@ -1,9 +1,22 @@
+2005-08-31 Jakob Petsovits <jpetso@gmx.at>
+* Introducing libpakt's process management
+  - new files:
+    > core: processjob.[h|cpp]
+    > src: actionview.[h|cpp]
+    > installer: emergeprocess.[h|cpp]
+* Code maintaining
+  - Make member variables start with "m_"
+  - Iron out emitDebugOutput() calls
+  - removed files:
+    > core: iasyncjob.h (merged with IJob into ijob.h again)
+
 2005-08-29 Jakob Petsovits <jpetso@gmx.at>
 * fixing the search filter again
 * fixing the "find-the-pakoorc.ui-file-even-if-not-installed" again
+* switching of the sections on the right side of the window
 
 2005-08-20 Jakob Petsovits <jpetso@gmx.at>
-* the big libqortage refactoring (man, this was tough!):
+* the big libqortage (now libpakt) refactoring (man, this was tough!):
   - make a "setBlaBla(bla); start();" interface instead of "startBla(bla);"
   - drop the nasty event handling in favour of jobs with signals (mmmh)
   - Safer Threading(TM)

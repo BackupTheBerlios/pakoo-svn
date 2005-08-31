@@ -33,7 +33,9 @@
 #include <kdebug.h>
 
 #define DO_ABORT { \
-	emitDebugOutput( "Aborting the tree scanner on request." ); \
+	kdDebug() << i18n( "PortageTreeScanner debug output", \
+		"PortageTreeScanner: Aborting on user request." ) \
+		<< endl; \
 	return Failure; \
 }
 
@@ -42,11 +44,11 @@ namespace libpakt {
 
 PortageTreeScanner::PortageTreeScanner()
 : ThreadedJob(),
-  rxVersion("(-\\d+(?:\\.\\d+)*[a-z]?)")
+  m_rxVersion("(-\\d+(?:\\.\\d+)*[a-z]?)")
 {
-	packages = NULL;
-	scanAvailablePackages = true;
-	scanInstalledPackages = true;
+	m_packages = NULL;
+	m_scanAvailablePackages = true;
+	m_scanInstalledPackages = true;
 }
 
 /**
@@ -54,7 +56,7 @@ PortageTreeScanner::PortageTreeScanner()
  */
 void PortageTreeScanner::setSettingsObject( PortageSettings* settings )
 {
-	this->settings = settings;
+	m_settings = settings;
 }
 
 /**
@@ -62,7 +64,7 @@ void PortageTreeScanner::setSettingsObject( PortageSettings* settings )
  */
 void PortageTreeScanner::setPackageList( PackageList* packages )
 {
-	this->packages = packages;
+	m_packages = packages;
 }
 
 /**
@@ -73,7 +75,7 @@ void PortageTreeScanner::setPackageList( PackageList* packages )
 void PortageTreeScanner::setScanAvailablePackages(
 	bool scanAvailablePackages )
 {
-	this->scanAvailablePackages = scanAvailablePackages;
+	m_scanAvailablePackages = scanAvailablePackages;
 }
 
 /**
@@ -86,7 +88,7 @@ void PortageTreeScanner::setScanAvailablePackages(
 void PortageTreeScanner::setScanInstalledPackages(
 	bool scanInstalledPackages )
 {
-	this->scanInstalledPackages = scanInstalledPackages;
+	m_scanInstalledPackages = scanInstalledPackages;
 }
 
 
@@ -96,7 +98,7 @@ void PortageTreeScanner::setScanInstalledPackages(
 IJob::JobResult PortageTreeScanner::performThread()
 {
 	// load the settings
-	if( settings == NULL ) {
+	if( m_settings == NULL ) {
 		kdDebug() << i18n( "PortageTreeScanner debug output",
 			"PortageTreeScanner::performThread(): "
 			"Didn't start because the settings object is NULL" )
@@ -104,18 +106,18 @@ IJob::JobResult PortageTreeScanner::performThread()
 		return Failure;
 	}
 	else {
-		preferCache = settings->preferCache();
-		mainlineTreeDir = settings->mainlineTreeDirectory();
-		overlayTreeDirs = settings->overlayTreeDirectories();
-		installedPackagesDir = settings->installedPackagesDirectory();
-		cacheDir = settings->cacheDirectory();
+		m_preferCache = m_settings->preferCache();
+		m_mainlineTreeDir = m_settings->mainlineTreeDirectory();
+		m_overlayTreeDirs = m_settings->overlayTreeDirectories();
+		m_installedPackagesDir = m_settings->installedPackagesDirectory();
+		m_cacheDir = m_settings->cacheDirectory();
 	}
 
 	// initialize package count
-	packageCountAvailable = 0;
-	packageCountInstalled = 0;
+	m_packageCountAvailable = 0;
+	m_packageCountInstalled = 0;
 
-	if( packages == NULL ) {
+	if( m_packages == NULL ) {
 		kdDebug() << i18n( "PortageTreeScanner debug output",
 			"PortageTreeScanner::performThread(): "
 			"Didn't start because the PackageList object is NULL" )
@@ -124,26 +126,29 @@ IJob::JobResult PortageTreeScanner::performThread()
 	}
 
 	QDateTime startTime = QDateTime::currentDateTime();
-	emitDebugOutput( "Scanning the portage tree..." );
+	kdDebug() << i18n( "PortageTreeScanner debug output",
+		"PortageTreeScanner::performThread(): "
+		"Scanning the portage tree..." )
+		<< endl;
 
-	if( scanAvailablePackages == true )
+	if( m_scanAvailablePackages == true )
 	{
 		// scan the mainline tree
-		if( !scanTree(mainlineTreeDir, Mainline) )
+		if( !scanTree(m_mainlineTreeDir, Mainline) )
 			DO_ABORT;
 
 		// scan the overlay trees
-		for( QStringList::iterator overlayIterator = overlayTreeDirs.begin();
-		     overlayIterator != overlayTreeDirs.end(); overlayIterator++ )
+		for( QStringList::iterator overlayIterator = m_overlayTreeDirs.begin();
+		     overlayIterator != m_overlayTreeDirs.end(); overlayIterator++ )
 		{
 			if( !scanTree(*overlayIterator, Overlay) )
 				DO_ABORT;
 		}
 	}
-	if( scanInstalledPackages == true )
+	if( m_scanInstalledPackages == true )
 	{
 		// scan the installed packages database
-		if( !scanTree(installedPackagesDir, Installed) )
+		if( !scanTree(m_installedPackagesDir, Installed) )
 			DO_ABORT;
 	}
 
@@ -182,7 +187,9 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 	// set the d directory to the treeDir string
 	d.setPath( treeDir );
 	if( treeDir.isNull() || treeDir.isEmpty() || !d.exists() ) {
-		emitDebugOutput( "Invalid tree directory." );
+		kdDebug() << i18n( "PortageTreeScanner debug output",
+			"PortageTreeScanner::performThread(): Invalid tree directory." )
+			<< endl;
 		return true;
 	}
 
@@ -197,8 +204,8 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 	}
 	d.setSorting( QDir::Name );
 
-	currentPackage = NULL;
-	currentVersion = NULL;
+	m_currentPackage = NULL;
+	m_currentVersion = NULL;
 
 	// Iterate through the available categories (e.g. sys-kernel)
 	QStringList categories = d.entryList();
@@ -215,14 +222,15 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 
 		// Extract the category and subcategory from the folder name
 
-		currentCategory.setCategory( (*categoryIterator).left(pos),
+		m_currentCategory.setCategory( (*categoryIterator).left(pos),
 		                             (*categoryIterator).mid(pos+1) );
 
 		// If the Portage cache is searched, do this
-		if( (treeType == Mainline) && (preferCache == true) )
+		if( (treeType == Mainline) && (m_preferCache == true) )
 		{
 			// Compose the folder name of the current category
-			d.setPath( cacheDir + mainlineTreeDir + "/" + (*categoryIterator) );
+			d.setPath( m_cacheDir + m_mainlineTreeDir + "/"
+			           + (*categoryIterator) );
 			if( !d.exists() )
 				continue;
 
@@ -261,16 +269,16 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 
 				if( treeType == Mainline )
 				{
-					currentPackage = packages->package(
-						new PortageCategory(currentCategory),
+					m_currentPackage = m_packages->package(
+						new PortageCategory(m_currentCategory),
 						*packageNameIterator
 					);
 					scanTreePackage( d, false );
 				}
 				else if( treeType == Overlay )
 				{
-					currentPackage = packages->package(
-						new PortageCategory(currentCategory),
+					m_currentPackage = m_packages->package(
+						new PortageCategory(m_currentCategory),
 						*packageNameIterator
 					);
 					scanTreePackage( d, true );
@@ -281,8 +289,11 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 				}
 
 				// send a status update every 20 packages
-				if( (packageCountAvailable + packageCountInstalled) % 20 == 0 )
+				if( (m_packageCountAvailable + m_packageCountInstalled) % 20
+				    == 0 )
+				{
 					emitPackagesScanned();
+				}
 
 				if( aborting() )
 					return false; // means: abort!
@@ -296,18 +307,27 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 	switch( treeType )
 	{
 	case Mainline:
-		treeName = "mainline tree"; break;
+		treeName = i18n("PortageTreeScanner tree type string #1 "
+		                "(for debug output)",
+		                "mainline tree"); break;
 	case Overlay:
-		treeName = "overlay tree"; break;
+		treeName = i18n("PortageTreeScanner tree type string #2"
+		                "(for debug output)",
+		                "overlay tree"); break;
 	case Installed:
-		treeName = "installed packages database"; break;
+		treeName = i18n("PortageTreeScanner tree type string #3"
+		                "(for debug output)",
+		                "installed packages database"); break;
 	}
-	emitDebugOutput(
-		QString("Finished scanning %1 in %2... (%3 seconds)")
+	kdDebug() << i18n( "PortageTreeScanner debug output."
+	                   "%1 is a PortageTreeScanner tree type string, "
+	                   "%2 is its directory and %3 are the seconds.",
+		"PortageTreeScanner::performThread(): "
+		"Finished scanning %1 in %2... (%3 seconds)")
 			.arg( treeName )
 			.arg( treeDir )
 			.arg( startTime.secsTo(QDateTime::currentDateTime()) )
-	);
+		<< endl;
 
 	return true;
 } // end of scanPackageList()
@@ -315,7 +335,7 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 
 /**
  * Iterate through a directory's ebuild files and add the found
- * package versions to the currentPackage object.
+ * package versions to the m_currentPackage object.
  *
  * @param d        The directory containing the ebuilds
  * @param overlay  The value for version->overlay
@@ -323,7 +343,7 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
  */
 void PortageTreeScanner::scanTreePackage( QDir& d, bool overlay )
 {
-	// Iterate through all ebuild files of the current currentPackage
+	// Iterate through all ebuild files of the current m_currentPackage
 	QStringList ebuilds = d.entryList( "*.ebuild" );
 	QStringList::iterator ebuildIteratorEnd = ebuilds.end();
 
@@ -331,16 +351,16 @@ void PortageTreeScanner::scanTreePackage( QDir& d, bool overlay )
 	      ebuildIterator != ebuildIteratorEnd; ++ebuildIterator )
 	{
 		// add version info
-		currentVersion = currentPackage->version(
+		m_currentVersion = m_currentPackage->version(
 			(*ebuildIterator).mid( // extract the package version string
-				(currentPackage->name()).length() + 1,
+				(m_currentPackage->name()).length() + 1,
 				(*ebuildIterator).length() - 7
-					- ((currentPackage->name()).length() + 1)
+					- ((m_currentPackage->name()).length() + 1)
 			)
 		);
-		currentVersion->overlay = overlay;
+		m_currentVersion->overlay = overlay;
 	}
-	packageCountAvailable++;
+	m_packageCountAvailable++;
 } // end of scanTreePackage()
 
 /**
@@ -353,7 +373,7 @@ void PortageTreeScanner::scanCacheCategory( QDir& d )
 {
 	QString packageName;
 
-	// Iterate through all ebuild files of the current currentPackage
+	// Iterate through all ebuild files of the current m_currentPackage
 	QStringList files = d.entryList();
 	QStringList::iterator fileIteratorEnd = files.end();
 
@@ -365,30 +385,33 @@ void PortageTreeScanner::scanCacheCategory( QDir& d )
 			continue;
 
 
-		int packageNameEndIndex = (*fileIterator).findRev( rxVersion );
+		int packageNameEndIndex = (*fileIterator).findRev( m_rxVersion );
 		packageName = (*fileIterator).left( packageNameEndIndex );
 
 		// See if it's a new package (if not, it's just another version)
-		if( (currentPackage == NULL)
-		    || (packageName != currentPackage->name()) )
+		if( (m_currentPackage == NULL)
+		    || (packageName != m_currentPackage->name()) )
 		{
 			// Separate package name from version
-			currentPackage = packages->package(
-				new PortageCategory( currentCategory ),
+			m_currentPackage = m_packages->package(
+				new PortageCategory( m_currentCategory ),
 				packageName
 			);
-			packageCountAvailable++;
+			m_packageCountAvailable++;
 
 			// send a status update every 20 packages
-			if( (packageCountAvailable + packageCountInstalled) % 20 == 0 )
+			if( (m_packageCountAvailable + m_packageCountInstalled) % 20
+			    == 0 )
+			{
 				emitPackagesScanned();
+			}
 		}
 
 		// extract the package version string, and add version info
-		currentVersion = currentPackage->version(
-			(*fileIterator).mid( (currentPackage->name()).length() + 1 )
+		m_currentVersion = m_currentPackage->version(
+			(*fileIterator).mid( (m_currentPackage->name()).length() + 1 )
 		);
-		currentVersion->overlay = false;
+		m_currentVersion->overlay = false;
 	}
 } // end of scanCacheCategory()
 
@@ -401,19 +424,19 @@ void PortageTreeScanner::scanCacheCategory( QDir& d )
 void PortageTreeScanner::scanInstalledPackage( QDir& d )
 {
 	QString dirName = d.dirName();
-	int packageNameEndIndex = dirName.findRev( rxVersion );
+	int packageNameEndIndex = dirName.findRev( m_rxVersion );
 
 	// Separate package name from version
-	currentPackage = packages->package(
-		new PortageCategory( currentCategory ),
+	m_currentPackage = m_packages->package(
+		new PortageCategory( m_currentCategory ),
 		dirName.left( packageNameEndIndex ) // package name
 	);
-	currentVersion = currentPackage->version(
+	m_currentVersion = m_currentPackage->version(
 		dirName.mid( packageNameEndIndex + 1 )
 	);
-	currentVersion->installed = true;
+	m_currentVersion->installed = true;
 
-	packageCountInstalled++;
+	m_packageCountInstalled++;
 }
 
 
@@ -423,7 +446,7 @@ void PortageTreeScanner::scanInstalledPackage( QDir& d )
 void PortageTreeScanner::emitFinishedLoading()
 {
 	FinishedLoadingEvent* event = new FinishedLoadingEvent();
-	event->packages = this->packages;
+	event->packages = m_packages;
 	QApplication::postEvent( this, event );
 }
 
@@ -433,8 +456,8 @@ void PortageTreeScanner::emitFinishedLoading()
 void PortageTreeScanner::emitPackagesScanned()
 {
 	PackagesScannedEvent* event  = new PackagesScannedEvent();
-	event->packageCountAvailable = this->packageCountAvailable;
-	event->packageCountInstalled = this->packageCountInstalled;
+	event->packageCountAvailable = m_packageCountAvailable;
+	event->packageCountInstalled = m_packageCountInstalled;
 	QApplication::postEvent( this, event );
 }
 
@@ -454,7 +477,7 @@ void PortageTreeScanner::customEvent( QCustomEvent* event )
 		break;
 
 	case (int) FinishedLoadingEventType:
-		emit finishedLoading( packages );
+		emit finishedLoading( m_packages );
 
 	default:
 		ThreadedJob::customEvent( event );

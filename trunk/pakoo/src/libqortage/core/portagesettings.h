@@ -74,7 +74,7 @@ protected:
 	QString substituteShellVariables( const QString& value );
 
 private:
-	ConfigValueMap configValues;
+	ConfigValueMap m_configValues;
 };
 
 }

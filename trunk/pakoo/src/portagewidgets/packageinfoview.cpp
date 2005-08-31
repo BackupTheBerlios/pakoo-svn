@@ -23,6 +23,7 @@
 #include <kservice.h>
 #include <kuserprofile.h>
 #include <krun.h>
+#include <kparts/partmanager.h>
 
 
 namespace libpakt {
@@ -39,7 +40,7 @@ PackageInfoView::PackageInfoView(
 {
 	htmlGenerator = new PortageHTMLGenerator(arch);
 	connect( this->browserExtension(),
-		SIGNAL( openURLRequest( const KURL&, const KParts::URLArgs&) ),
+		SIGNAL( openURLRequest(const KURL&, const KParts::URLArgs&) ),
 		this, SLOT( openURLRequest(const KURL&, const KParts::URLArgs&) ) );
 }
 

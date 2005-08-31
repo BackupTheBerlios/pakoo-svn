@@ -67,26 +67,23 @@ private:
 	bool extractStringList( const QString& string, QRegExp* rx, QStringList* targetList );
 
 	//! The PortageSettings object used for retrieving directories and cache info.
-	PortageSettings* settings;
-
-	//! An object used for temporarily storing package version information.
-	PackageVersion* version;
+	PortageSettings* m_settings;
 
 	//! The directory where PortagePackageLoader tries to find packages.
-	QString mainlineTreeDir;
+	QString m_mainlineTreeDir;
 	//! The overlay directories for finding additional packages.
-	QStringList overlayTreeDirs;
+	QStringList m_overlayTreeDirs;
 	//! The directory where the database of installed packages resides.
-	QString installedPackagesDir;
+	QString m_installedPackagesDir;
 	//! The directory where the portage cache resides.
-	QString cacheDir;
+	QString m_cacheDir;
 
 	//! Set true if the Portage cache should be scanned instead of the mainline tree.
-	bool preferCache;
+	bool m_preferCache;
 
 	// Regexps for various line strings inside an ebuild.
-	QRegExp rxDescription, rxHomepage, rxSlot;
-	QRegExp rxLicenses, rxKeywords, rxUseflags;
+	QRegExp m_rxDescription, m_rxHomepage, m_rxSlot;
+	QRegExp m_rxLicenses, m_rxKeywords, m_rxUseflags;
 };
 
 }

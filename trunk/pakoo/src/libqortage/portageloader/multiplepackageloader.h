@@ -61,20 +61,13 @@ public:
 
 	void setPackageList( PackageList* packages );
 
-signals:
-	/**
-	 * Emitted for untranslated debug output, like starting the scan
-	 * or error messages.
-	 */
-	void debugOutput( QString output );
-
 protected:
 	JobResult performThread();
 
 private:
-	PackageLoader* loader;
-	PackageList* packages;
-	bool autoDeleteLoader;
+	PackageLoader* m_loader;
+	PackageList* m_packages;
+	bool m_autoDeleteLoader;
 };
 
 }

@@ -30,7 +30,7 @@ namespace libpakt {
  */
 FilePackageMaskLoader::FilePackageMaskLoader() : FileAtomLoaderBase()
 {
-	mask = true;
+	m_mask = true;
 }
 
 /**
@@ -41,9 +41,9 @@ FilePackageMaskLoader::FilePackageMaskLoader() : FileAtomLoaderBase()
 void FilePackageMaskLoader::setMode( FilePackageMaskLoader::Mode mode )
 {
 	if( mode == Mask )
-		mask = true;
+		m_mask = true;
 	else if( mode == Unmask )
-		mask = false;
+		m_mask = false;
 }
 
 /**
@@ -62,7 +62,7 @@ bool FilePackageMaskLoader::isLineProcessed( const QString& line )
  */
 bool FilePackageMaskLoader::setAtomString( const QString& line )
 {
-	atomString = line;
+	m_atomString = line;
 	return true;
 }
 
@@ -72,7 +72,7 @@ bool FilePackageMaskLoader::setAtomString( const QString& line )
  */
 void FilePackageMaskLoader::processVersion( PackageVersion* version )
 {
-	version->isHardMasked = mask;
+	version->isHardMasked = m_mask;
 }
 
 } // namespace

@@ -84,12 +84,6 @@ signals:
 	 */
 	void finishedLoading( PackageList* packages );
 
-	/**
-	 * Emitted for debug output, like starting the scan,
-	 * finishing part of the job, or error messages.
-	 */
-	void debugOutput( QString output );
-
 protected:
 	JobResult performThread();
 	void customEvent( QCustomEvent* event );
@@ -116,42 +110,42 @@ private:
 	void emitFinishedLoading();
 
 	//! The PackageList object that will be filled.
-	PackageList* packages;
+	PackageList* m_packages;
 	//! The PortageSettings object used for retrieving directories and cache info.
-	PortageSettings* settings;
+	PortageSettings* m_settings;
 
 	//! The directory where PortageTreeScanner tries to find packages.
-	QString mainlineTreeDir;
+	QString m_mainlineTreeDir;
 	//! The list of portage overlay directories.
-	QStringList overlayTreeDirs;
+	QStringList m_overlayTreeDirs;
 	//! The directory where the database of installed packages resides.
-	QString installedPackagesDir;
+	QString m_installedPackagesDir;
 	//! The directory where the portage cache resides.
-	QString cacheDir;
+	QString m_cacheDir;
 
 	//! Set true if the Portage cache should be scanned instead of the mainline tree.
-	bool preferCache;
+	bool m_preferCache;
 
 	//! Defines if mainline and overlay trees are searched.
-	bool scanAvailablePackages;
+	bool m_scanAvailablePackages;
 	//! Defines if the installed packages database is searched.
-	bool scanInstalledPackages;
+	bool m_scanInstalledPackages;
 
 	//! A counter, incremented with each found available package.
-	int packageCountAvailable;
+	int m_packageCountAvailable;
 	//! A counter, incremented with each found installed package.
-	int packageCountInstalled;
+	int m_packageCountInstalled;
 
 	//! The name of the current category
-	PortageCategory currentCategory;
+	PortageCategory m_currentCategory;
 
 	//! An object used for temporarily storing package information.
-	Package* currentPackage;
+	Package* m_currentPackage;
 	//! An object used for temporarily storing package version information.
-	PackageVersion* currentVersion;
+	PackageVersion* m_currentVersion;
 
 	//! Regexp for ebuild names (the part before the version string)
-	QRegExp rxVersion;
+	QRegExp m_rxVersion;
 
 
 	//

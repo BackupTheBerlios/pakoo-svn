@@ -26,6 +26,9 @@
 #include <qfile.h>
 #include <qtextstream.h>
 
+#include <kdebug.h>
+#include <klocale.h>
+
 
 namespace libpakt {
 
@@ -34,7 +37,7 @@ namespace libpakt {
  */
 FileLoaderBase::FileLoaderBase()
 {
-	filename = QString::null;
+	m_filename = QString::null;
 }
 
 
@@ -44,7 +47,7 @@ FileLoaderBase::FileLoaderBase()
  */
 void FileLoaderBase::setFileName( const QString& filename )
 {
-	this->filename = filename;
+	m_filename = filename;
 }
 
 /**
@@ -71,11 +74,11 @@ bool FileLoaderBase::isLineProcessed( const QString& line )
 IJob::JobResult FileLoaderBase::performThread()
 {
 	// Check if the file has been defined
-	if( filename.isNull() ) {
-		emit debugOutput(
-			"Didn't start the file loader because "
-			"the file name has not been set"
-		);
+	if( m_filename.isNull() ) {
+		kdDebug() << i18n( "FileLoaderBase debug output.",
+			"FileLoaderBase::performThread(): Didn't start loading because "
+			"the file name has not been set")
+			<< endl;
 		return Failure;
 	}
 
@@ -83,13 +86,14 @@ IJob::JobResult FileLoaderBase::performThread()
 		return Failure;
 
 	// Open the file for reading
-	QFile file( filename );
+	QFile file( m_filename );
 
 	if( !file.open( IO_ReadOnly ) ) {
-		emit debugOutput(
-			QString( "Couldn't open %1 for reading" )
-				.arg( filename )
-		);
+		kdDebug() << i18n( "FileLoaderBase debug output. "
+		                   "%1 is the file that was about to load",
+			"FileLoaderBase::performThread(): Couldn't open %1 for reading" )
+				.arg( m_filename )
+		<< endl;
 		return Failure;
 	}
 

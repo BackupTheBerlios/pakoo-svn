@@ -26,6 +26,7 @@
 
 
 // widgets
+#include "actionview.h"
 #include "portagewidgets/packagetreeview.h"
 #include "portagewidgets/packageview.h"
 #include "portagewidgets/packageinfoview.h"
@@ -60,65 +61,88 @@ PakooView::PakooView( QWidget *parent )
 {
 	m_backend = new PortageBackend();
 
+	// Overall layout
+
 	QHBoxLayout* topLayout = new QHBoxLayout( this );
 	topLayout->setAutoAdd( true );
 
-	hSplitter = new QSplitter( this );
-	hSplitter->setOpaqueResize( true );
+	m_hSplitter = new QSplitter( this );
+	m_hSplitter->setOpaqueResize( true );
 
-	QToolBox* toolBox = new QToolBox( hSplitter, "toolBox" );
+	QToolBox* toolBox = new QToolBox( m_hSplitter, "toolBox" );
 
-	treeView = new PackageTreeView( 0, "treeView", m_backend );
-	toolBox->addItem( treeView, TREEVIEWTEXT );
-	toolBox->addItem( new QLabel("Action View", 0, "tempactionlabel"), ACTIONVIEWTEXT );
-	toolBox->addItem( new QLabel("Config View", 0, "tempconfiglabel"), CONFIGVIEWTEXT );
+	m_vSplitter = new QSplitter( m_hSplitter );
+	m_vSplitter->setOrientation( QSplitter::Vertical );
+	m_vSplitter->setOpaqueResize( true );
 
-	vSplitter = new QSplitter( hSplitter );
-	vSplitter->setOrientation(QSplitter::Vertical);
-	vSplitter->setOpaqueResize( true );
 
-	packageView = new PackageView( vSplitter, "packageView", m_backend );
+	// Adding the individual widgets
 
-	packageInfoView = new PackageInfoView( vSplitter, "packageInfoView" );
+	m_treeView = new PackageTreeView( 0, "treeView", m_backend );
 
-	hSplitter->setResizeMode( toolBox, QSplitter::KeepSize );
-	vSplitter->setResizeMode( packageInfoView->view(), QSplitter::KeepSize );
+	int sectionIndex = toolBox->addItem( m_treeView, TREEVIEWTEXT );
+	m_sectionIndexes[sectionIndex] = BrowseSection;
 
-	vSplitter->setSizes( PakooConfig::vSplitterSizes() );
-	hSplitter->setSizes( PakooConfig::hSplitterSizes() );
+	sectionIndex = toolBox->addItem(
+		new QLabel("Action View", 0, "tempactionlabel"), ACTIONVIEWTEXT );
+	m_sectionIndexes[sectionIndex] = ActionSection;
+
+	sectionIndex = toolBox->addItem(
+		new QLabel("Config View", 0, "tempconfiglabel"), CONFIGVIEWTEXT );
+	m_sectionIndexes[sectionIndex] = ConfigSection;
+
+	m_packageView = new PackageView( m_vSplitter, "packageView", m_backend );
+	m_actionView = new ActionView( m_vSplitter, "actionView" );
+	m_configView = new QLabel( "Config View", m_vSplitter, "configView" );
+	m_actionView->hide();
+	m_configView->hide();
+
+	m_packageInfoView = new PackageInfoView( m_vSplitter, "packageInfoView" );
+
+	m_hSplitter->setResizeMode( toolBox, QSplitter::KeepSize );
+	m_vSplitter->setResizeMode( m_packageInfoView->view(), QSplitter::KeepSize );
+
+	m_vSplitter->setSizes( PakooConfig::vSplitterSizes() );
+	m_hSplitter->setSizes( PakooConfig::hSplitterSizes() );
 
 
 	//
 	// Here comes the big connection creator
 	//
 
+	// Connect the QToolBox signals so the right side follows the left one
+	connect(
+		toolBox, SIGNAL( currentChanged(int) ),
+		this,      SLOT( showSection(int) )
+	);
+
 	// Connect the package displaying widgets to work together
 	connect(
-		treeView,            SIGNAL( packageListChanged(PackageList&) ),
-		packageView->listView, SLOT( setPackageList(PackageList&) )
+		m_treeView,            SIGNAL( packageListChanged(PackageList&) ),
+		m_packageView->listView, SLOT( setPackageList(PackageList&) )
 	);
 	connect(
-		treeView,            SIGNAL( selectionChanged(PackageSelector&) ),
-		packageView->listView, SLOT( setPackageSelector(PackageSelector&) )
+		m_treeView,            SIGNAL( selectionChanged(PackageSelector&) ),
+		m_packageView->listView, SLOT( setPackageSelector(PackageSelector&) )
 	);
 	connect(
-		packageView->listView, SIGNAL( selectionChanged(Package*) ),
-		packageInfoView, SLOT( displayPackage(Package*) )
+		m_packageView->listView, SIGNAL( selectionChanged(Package*) ),
+		m_packageInfoView, SLOT( displayPackage(Package*) )
 	);
 	connect(
-		packageView->listView, SIGNAL(selectionChanged(Package*, PackageVersion*)),
-		packageInfoView, SLOT(displayPackage(Package*, PackageVersion*))
+		m_packageView->listView, SIGNAL(selectionChanged(Package*, PackageVersion*)),
+		m_packageInfoView, SLOT(displayPackage(Package*, PackageVersion*))
 	);
 
 	// Connect the package list view with the status bar,
 	// so the latter one is updated properly
 	//TODO: adapt
 	/*connect(
-		packageView->listView, SIGNAL(loadingPackageInfo(int,int)),
+		m_packageView->listView, SIGNAL(loadingPackageInfo(int,int)),
 		this, SLOT(handleLoadingPackageInfo(int,int))
 	);
 	connect(
-		packageView->listView, SIGNAL(finishedLoadingPackageDetails(PackageList&)),
+		m_packageView->listView, SIGNAL(finishedLoadingPackageDetails(PackageList&)),
 		this, SLOT(handleFinishedLoadingPackageDetails(PackageList&))
 	);*/
 }
@@ -134,7 +158,7 @@ void PakooView::initData()
 
 	// display the packages when loaded
 	connect( initialLoader, SIGNAL( finishedLoading(PackageList*) ),
-	         treeView,        SLOT( setPackageList(PackageList*) )
+	         m_treeView,      SLOT( setPackageList(PackageList*) )
 	);
 	// hide the progress bar when it's done
 	connect( initialLoader, SIGNAL( finishedLoading(PackageList*) ),
@@ -157,6 +181,34 @@ void PakooView::initData()
 }
 
 /**
+ * Show the section belonging to the QToolBox index.
+ */
+void PakooView::showSection( int sectionIndex )
+{
+	if( !m_sectionIndexes.contains(sectionIndex) )
+		return;
+
+	switch( m_sectionIndexes[sectionIndex] )
+	{
+	case BrowseSection:
+		m_packageView->show();
+		m_actionView->hide();
+		m_configView->hide();
+		break;
+	case ActionSection:
+		m_packageView->hide();
+		m_actionView->show();
+		m_configView->hide();
+		break;
+	case ConfigSection:
+		m_packageView->hide();
+		m_actionView->hide();
+		m_configView->show();
+		break;
+	}
+}
+
+/**
  * Size hint for the central view.
  */
 QSize PakooView::sizeHint() const
@@ -169,7 +221,7 @@ QSize PakooView::sizeHint() const
  */
 void PakooView::abortProgress()
 {
-	packageView->listView->abortLoadingPackageDetails();
+	m_packageView->listView->abortLoadingPackageDetails();
 }
 
 /**
@@ -178,8 +230,8 @@ void PakooView::abortProgress()
 void PakooView::quit()
 {
 	// store UI configuration
-	PakooConfig::setHSplitterSizes(hSplitter->sizes());
-	PakooConfig::setVSplitterSizes(vSplitter->sizes());
+	PakooConfig::setHSplitterSizes( m_hSplitter->sizes() );
+	PakooConfig::setVSplitterSizes( m_vSplitter->sizes() );
 	PakooConfig::writeConfig();
 }
 

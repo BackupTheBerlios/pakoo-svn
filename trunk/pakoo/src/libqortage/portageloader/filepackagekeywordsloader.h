@@ -32,7 +32,7 @@ namespace libpakt {
  * Using this class, you're able to load additional keywords from
  * package.keywords files (from what I know there's only one,
  * which is residing in /etc/portage/package.keywords).
- * Just call loadFile() and enjoy correct keywording.
+ * Just call start() or perform() and enjoy correct keywording.
  */
 class FilePackageKeywordsLoader : public FileAtomLoaderBase
 {
@@ -46,7 +46,7 @@ private:
 	bool setAtomString( const QString& line );
 	void processVersion( PackageVersion* version );
 
-	QStringList keywords;
+	QStringList m_keywords;
 };
 
 }

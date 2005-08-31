@@ -38,8 +38,10 @@ namespace libpakt {
 class PackageInfoView : public KHTMLPart // public KTextBrowser
 {
 	Q_OBJECT
+
 public:
-	PackageInfoView( QWidget* parentWidget, const char* widgetname, const QString& arch = "x86" );
+	PackageInfoView( QWidget* parentWidget = 0, const char* widgetname = 0,
+	                 const QString& arch = "x86" );
 	~PackageInfoView();
 
 public slots:

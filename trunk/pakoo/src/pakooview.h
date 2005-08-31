@@ -24,6 +24,7 @@
 
 #include <qwidget.h>
 #include <qvaluelist.h>
+#include <qmap.h>
 
 #include <khtml_part.h>
 #include <pakooiface.h>
@@ -43,6 +44,10 @@ class PackageView;
 class PackageInfoView;
 
 } // end of libpakt declarations
+
+class ActionView;
+//TODO: remove and replace with real, working widgets
+class QLabel;
 
 
 /**
@@ -83,14 +88,24 @@ signals:
 	void statusbarProgressButtonHidden();
 
 protected:
+	libpakt::PackageTreeView* m_treeView;
+	libpakt::PackageView*     m_packageView;
+	libpakt::PackageInfoView* m_packageInfoView;
+	ActionView* m_actionView;
+	QLabel* m_configView;
+	QSplitter* m_hSplitter;
+	QSplitter* m_vSplitter;
 
-	libpakt::PackageTreeView* treeView;
-	libpakt::PackageView* packageView;
-	libpakt::PackageInfoView* packageInfoView;
-	QSplitter* vSplitter;
-	QSplitter* hSplitter;
+private slots:
+	void showSection( int sectionIndex );
 
 private:
+	enum SectionType {
+		BrowseSection,
+		ActionSection,
+		ConfigSection
+	};
+
 	void scanPortageTree();
 
 	/** The factory creating all backend specific objects. */
@@ -101,6 +116,8 @@ private:
 	 * It is filled in loadPortageTree().
 	 */
 	libpakt::PackageList* m_packages;
+
+	QMap<int,SectionType> m_sectionIndexes;
 };
 
 #endif // PAKOOVIEW_H

@@ -25,7 +25,8 @@
 
 namespace libpakt {
 
-ThreadedJob::ThreadedJob() : IAsyncJob()
+ThreadedJob::ThreadedJob( QObject *parent, const char *name )
+	: IJob( parent, name )
 {}
 
 /**
@@ -33,10 +34,7 @@ ThreadedJob::ThreadedJob() : IAsyncJob()
  */
 ThreadedJob::~ThreadedJob()
 {
-	if( running() ) {
-		abort();
-		wait();
-	}
+	abortAndWait();
 	qApp->processEvents();
 	this->disconnect();
 }
@@ -53,7 +51,7 @@ void ThreadedJob::start()
 	if( running() )
 		wait();
 
-	isAborting = false;
+	m_aborting = false;
 
 	QThread::start();
 	emit started();
@@ -64,7 +62,7 @@ void ThreadedJob::start()
  * If the thread is already running, this function waits for the running
  * thread to end (without aborting) before going at it again.
  *
- * @return  If the thread finished successfully (IJob::Success) or not
+ * @return  Tells if the thread finished successfully (IJob::Success) or not
  *          (IJob::Failure). The finished() signal is not emitted.
  */
 IJob::JobResult ThreadedJob::perform()
@@ -72,7 +70,7 @@ IJob::JobResult ThreadedJob::perform()
 	if( running() )
 		wait();
 
-	isAborting = false;
+	m_aborting = false;
 
 	return performThread();
 }
@@ -99,7 +97,7 @@ bool ThreadedJob::running()
 // Take documentation from IJob doxygen.
 void ThreadedJob::abort()
 {
-	isAborting = true;
+	m_aborting = true;
 }
 
 /**
@@ -117,13 +115,24 @@ void ThreadedJob::abortAndWait()
 }
 
 /**
+ * Wait for the thread to end before this function returns.
+ * If the thread is not currently running, it returns immediately.
+ * The return value is the one from QThread::wait() and is always true
+ * (since no timeout is being used in this implementation).
+ */
+bool ThreadedJob::wait()
+{
+	return QThread::wait();
+}
+
+/**
  * Determine if the thread should be aborted.
  * Running threads should check regularly on this
  * and stop as soon as it makes sense if true is returned.
  */
 bool ThreadedJob::aborting()
 {
-	return isAborting;
+	return m_aborting;
 }
 
 
@@ -150,16 +159,6 @@ void ThreadedJob::emitProgressChanged( int value, int maximum )
 }
 
 /**
- * From within the thread, emit a debugOutput() signal to the main thread.
- */
-void ThreadedJob::emitDebugOutput( const QString& output )
-{
-	DebugOutputEvent* event = new DebugOutputEvent();
-	event->output = output;
-	QApplication::postEvent( this, event );
-}
-
-/**
  * From within the thread, emit a currentTaskChanged() signal
  * to the main thread.
  */
@@ -180,16 +179,12 @@ void ThreadedJob::customEvent( QCustomEvent* event )
 	switch( event->type() )
 	{
 	case (int) FinishedEventType:
-		emit IAsyncJob::finished( ((FinishedEvent*)event)->result );
+		emit IJob::finished( ((FinishedEvent*)event)->result );
 		break;
 
 	case (int) ProgressChangedEventType:
 		ProgressChangedEvent* pcEvent = (ProgressChangedEvent*) event;
 		emit progressChanged( pcEvent->value, pcEvent->maximum );
-		break;
-
-	case (int) DebugOutputEventType:
-		emit debugOutput( ((DebugOutputEvent*)event)->output );
 		break;
 
 	case (int) CurrentTaskChangedEventType:

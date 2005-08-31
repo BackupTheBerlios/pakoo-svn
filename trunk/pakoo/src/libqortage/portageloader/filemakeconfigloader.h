@@ -33,8 +33,8 @@ class PortageSettings;
 /**
  * This is a class that is able to load files like /etc/make.conf,
  * /etc/make.globals or the make.defaults files in each profile directory.
- * Calling loadFile() retrieves the configuration values and stores them
- * into a given PortageSettings object.
+ * Starting the loader with start() or perform() retrieves the configuration
+ * values and stores them into a given PortageSettings object.
  */
 class FileMakeConfigLoader : public FileLoaderBase
 {
@@ -51,10 +51,10 @@ private:
 	void processLine( const QString& line );
 
 	//! The PortageSettings object that will be filled with configuration values.
-	PortageSettings* settings;
+	PortageSettings* m_settings;
 
 	// Regexp for a configuration line, like ARCH="x86" or SUPPORT_ALSA=1
-	QRegExp rxConfigLine;
+	QRegExp m_rxConfigLine;
 };
 
 }

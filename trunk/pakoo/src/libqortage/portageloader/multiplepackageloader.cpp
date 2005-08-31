@@ -37,14 +37,14 @@ MultiplePackageLoader::MultiplePackageLoader( PackageLoader* loader )
 : ThreadedJob()
 {
 	setPackageLoader( loader );
-	packages = NULL;
-	autoDeleteLoader = false;
+	m_packages = NULL;
+	m_autoDeleteLoader = false;
 }
 
 MultiplePackageLoader::~ MultiplePackageLoader( )
 {
-	if( autoDeleteLoader == true && loader != NULL ) {
-		loader->deleteLater();
+	if( m_autoDeleteLoader == true && m_loader != NULL ) {
+		m_loader->deleteLater();
 	}
 }
 
@@ -54,7 +54,7 @@ MultiplePackageLoader::~ MultiplePackageLoader( )
  */
 PackageLoader* MultiplePackageLoader::packageLoader()
 {
-	return loader;
+	return m_loader;
 }
 
 /**
@@ -68,7 +68,7 @@ PackageLoader* MultiplePackageLoader::packageLoader()
  */
 void MultiplePackageLoader::setAutoDeletePackageLoader( bool autoDelete )
 {
-	this->autoDeleteLoader = autoDelete;
+	m_autoDeleteLoader = autoDelete;
 }
 
 /**
@@ -77,7 +77,7 @@ void MultiplePackageLoader::setAutoDeletePackageLoader( bool autoDelete )
  */
 void MultiplePackageLoader::setPackageLoader( PackageLoader* loader )
 {
-	this->loader = loader;
+	m_loader = loader;
 }
 
 /**
@@ -86,7 +86,7 @@ void MultiplePackageLoader::setPackageLoader( PackageLoader* loader )
  */
 void MultiplePackageLoader::setPackageList( PackageList* packages )
 {
-	this->packages = packages;
+	m_packages = packages;
 }
 
 
@@ -98,7 +98,7 @@ void MultiplePackageLoader::setPackageList( PackageList* packages )
  */
 IJob::JobResult MultiplePackageLoader::performThread()
 {
-	if( loader == NULL )
+	if( m_loader == NULL )
 	{
 		kdDebug() << i18n( "MultiplePackageLoader debug output",
 			"MultiplePackageLoader::performThread(): "
@@ -106,7 +106,7 @@ IJob::JobResult MultiplePackageLoader::performThread()
 			<< endl;
 		return Failure;
 	}
-	if( packages == NULL )
+	if( m_packages == NULL )
 	{
 		kdDebug() << i18n( "MultiplePackageLoader debug output",
 			"MultiplePackageLoader::performThread(): "
@@ -115,15 +115,15 @@ IJob::JobResult MultiplePackageLoader::performThread()
 		return Failure;
 	}
 
-	PackageList::iterator packageIteratorEnd = packages->end();
+	PackageList::iterator packageIteratorEnd = m_packages->end();
 
 	// Iterate through all packages
-	for( PackageList::iterator packageIterator = packages->begin();
+	for( PackageList::iterator packageIterator = m_packages->begin();
 	     packageIterator != packageIteratorEnd; ++packageIterator )
 	{
 		// scan the current package
-		loader->setPackage( *packageIterator );
-		loader->perform();
+		m_loader->setPackage( *packageIterator );
+		m_loader->perform();
 
 		if( aborting() ) {
 			kdDebug() << i18n( "MultiplePackageLoader debug output",
@@ -135,7 +135,7 @@ IJob::JobResult MultiplePackageLoader::performThread()
 	}
 
 	// make sure no one tries to access it when it might already be deleted
-	loader->setPackage( NULL );
+	m_loader->setPackage( NULL );
 
 	// all packages have been scanned
 	return Success;

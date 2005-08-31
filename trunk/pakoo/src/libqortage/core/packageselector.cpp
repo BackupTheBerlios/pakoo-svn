@@ -66,10 +66,10 @@ namespace libpakt {
  */
 PackageSelector::PackageSelector() : ThreadedJob()
 {
-	includedCategories = NULL;
-	excludedCategories = NULL;
-	includeInstalledPackages = NULL;
-	excludeInstalledPackages = NULL;
+	m_includedCategories = NULL;
+	m_excludedCategories = NULL;
+	m_includeInstalledPackages = NULL;
+	m_excludeInstalledPackages = NULL;
 	clearFilters();
 }
 
@@ -99,7 +99,7 @@ PackageSelector& PackageSelector::operator=(
  */
 void PackageSelector::setSourceList( PackageList* sourceList )
 {
-	this->sourceList = sourceList;
+	m_sourceList = sourceList;
 }
 
 /**
@@ -110,7 +110,7 @@ void PackageSelector::setSourceList( PackageList* sourceList )
  */
 void PackageSelector::setDestinationList( PackageList* destList )
 {
-	this->destList = destList;
+	m_destList = destList;
 }
 
 /**
@@ -136,7 +136,7 @@ void PackageSelector::clearFilters()
  */
 void PackageSelector::setAllPackagesFilter( FilterType allPackagesFilter )
 {
-	this->allPackagesFilter = allPackagesFilter;
+	m_allPackagesFilter = allPackagesFilter;
 }
 
 
@@ -152,12 +152,12 @@ void PackageSelector::addCategoryFilter( FilterType filterType,
                                          const PackageCategory& category )
 {
 	if( filterType == Include ) {
-		ENSURE_EXISTANCE( includedCategories, QValueList<PackageCategory> );
-		includedCategories->append( category );
+		ENSURE_EXISTANCE( m_includedCategories, QValueList<PackageCategory> );
+		m_includedCategories->append( category );
 	}
 	else if( filterType == Exclude ) {
-		ENSURE_EXISTANCE( excludedCategories, QValueList<PackageCategory> );
-		excludedCategories->append( category );
+		ENSURE_EXISTANCE( m_excludedCategories, QValueList<PackageCategory> );
+		m_excludedCategories->append( category );
 	}
 }
 
@@ -166,8 +166,8 @@ void PackageSelector::addCategoryFilter( FilterType filterType,
  */
 void PackageSelector::clearCategoryFilters()
 {
-	SAFEDELETE( includedCategories );
-	SAFEDELETE( excludedCategories );
+	SAFEDELETE( m_includedCategories );
+	SAFEDELETE( m_excludedCategories );
 }
 
 
@@ -183,12 +183,12 @@ void PackageSelector::addIsInstalledFilter( FilterType filterType,
                                             bool installed )
 {
 	if( filterType == Include ) {
-		ENSURE_EXISTANCE( includeInstalledPackages, bool );
-		*includeInstalledPackages = installed;
+		ENSURE_EXISTANCE( m_includeInstalledPackages, bool );
+		*m_includeInstalledPackages = installed;
 	}
 	else if( filterType == Exclude ) {
-		ENSURE_EXISTANCE( excludeInstalledPackages, bool );
-		*excludeInstalledPackages = installed;
+		ENSURE_EXISTANCE( m_excludeInstalledPackages, bool );
+		*m_excludeInstalledPackages = installed;
 	}
 }
 
@@ -197,8 +197,8 @@ void PackageSelector::addIsInstalledFilter( FilterType filterType,
  */
 void PackageSelector::clearIsInstalledFilters()
 {
-	SAFEDELETE( includeInstalledPackages );
-	SAFEDELETE( excludeInstalledPackages );
+	SAFEDELETE( m_includeInstalledPackages );
+	SAFEDELETE( m_excludeInstalledPackages );
 }
 
 
@@ -209,11 +209,13 @@ void PackageSelector::clearIsInstalledFilters()
  */
 void PackageSelector::copyFrom( const PackageSelector& otherSelector )
 {
-	this->allPackagesFilter = otherSelector.allPackagesFilter;
-	DEEPCOPY(otherSelector, includedCategories, QValueList<PackageCategory>);
-	DEEPCOPY(otherSelector, excludedCategories, QValueList<PackageCategory>);
-	DEEPCOPY(otherSelector, includeInstalledPackages, bool );
-	DEEPCOPY(otherSelector, excludeInstalledPackages, bool );
+	m_allPackagesFilter = otherSelector.m_allPackagesFilter;
+	DEEPCOPY( otherSelector, m_includeInstalledPackages, bool );
+	DEEPCOPY( otherSelector, m_excludeInstalledPackages, bool );
+	DEEPCOPY( otherSelector,
+	          m_includedCategories, QValueList<PackageCategory> );
+	DEEPCOPY( otherSelector,
+	          m_excludedCategories, QValueList<PackageCategory> );
 }
 
 
@@ -228,38 +230,41 @@ void PackageSelector::copyFrom( const PackageSelector& otherSelector )
  */
 IJob::JobResult PackageSelector::performThread()
 {
-	if( sourceList == NULL )
+	if( m_sourceList == NULL )
 	{
 		kdDebug() << i18n( "PackageSelector debug output",
+			"PackageSelector::performThread(): "
 			"Didn't start scanning because "
 			"the source PackageList is NULL." )
 			<< endl;
 		return Failure;
 	}
-	if( destList == NULL )
+	if( m_destList == NULL )
 	{
 		kdDebug() << i18n( "PackageSelector debug output",
+			"PackageSelector::performThread(): "
 			"Didn't start scanning because "
 			"the destination PackageList is NULL." )
 			<< endl;
 		return Failure;
 	}
-	destList->clear();
+	m_destList->clear();
 
-	PackageList::iterator packageIteratorEnd = sourceList->end();
+	PackageList::iterator packageIteratorEnd = m_sourceList->end();
 
 	// Iterate through all packages
-	for( PackageList::iterator packageIterator = sourceList->begin();
+	for( PackageList::iterator packageIterator = m_sourceList->begin();
 	     packageIterator != packageIteratorEnd; ++packageIterator )
 	{
 		// test the current package
 		if( includePackage( *packageIterator ) == true )
-			destList->insert( *packageIterator );
+			m_destList->insert( *packageIterator );
 
 		if( aborting() )
 		{
 			kdDebug() << i18n( "PackageSelector debug output",
-				"Aborting the package selector on request" )
+				"PackageSelector::performThread(): "
+				"Aborting on user request" )
 				<< endl;
 			return Failure;
 		}
@@ -283,7 +288,7 @@ bool PackageSelector::includePackage( Package* package )
 	// all exclusions are done (and don't apply for this package,
 	// because otherwise we wouldn't come here): so, if any inclusion filter
 	// matches, then the package is in.
-	if( allPackagesFilter == Include || inclusionFilterMatches(package) )
+	if( m_allPackagesFilter == Include || inclusionFilterMatches(package) )
 		return true;
 	else
 		return false;
@@ -300,18 +305,18 @@ bool PackageSelector::includePackage( Package* package )
 bool PackageSelector::inclusionFilterMatches( Package* package )
 {
 	// included categories filter
-	if( includedCategories != NULL )
+	if( m_includedCategories != NULL )
 	{
-		FOREACH( categoryIterator, includedCategories, PackageCategory )
+		FOREACH( categoryIterator, m_includedCategories, PackageCategory )
 		{
 			if( !package->category()->isContainedIn(*categoryIterator) )
 				return false;
 		}
 	}
 	// include packages with 'package.installed == given value' filter
-	if( includeInstalledPackages != NULL )
+	if( m_includeInstalledPackages != NULL )
 	{
-		if( !package->hasInstalledVersion() == *includeInstalledPackages )
+		if( !package->hasInstalledVersion() == *m_includeInstalledPackages )
 			return false;
 	}
 	return true;
@@ -328,18 +333,18 @@ bool PackageSelector::inclusionFilterMatches( Package* package )
 bool PackageSelector::exclusionFilterMatches( Package* package )
 {
 	// excluded categories filter
-	if( excludedCategories != NULL )
+	if( m_excludedCategories != NULL )
 	{
-		FOREACH( categoryIterator, excludedCategories, PackageCategory )
+		FOREACH( categoryIterator, m_excludedCategories, PackageCategory )
 		{
 			if( package->category()->isContainedIn(*categoryIterator) )
 				return true;
 		}
 	}
 	// exclude packages with 'package.installed == given value' filter
-	if( excludeInstalledPackages != NULL )
+	if( m_excludeInstalledPackages != NULL )
 	{
-		if( package->hasInstalledVersion() == *excludeInstalledPackages )
+		if( package->hasInstalledVersion() == *m_excludeInstalledPackages )
 			return true;
 	}
 	return false;

@@ -67,7 +67,7 @@ private:
 	typedef QMap<QString,KSharedPtr<Package> > PackageMap;
 
 	//! The internal list of packages in the tree.
-	PackageMap packages;
+	PackageMap m_packages;
 };
 
 }

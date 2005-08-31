@@ -86,12 +86,6 @@ signals:
 	 */
 	void finishedSaving( PackageList* packages, const QString& filename );
 
-	/**
-	 * Emitted for untranslated debug output, like starting the job,
-	 * finishing part of it, or error messages.
-	 */
-	void debugOutput( QString output );
-
 protected:
 	JobResult performThread();
 	void customEvent( QCustomEvent* event );
@@ -117,18 +111,18 @@ private:
 	void emitPackagesScanned();
 
 	//! The PackageList object that will be filled (when loading) or read (when saving).
-	PackageList* packages;
+	PackageList* m_packages;
 	//! The action that will be performed when running as thread.
-	PortageML::Action action;
+	PortageML::Action m_action;
 	//! The file that will be read or written.
-	QString filename;
+	QString m_filename;
 
 	//! The currently processed package.
-	Package* package;
+	Package* m_package;
 	//! A counter that is incremented with each added package.
-	int packageCountAvailable;
+	int m_packageCountAvailable;
 	//! A counter that is incremented with each added package where the installed flag is set.
-	int packageCountInstalled;
+	int m_packageCountInstalled;
 
 
 	//

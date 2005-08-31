@@ -21,7 +21,7 @@
 #ifndef LIBPAKTTHREADEDJOB_H
 #define LIBPAKTTHREADEDJOB_H
 
-#include "iasyncjob.h"
+#include "ijob.h"
 
 #include <qthread.h>
 
@@ -30,7 +30,7 @@ namespace libpakt {
 
 /**
  * A base class for jobs that need an extra thread.
- * It's derived from QThread and implements the IAsyncJob interface.
+ * It's derived from QThread and implements the IJob interface.
  * Its main feature, which will be obsolete when switching to Qt 4,
  * is convenient translation of QCustomEvents to signals,
  * which is very handy for the caller.
@@ -44,18 +44,18 @@ namespace libpakt {
  *
  * @short  A base class for asynchronous jobs that are running as thread.
  */
-class ThreadedJob : public IAsyncJob, public QThread
+class ThreadedJob : public IJob, public QThread
 {
 	Q_OBJECT
 
 public:
-	ThreadedJob();
+	ThreadedJob( QObject *parent = 0, const char *name = 0 );
 	~ThreadedJob();
 
 	IJob::JobResult perform();
 	void abortAndWait();
 	bool running();
-	//bool wait();
+	bool wait();
 
 	/**
 	 * True if the job reports its current progress status
@@ -63,7 +63,7 @@ public:
 	 * returns false, it should be overloaded by derived classes
 	 * if they plan to emit progressChanged() signals.
 	 */
-	virtual bool progressEnabled() { return false; };
+	bool progressEnabled() { return false; }
 
 public slots:
 	void start();
@@ -96,16 +96,14 @@ protected:
 	virtual void customEvent( QCustomEvent* event );
 
 protected slots:
-
-	void emitDebugOutput( const QString& output );
 	void emitProgressChanged( int value, int maximum );
 	void emitCurrentTaskChanged( const QString& description );
 
 private:
-	bool isAborting;
-
 	void run();
 	void emitFinished( IJob::JobResult result );
+
+	bool m_aborting;
 
 	enum ThreadedJobEventType
 	{
@@ -132,13 +130,6 @@ private:
 	public:
 		ProgressChangedEvent() : QCustomEvent( ProgressChangedEventType ) {};
 		int value, maximum;
-	};
-
-	class DebugOutputEvent : public QCustomEvent
-	{
-	public:
-		DebugOutputEvent() : QCustomEvent( DebugOutputEventType ) {};
-		QString output;
 	};
 
 	class CurrentTaskChangedEvent : public QCustomEvent

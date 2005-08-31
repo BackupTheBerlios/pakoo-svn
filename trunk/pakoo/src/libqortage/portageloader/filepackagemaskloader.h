@@ -29,9 +29,10 @@ namespace libpakt {
 /**
  * This is a class that is able to load hardmasking files, such as
  * package.mask or package.unmask from /etc/portage/.
- * Calling loadFile() sets or unsets the hardmasked flag for each
- * package version contained in this file. By calling setMode(),
- * you can decide if the found packages will be masked or unmasked.
+ * Starting the loader (using start() or perform()) sets or unsets
+ * the hardmasked flag for each package version contained in this file.
+ * By calling setMode(), you can decide if the found packages will be
+ * masked or unmasked.
  */
 class FilePackageMaskLoader : public FileAtomLoaderBase
 {
@@ -52,7 +53,7 @@ protected:
     void processVersion( PackageVersion* version );
 
 private:
-	bool mask;
+	bool m_mask;
 };
 
 }

@@ -62,7 +62,7 @@ PortageInitialLoader::PortageInitialLoader() : InitialLoader()
  */
 void PortageInitialLoader::setSettingsObject( PortageSettings* settings )
 {
-	this->settings = settings;
+	m_settings = settings;
 }
 
 /**
@@ -72,7 +72,7 @@ void PortageInitialLoader::setSettingsObject( PortageSettings* settings )
  */
 IJob::JobResult PortageInitialLoader::performThread()
 {
-	if( packages == NULL ) {
+	if( m_packages == NULL ) {
 		kdDebug() << i18n( "PortageInitialLoader debug output",
 			"PortageInitialLoader::performThread(): "
 			"Didn't start because the PackageList object is NULL" )
@@ -101,7 +101,7 @@ IJob::JobResult PortageInitialLoader::performThread()
 		     "Loading global Portage settings...")
 	);
 	ProfileLoader* profileLoader = new ProfileLoader();
-	profileLoader->setSettingsObject( settings );
+	profileLoader->setSettingsObject( m_settings );
 
 	result = profileLoader->perform();
 	profileLoader->deleteLater();
@@ -120,8 +120,8 @@ IJob::JobResult PortageInitialLoader::performThread()
 		     "Loading packages from the Portage tree...")
 	);
 	PortageTreeScanner* treeScanner = new PortageTreeScanner();
-	treeScanner->setPackageList( packages );
-	treeScanner->setSettingsObject( settings );
+	treeScanner->setPackageList( m_packages );
+	treeScanner->setSettingsObject( m_settings );
 
 	connect( treeScanner, SIGNAL( packagesScanned(int,int) ),
 	         this,          SLOT( emitPackagesScanned(int,int) ) );
@@ -142,7 +142,7 @@ IJob::JobResult PortageInitialLoader::performThread()
 		);
 		PortageML* portageML = new PortageML();
 		portageML->setAction( PortageML::LoadFile );
-		portageML->setPackageList( packages );
+		portageML->setPackageList( m_packages );
 		portageML->setFileName( filename );
 
 		connect( portageML, SIGNAL( packagesScanned(int,int) ),
@@ -168,12 +168,12 @@ IJob::JobResult PortageInitialLoader::performThread()
 	// package.keywords, package.mask and package.unmask
 	//
 	FilePackageMaskLoader* maskLoader = new FilePackageMaskLoader();
-	maskLoader->setPackageList( packages );
+	maskLoader->setPackageList( m_packages );
 
 	// package.mask files (in /usr/portage/profiles and /etc/portage)
 	maskLoader->setMode( FilePackageMaskLoader::Mask );
 	maskLoader->setFileName(
-		settings->mainlineTreeDirectory() + globalPackageMaskFile );
+		m_settings->mainlineTreeDirectory() + globalPackageMaskFile );
 	maskLoader->perform();
 	maskLoader->setFileName( etcPackageMaskFile );
 	maskLoader->perform();
@@ -186,12 +186,12 @@ IJob::JobResult PortageInitialLoader::performThread()
 	// package.keywords file (in /etc/portage)
 	FilePackageKeywordsLoader* keywordsLoader
 		= new FilePackageKeywordsLoader();
-	keywordsLoader->setPackageList( packages );
+	keywordsLoader->setPackageList( m_packages );
 	keywordsLoader->setFileName( etcPackageKeywordsFile );
 	keywordsLoader->perform();
 
 	// done!
-	emitFinishedLoading( packages );
+	emitFinishedLoading( m_packages );
 
 	return Success;
 }
@@ -216,8 +216,8 @@ void PortageInitialLoader::emitPackagesScanned( int packageCountAvailable,
 		i18n("PortageInitialLoader task #2a",
 			 "Loading packages from the Portage tree: "
 		     "%1 packages, %2 installed...")
-		.arg(packageCountAvailable)
-		.arg(packageCountInstalled)
+		.arg( packageCountAvailable )
+		.arg( packageCountInstalled )
 	);
 }
 

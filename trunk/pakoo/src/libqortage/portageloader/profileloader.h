@@ -55,7 +55,7 @@ private:
 	bool goToParentDirectory( QDir& currentDir );
 
 	//! The PortageSettings object that will be filled with configuration values.
-	PortageSettings* settings;
+	PortageSettings* m_settings;
 };
 
 }

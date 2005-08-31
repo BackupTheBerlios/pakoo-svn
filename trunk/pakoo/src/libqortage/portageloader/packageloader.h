@@ -32,7 +32,7 @@ class PackageVersion;
 /**
  * PackageLoader is a threaded job which is able to retrieve package
  * detail information. This class is responsible for filling in
- * package and version infos which were not loaded by @class InitialLoader
+ * package and version infos which were not loaded by InitialLoader
  * (because it would have been too resource- or time-expensive to load
  * all the info at once).
  *

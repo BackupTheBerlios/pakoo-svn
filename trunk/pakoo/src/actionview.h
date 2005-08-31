@@ -18,69 +18,24 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTINITIALLOADER_H
-#define LIBPAKTINITIALLOADER_H
+#ifndef PAKOOACTIONVIEW_H
+#define PAKOOACTIONVIEW_H
 
-#include "../core/threadedjob.h"
-
-
-namespace libpakt {
-
-class PackageList;
+#include <qwidget.h>
 
 /**
- * This is a job that initializes the package list with packages in the
- * package tree, loads global settings from config files, and/or does other
- * initialization work (depending on the specific backend). Please perform()
- * or start() this job before attempting to work with the back end,
- * because otherwise there won't be any packages that you can access.
+ * @short A class that manages (contains, shows/hides, ...) widgets of Pakoo's action view.
+ *
+ * The ActionView is a collection of widgets that are dynamically added
+ * and removed. Each one of them represents a specific action, such as
+ * syncing the package repository, installing a package, or similar.
  */
-class InitialLoader : public ThreadedJob
+class ActionView : public QWidget
 {
-	Q_OBJECT
+Q_OBJECT
 
 public:
-	InitialLoader();
-
-	void setPackageList( PackageList* packages );
-
-signals:
-	/**
-	 * Emitted if the package tree has successfully been loaded from disk.
-	 * The PackageList object now contains all packages and package versions,
-	 * but without detailed package information.
-	 */
-	void finishedLoading( PackageList* packages );
-
-protected slots:
-	void emitFinishedLoading( PackageList* packages );
-
-protected:
-	void customEvent(QCustomEvent* event);
-
-	//! The PackageList object that will be filled with packages.
-	PackageList* m_packages;
-
-private:
-	enum InitialLoaderEventType
-	{
-		FinishedLoadingEventType = QEvent::User + 14344
-	};
-
-
-	//
-	// nested event classes
-	//
-
-	class FinishedLoadingEvent : public QCustomEvent
-	{
-	public:
-		FinishedLoadingEvent() : QCustomEvent( FinishedLoadingEventType ) {};
-		PackageList* packages;
-	};
-
+    ActionView( QWidget* parent = 0, const char* name = 0 );
 };
 
-}
-
-#endif // LIBPAKTINITIALLOADER_H
+#endif // PAKOOACTIONVIEW_H

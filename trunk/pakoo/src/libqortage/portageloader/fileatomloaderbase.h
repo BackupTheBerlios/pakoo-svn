@@ -37,7 +37,7 @@ class DependAtom;
  * DEPEND atom per line, like the config files in /etc/portage/.
  *
  * To use it, set it up calling the setPackageList and setFileName
- * member functions, then call perform to process the file.
+ * member functions, then call start() or perform() to process the file.
  */
 class FileAtomLoaderBase : public FileLoaderBase
 {
@@ -50,17 +50,17 @@ public:
 
 protected:
 	//! A DEPEND atom validator / package version retriever
-	DependAtom* atom;
+	DependAtom* m_atom;
 	//! The string of the current line's DEPEND atom, to be set by setAtomString().
-	QString atomString;
+	QString m_atomString;
 
 	//! The PackageList object whose packages will be modified.
-	PackageList* packages;
+	PackageList* m_packages;
 
 	/**
 	 * This purely virtual function is called by processLine() for every
 	 * non-empty line and has to extract the DEPEND atom string from there
-	 * and store it in the 'atomString' member variable.
+	 * and store it in the 'm_atomString' member variable.
 	 *
 	 * If the matching versions should not be processed (like when it's a
 	 * comment, or if you just need the line string) this function can return
@@ -71,7 +71,7 @@ protected:
 	 * you might want to save them into a member variable, so that you can
 	 * access it when process() is called.
 	 *
-	 * Further, you can assume that the 'atom' member variable is a valid
+	 * Further, you can assume that the 'm_atom' member is a valid
 	 * DependAtom object, so use it if you need to.
 	 */
 	virtual bool setAtomString( const QString& line ) = 0;
@@ -82,7 +82,7 @@ protected:
 	 * line in the file. In most cases, you will change some version
 	 * property here (like (un)hardmasking the version, for example).
 	 *
-	 * Further, you can assume that 'atom' is a valid DependAtom object
+	 * Further, you can assume that 'm_atom' is a valid DependAtom object
 	 * which is containing info about the current line's atom.
 	 */
 	virtual void processVersion( PackageVersion* version ) = 0;

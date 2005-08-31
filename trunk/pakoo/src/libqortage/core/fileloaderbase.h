@@ -33,7 +33,7 @@ namespace libpakt {
  *
  * To use it, set it up calling the setFileName member function
  * (and probably other ones from the derived classes), then call
- * perform() to process the file.
+ * start() or perform() to process the file.
  *
  * @short A base class which simplifies reading from a file.
  */
@@ -44,14 +44,12 @@ class FileLoaderBase : public ThreadedJob
 public:
 	FileLoaderBase();
 
+	const QString& fileName() { return m_filename; };
 	void setFileName( const QString& filename );
 
 	IJob::JobResult performThread();
 
 protected:
-	//! The file that will be read or written.
-	QString filename;
-
 	/**
 	 * This purely virtual function is called by perform() for every line
 	 * in the file if isLineProcessed(line) returns true.
@@ -104,6 +102,10 @@ protected:
 	 * (By default, it always returns IJob::Success.)
 	 */
 	virtual IJob::JobResult finish() { return Success; }
+
+private:
+	//! The file that will be read or written.
+	QString m_filename;
 };
 
 }

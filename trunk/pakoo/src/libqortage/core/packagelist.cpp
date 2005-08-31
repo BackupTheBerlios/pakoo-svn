@@ -42,7 +42,7 @@ PackageList::PackageList()
  */
 int PackageList::count()
 {
-	return packages.count();
+	return m_packages.count();
 }
 
 /**
@@ -50,7 +50,7 @@ int PackageList::count()
  */
 void PackageList::clear()
 {
-	packages.clear();
+	m_packages.clear();
 }
 
 /**
@@ -65,7 +65,7 @@ bool PackageList::insert( Package* package )
 	if( package == NULL || package->name() == "" )
 		return false;
 
-	packages.insert(
+	m_packages.insert(
 		package->category()->uniqueName() + package->name(),
 		KSharedPtr<Package>( package )
 	);
@@ -105,7 +105,7 @@ bool PackageList::contains( PackageCategory* category,
 	if( category == NULL )
 		return false;
 
-	return packages.contains( category->uniqueName() + name );
+	return m_packages.contains( category->uniqueName() + name );
 }
 
 /**
@@ -138,12 +138,12 @@ Package* PackageList::package( PackageCategory* category,
 	}
 
 	PackageMap::iterator packageIterator =
-		packages.find( category->uniqueName() + name );
+		m_packages.find( category->uniqueName() + name );
 
 	// if there is no such package, then create one and retrieve again:
-	if( packageIterator == packages.end() ) {
+	if( packageIterator == m_packages.end() ) {
 		this->insert(category, name);
-		packageIterator = packages.find( category->uniqueName() + name );
+		packageIterator = m_packages.find( category->uniqueName() + name );
 	}
 	else { // The package already exists, delete the superfluous category
 		delete category;
@@ -155,22 +155,22 @@ Package* PackageList::package( PackageCategory* category,
 
 PackageList::iterator PackageList::begin()
 {
-	return packages.begin();
+	return m_packages.begin();
 }
 
 PackageList::iterator PackageList::end()
 {
-	return packages.end();
+	return m_packages.end();
 }
 
 PackageList::const_iterator PackageList::begin() const
 {
-	return packages.begin();
+	return m_packages.begin();
 }
 
 PackageList::const_iterator PackageList::end() const
 {
-	return packages.end();
+	return m_packages.end();
 }
 
 } // namespace

@@ -18,10 +18,10 @@ pakoo_LDADD = $(top_builddir)/src/portagewidgets/libportagewidgets.a \
 
 # which sources should be compiled for pakoo
 pakoo_SOURCES = main.cpp pakoo.cpp pakooview.cpp pref.cpp pakooiface.skel \
-	pakooconfig.kcfgc
+		pakooconfig.kcfgc actionview.cpp
 
 # these are the headers for your project
-noinst_HEADERS = pakoo.h pakooview.h pref.h i18n.h
+noinst_HEADERS = pakoo.h pakooview.h pref.h i18n.h actionview.h
 
 # client stuff
 pakoo_client_LDFLAGS = $(KDE_RPATH) $(all_libraries)

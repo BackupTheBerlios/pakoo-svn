@@ -20,14 +20,17 @@
 
 #include "profileloader.h"
 
+#include "filemakeconfigloader.h"
+#include "portagesettings.h"
+
 #include <qstring.h>
 #include <qdir.h>
 #include <qfile.h>
 #include <qfileinfo.h>
 #include <qtextstream.h>
 
-#include "filemakeconfigloader.h"
-//#include "portagesettings.h"
+#include <klocale.h>
+#include <kdebug.h>
 
 
 namespace libpakt {
@@ -37,7 +40,7 @@ namespace libpakt {
  */
 ProfileLoader::ProfileLoader()
 {
-	settings = NULL;
+	m_settings = NULL;
 }
 
 /**
@@ -46,7 +49,7 @@ ProfileLoader::ProfileLoader()
  */
 void ProfileLoader::setSettingsObject( PortageSettings* settings )
 {
-	this->settings = settings;
+	m_settings = settings;
 }
 
 /**
@@ -58,35 +61,37 @@ void ProfileLoader::setSettingsObject( PortageSettings* settings )
  */
 IJob::JobResult ProfileLoader::performThread()
 {
-	if( settings == NULL ) {
-		emit debugOutput(
-			"Didn't start the profile loader because "
-			"the settings object has not been set"
-		);
+	if( m_settings == NULL ) {
+		kdDebug() << i18n( "ProfileLoader debug output",
+			"ProfileLoader::performThread(): "
+			"Didn't start the because the settings object has not been set" )
+			<< endl;
 		return Failure;
 	}
 
 	// get the directory where we start reading
 	QDir dir;
 	if( goToStartDirectory(dir) == false ) {
-		emit debugOutput( "Couldn't find the starting directory "
-		             "of the cascading profile" );
+		kdDebug() << i18n( "ProfileLoader debug output",
+			"ProfileLoader::performThread(): Couldn't find the "
+			"starting directory of the cascading profile" );
 		return Failure;
 	}
 
 	FileMakeConfigLoader makeConfigLoader;
-	makeConfigLoader.setSettingsObject( settings );
+	makeConfigLoader.setSettingsObject( m_settings );
 
 	// beginning from the start directory,
 	// read all of the profile directories that the 'parent' files point to
 	while( true )
 	{
 		if( dir.exists() == false ) // should not happen
- 		{
-			emit debugOutput(
-				QString( "Directory %1 does not exist" )
+		{
+			kdDebug() << i18n( "ProfileLoader debug output",
+				"ProfileLoader::performThread(): "
+				"Directory %1 does not exist" )
 					.arg( dir.path() )
-			);
+				<< endl;
 			return Failure;
 		}
 
@@ -107,7 +112,10 @@ IJob::JobResult ProfileLoader::performThread()
 	makeConfigLoader.setFileName( "/etc/make.conf" );
 	makeConfigLoader.perform();
 
-	emit debugOutput( "Loaded the cascading profile's configuration values" );
+	kdDebug() << i18n( "ProfileLoader debug output",
+		"ProfileLoader::performThread(): "
+		"Loaded the cascading profile's configuration values" )
+		<< endl;
 	return Success;
 }
 

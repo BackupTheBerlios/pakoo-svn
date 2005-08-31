@@ -33,7 +33,7 @@ namespace libpakt {
  */
 InitialLoader::InitialLoader() : ThreadedJob()
 {
-	packages = NULL;
+	m_packages = NULL;
 }
 
 /**
@@ -41,7 +41,7 @@ InitialLoader::InitialLoader() : ThreadedJob()
  */
 void InitialLoader::setPackageList( PackageList* packages )
 {
-	this->packages = packages;
+	m_packages = packages;
 }
 
 /**

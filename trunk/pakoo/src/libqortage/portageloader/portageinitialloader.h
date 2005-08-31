@@ -74,7 +74,7 @@ private:
 	};
 
 	//! The PortageTree object that will be filled with configuration values.
-	PortageSettings* settings;
+	PortageSettings* m_settings;
 
 
 	//

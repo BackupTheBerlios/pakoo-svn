@@ -37,7 +37,7 @@ PortageSettings::PortageSettings()
  */
 void PortageSettings::clear()
 {
-	configValues.clear();
+	m_configValues.clear();
 }
 
 /**
@@ -68,8 +68,8 @@ bool PortageSettings::isIncremental( const QString& name )
  */
 QString PortageSettings::value( const QString& name )
 {
-	if( configValues.contains(name) ) {
-		return substituteShellVariables( configValues[name] );
+	if( m_configValues.contains(name) ) {
+		return substituteShellVariables( m_configValues[name] );
 	}
 	else
 		return QString::null;
@@ -81,7 +81,7 @@ QString PortageSettings::value( const QString& name )
  */
 void PortageSettings::setValue( const QString& name, const QString& value )
 {
-	configValues[name] = value;
+	m_configValues[name] = value;
 }
 
 /**
@@ -91,14 +91,14 @@ void PortageSettings::setValue( const QString& name, const QString& value )
  */
 void PortageSettings::addToValue( const QString& name, const QString& value )
 {
-	if( configValues.contains(name) == false )
+	if( m_configValues.contains(name) == false )
 	{
-		configValues[name] = value;
+		m_configValues[name] = value;
 	}
 	else // the value already exists
 	{
 		QStringList addedValues = QStringList::split( ' ', value );
-		QStringList values = QStringList::split( ' ', configValues[name] );
+		QStringList values = QStringList::split( ' ', m_configValues[name] );
 
 		// go through all new entries
 		QStringList::iterator addedValueIteratorEnd = addedValues.end();
@@ -140,7 +140,7 @@ void PortageSettings::addToValue( const QString& name, const QString& value )
 
 		// Ok, now we have a fine updated list of values.
 		// Let's bring them back to QString format.
-		configValues[name] = values.join(" ");
+		m_configValues[name] = values.join(" ");
 	}
 }
 
@@ -149,7 +149,7 @@ void PortageSettings::addToValue( const QString& name, const QString& value )
  */
 ConfigValueMap* PortageSettings::configValueMap()
 {
-	return &(this->configValues);
+	return &(this->m_configValues);
 }
 
 /**
@@ -177,10 +177,10 @@ QString PortageSettings::substituteShellVariables( const QString& value )
 			varName = varName.mid( 1, varName.length() - 2 );
 		}
 
-		if( configValues.contains(varName) )
+		if( m_configValues.contains(varName) )
 		{
 			result = result.replace( pos, rxSubstitution.matchedLength(),
-			                         configValues[varName] );
+			                         m_configValues[varName] );
 		}
 		else // can't replace - skip forward to get rid of endless loops
 		{
@@ -228,7 +228,7 @@ QStringList PortageSettings::overlayTreeDirectories()
  */
 QString PortageSettings::acceptedKeyword()
 {
-	if( configValues.contains("ACCEPT_KEYWORDS") )
+	if( m_configValues.contains("ACCEPT_KEYWORDS") )
 	{
 		QStringList values = QStringList::split(" ", value("ACCEPT_KEYWORDS"));
 		if( values.count() == 1 ) // only one element, likely not to be masked
@@ -314,7 +314,7 @@ void PortageSettings::setPreferCache( bool preferCache )
 	if( preferCache == true )
 		setValue( "libpakt:preferCache", "true" );
 	else
-		configValues.remove( "libpakt:preferCache" );
+		m_configValues.remove( "libpakt:preferCache" );
 }
 
 /**
@@ -324,7 +324,7 @@ void PortageSettings::setPreferCache( bool preferCache )
  */
 bool PortageSettings::preferCache()
 {
-	if( configValues.contains("libpakt:preferCache") )
+	if( m_configValues.contains("libpakt:preferCache") )
 		return true;
 	else
 		return false;
