@@ -38,10 +38,11 @@ PackageInfoView::PackageInfoView(
 : KHTMLPart(parentWidget, widgetname)
 //: KTextBrowser(parentWidget, widgetname)
 {
-	htmlGenerator = new PortageHTMLGenerator(arch);
+	/*htmlGenerator = new PortageHTMLGenerator(arch);
 	connect( this->browserExtension(),
 		SIGNAL( openURLRequest(const KURL&, const KParts::URLArgs&) ),
 		this, SLOT( openURLRequest(const KURL&, const KParts::URLArgs&) ) );
+	*/
 }
 
 /**
@@ -49,7 +50,7 @@ PackageInfoView::PackageInfoView(
  */
 PackageInfoView::~PackageInfoView()
 {
-	delete htmlGenerator;
+	//delete htmlGenerator;
 }
 
 /**
@@ -58,7 +59,7 @@ PackageInfoView::~PackageInfoView()
  */
 void PackageInfoView::setArchitecture( const QString& arch )
 {
-	htmlGenerator->setArchitecture( arch );
+	//htmlGenerator->setArchitecture( arch );
 }
 
 /**
@@ -66,10 +67,11 @@ void PackageInfoView::setArchitecture( const QString& arch )
  */
 void PackageInfoView::displayPackage( Package* package )
 {
-	this->package = package;
+	/*this->package = package;
 	this->version = NULL;
 
 	displayScannedPackage();
+	*/
 }
 
 /**
@@ -79,10 +81,11 @@ void PackageInfoView::displayPackage( Package* package, PackageVersion* version 
 {
 	// same as in displayPackage(Package*)
 
-	this->package = package;
+	/*this->package = package;
 	this->version = version;
 
 	displayScannedPackage();
+	*/
 }
 
 
@@ -91,7 +94,7 @@ void PackageInfoView::displayPackage( Package* package, PackageVersion* version 
  */
 void PackageInfoView::displayScannedPackage()
 {
-	if( package == NULL )
+	/*if( package == NULL )
 		return;
 
 	QString contents;
@@ -100,11 +103,13 @@ void PackageInfoView::displayScannedPackage()
 		contents = htmlGenerator->fromPackage( package, NULL );
 	else
 		contents = htmlGenerator->fromPackage( package, version );
+	*/
 
 	//* KHTMLPart version
-	this->begin();
+	/*this->begin(); // right, uncomment this
 	this->write( contents );
 	this->end();
+	*/
 
 	/*/
 	// KTextBrowser version
@@ -120,13 +125,14 @@ void PackageInfoView::displayScannedPackage()
 void PackageInfoView::openURLRequest( const KURL& url, const KParts::URLArgs& )
 {
 	// get service for web browsing
-	KService::Ptr ptr =
+	/*KService::Ptr ptr =
 		KServiceTypeProfile::preferredService("text/html", "Application");
 
 	KURL::List lst;
 	// append 'url' parameter to the service and run it
 	lst.append( url );
 	KRun::run( *ptr, lst );
+	*/
 }
 
 } // namespace

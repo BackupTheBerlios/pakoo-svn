@@ -46,7 +46,8 @@ FileAtomLoaderBase::FileAtomLoaderBase() : FileLoaderBase()
  * (in case of loading from a file) or used as source of
  * package information (in case of saving to a file).
  */
-void FileAtomLoaderBase::setPackageList( PackageList* packages )
+void FileAtomLoaderBase::setPackageList(
+	TemplatedPackageList<PortagePackage>* packages )
 {
 	m_packages = packages;
 }
@@ -107,8 +108,8 @@ void FileAtomLoaderBase::processLine( const QString& line )
 		return;
 
 	// get the matching versions, and call process() on each of them
-	QValueList<PackageVersion*> versions = m_atom->matchingVersions();
-	QValueList<PackageVersion*>::iterator versionIterator;
+	QValueList<PortagePackageVersion*> versions = m_atom->matchingVersions();
+	QValueList<PortagePackageVersion*>::iterator versionIterator;
 
 	for( versionIterator = versions.begin();
 			versionIterator != versions.end(); versionIterator++ )

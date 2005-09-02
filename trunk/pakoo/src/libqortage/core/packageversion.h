@@ -25,8 +25,12 @@
 #include <qstringlist.h>
 #include <qregexp.h>
 
+#include <ksharedptr.h>
+
 
 namespace libpakt {
+
+class Package;
 
 /**
  * PackageVersion is a class for managing package version information,
@@ -35,74 +39,46 @@ namespace libpakt {
  *
  * @short  A class for storing package version information.
  */
-class PackageVersion
+class PackageVersion : public KShared
 {
 public:
-	//! The "maskedness" of a package version.
-	enum Stability {
-		Stable,
-		Masked,
-		HardMasked,
-		NotAvailable
-	};
+	friend class Package; // the only one that may construct this directly
 
-	PackageVersion( const QString& version = "" );
+	QString version() const;
+	Package* package();
 
-	PackageVersion::Stability stability( const QString& arch );
-	bool isNewerThan( const QString& otherVersion );
-	bool isOlderThan( const QString& otherVersion );
-
-
-	// Info retrievable by retrieving QFileInfos for ebuilds
-	// (without parsing their contents):
-
-	//! The package version string.
-	QString version;
-	//! Date of the ebuild file's last modification.
-	QString date;
-	//! true if the package is installed, false otherwise.
-	bool installed;
-	//! true if the package is from the overlay tree, false otherwise.
-	bool overlay;
-
-
-	// Info retrievable by scanning and parsing the contents of an ebuild file:
-
-	//! A short line describing the package.
-	QString description;
-	//! URL of the package's home page.
-	QString homepage;
-	//! The slot for this version. Mostly a number, but only has to be interpreted as string.
-	QString slot;
-	//! List of licenses that are used in the package.
-	QStringList licenses;
-	//! List of keywords, like x86 or ~alpha.
-	QStringList keywords;
-	//! List of use flags that influence compilation of the package.
-	QStringList useflags;
-	//! A list of additionally accepted keywords for this specific package.
-	QStringList acceptedKeywords;
-
-	//! A flag which is true if the ebuild belonging to this package has been parsed.
-	bool hasDetailedInfo;
-
-
-	// Info that's not in the ebuild:
-
-	//! Downloaded file size in bytes (retrievable by scanning the digest).
-	long size;
 	/**
-	 * true if this version is hardmasked, false otherwise.
-	 * Retrievable by scanning package.[un]mask and Co.
+	 * Returns true if this version is installed on the system, false if not.
 	 */
-	bool isHardMasked;
+	virtual bool isInstalled() const = 0;
+
+	/**
+	 * Returns true if this version is available (as in: can be installed)
+	 * and false if not.
+	 */
+	virtual bool isAvailable() const = 0;
+
+	/**
+	 * Returns true if this object's version is newer than the one
+	 * given as argument. As this depends on the package management system,
+	 * it can be overloaded by derived classes.
+	 * This default implementation just provides a simple string compare,
+	 * which is not likely to be sufficient in all cases.
+	 */
+	virtual bool isNewerThan( const QString& otherVersion ) const;
+
+	bool isOlderThan( const QString& otherVersion ) const;
+
+protected:
+	PackageVersion( Package* parent, const QString& version );
+	virtual ~PackageVersion();
 
 private:
-	QRegExp rxNumber, rxTrailingChar, rxSuffix, rxRevision;
+	/** The package containing this version. */
+	Package* m_parent;
 
-	int revisionNumber( const QString& versionString, int* foundPos = NULL );
-	long suffixNumber( const QString& versionString, int* foundPos = NULL );
-	int trailingCharNumber( const QString& versionString, int* foundPos = NULL );
+	/** The package version string. */
+	QString m_version;
 };
 
 }

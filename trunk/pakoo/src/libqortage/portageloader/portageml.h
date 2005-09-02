@@ -28,7 +28,8 @@
 
 namespace libpakt {
 
-class Package;
+template<class T> class TemplatedPackageList;
+class PortagePackage;
 class PackageList;
 
 /**
@@ -56,7 +57,7 @@ public:
 
 	PortageML();
 
-	void setPackageList( PackageList* packages );
+	void setPackageList( TemplatedPackageList<PortagePackage>* packages );
 	void setFileName( const QString& filename );
 	void setAction( PortageML::Action action );
 
@@ -77,14 +78,16 @@ signals:
 	 * packages, versions and detailed info that have been read from
 	 * the file.
 	 */
-	void finishedLoading( PackageList* packages, const QString& filename );
+	void finishedLoading( TemplatedPackageList<PortagePackage>* packages,
+	                      const QString& filename );
 
 	/**
 	 * Emitted if the package tree has successfully been saved to the
 	 * specified file. The file now contains information about packages,
 	 * versions and package details that can be read back afterwards.
 	 */
-	void finishedSaving( PackageList* packages, const QString& filename );
+	void finishedSaving( TemplatedPackageList<PortagePackage>* packages,
+	                     const QString& filename );
 
 protected:
 	JobResult performThread();
@@ -111,14 +114,14 @@ private:
 	void emitPackagesScanned();
 
 	//! The PackageList object that will be filled (when loading) or read (when saving).
-	PackageList* m_packages;
+	TemplatedPackageList<PortagePackage>* m_packages;
 	//! The action that will be performed when running as thread.
 	PortageML::Action m_action;
 	//! The file that will be read or written.
 	QString m_filename;
 
 	//! The currently processed package.
-	Package* m_package;
+	PortagePackage* m_package;
 	//! A counter that is incremented with each added package.
 	int m_packageCountAvailable;
 	//! A counter that is incremented with each added package where the installed flag is set.
@@ -134,7 +137,7 @@ private:
 	public:
 		FinishedFileEvent() : QCustomEvent( FinishedFileEventType ) {};
 		Action action;
-		PackageList* packages;
+		TemplatedPackageList<PortagePackage>* packages;
 		QString filename;
 	};
 

@@ -21,9 +21,9 @@
 #include "dependatom.h"
 
 #include "packagelist.h"
-#include "package.h"
+#include "portagepackage.h"
 #include "portagecategory.h"
-#include "packageversion.h"
+#include "portagepackageversion.h"
 
 // For more info on DEPEND atoms, see the DEPEND Atoms section of man 5 ebuild
 
@@ -46,7 +46,7 @@ namespace libpakt {
  * @param packages  The package list which contains the packages
  *                  that will be filtered out.
  */
-DependAtom::DependAtom( PackageList* packages )
+DependAtom::DependAtom( TemplatedPackageList<PortagePackage>* packages )
 : m_rxAtom("^"    // Start of the string
            "(!)?" // "Block these packages" flag, only occurring in ebuilds
            "(~|(?:<|>|=|<=|>=))?" // greater-than/less-than/equal, or "all revisions" prefix
@@ -120,9 +120,9 @@ bool DependAtom::parse( const QString& atom )
  * The searched packages are the ones from the package list.
  * If no matching package versions are found, an empty list is returned.
  */
-QValueList<PackageVersion*> DependAtom::matchingVersions()
+QValueList<PortagePackageVersion*> DependAtom::matchingVersions()
 {
-	QValueList<PackageVersion*> matchingVersions;
+	QValueList<PortagePackageVersion*> matchingVersions;
 
 	if( m_packages == NULL || m_matches == false )
 		return matchingVersions; // return an empty list
@@ -130,7 +130,7 @@ QValueList<PackageVersion*> DependAtom::matchingVersions()
 	if( m_packages->contains(m_category, m_package) == false )
 		return matchingVersions; // return an empty list
 
-	Package* pkg = m_packages->package(
+	PortagePackage* pkg = m_packages->package(
 		new PortageCategory(*m_category), m_package
 	);
 
@@ -163,19 +163,18 @@ QValueList<PackageVersion*> DependAtom::matchingVersions()
 
 
 	// So, let's iterate through the versions to check if they match or not
-	PackageVersionMap* versions = pkg->versionMap();
-	PackageVersionMap::iterator versionIterator;
-	for( versionIterator = versions->begin();
-	     versionIterator != versions->end(); versionIterator++ )
+	for( Package::versioniterator versionIterator = pkg->versionBegin();
+	     versionIterator != pkg->versionBegin(); versionIterator++ )
 	{
 		if( ( matchAllVersions == true ) ||
-		    ( matchBaseVersion == true  && (*versionIterator).version.startsWith(m_version) ) ||
-		    ( matchEqual       == true  && (*versionIterator).version == m_version   ) ||
-		    ( matchEqual == false && matchGreaterThan == true  && (*versionIterator).isNewerThan(m_version) ) ||
-		    ( matchEqual == false && matchGreaterThan == false && (*versionIterator).isOlderThan(m_version) )
+		    ( matchBaseVersion == true  && (*versionIterator)->version().startsWith(m_version) ) ||
+		    ( matchEqual       == true  && (*versionIterator)->version() == m_version   ) ||
+		    ( matchEqual == false && matchGreaterThan == true  && (*versionIterator)->isNewerThan(m_version) ) ||
+		    ( matchEqual == false && matchGreaterThan == false && (*versionIterator)->isOlderThan(m_version) )
 		  )
 		{
-			matchingVersions.append( &(*versionIterator) );
+			matchingVersions.append(
+				(PortagePackageVersion*) *versionIterator );
 			continue;
 		}
 	}

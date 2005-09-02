@@ -29,6 +29,7 @@
 
 namespace libpakt {
 
+class PortagePackageVersion;
 class PortageSettings;
 
 /**
@@ -59,10 +60,10 @@ private:
 
 	bool scanPackage();
 
-	bool scanEbuild( PackageVersion* version, const QString& filename );
-	bool scanEdbFile( PackageVersion* version, const QString& filename );
-	bool scanOverlayPackage( PackageVersion* version );
-	bool scanDigest( PackageVersion* version, const QString& filename );
+	bool scanEbuild( PortagePackageVersion* version, const QString& filename );
+	bool scanEdbFile( PortagePackageVersion* version, const QString& filename );
+	bool scanOverlayPackage( PortagePackageVersion* version );
+	bool scanDigest( PortagePackageVersion* version, const QString& filename );
 
 	bool extractStringList( const QString& string, QRegExp* rx, QStringList* targetList );
 

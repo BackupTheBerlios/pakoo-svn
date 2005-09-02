@@ -29,7 +29,9 @@
 namespace libpakt {
 
 class PackageList;
-class PackageVersion;
+template<class T> class TemplatedPackageList;
+class PortagePackage;
+class PortagePackageVersion;
 class DependAtom;
 
 /**
@@ -46,7 +48,7 @@ class FileAtomLoaderBase : public FileLoaderBase
 public:
 	FileAtomLoaderBase();
 
-	void setPackageList( PackageList* packages );
+	void setPackageList( TemplatedPackageList<PortagePackage>* packages );
 
 protected:
 	//! A DEPEND atom validator / package version retriever
@@ -55,7 +57,7 @@ protected:
 	QString m_atomString;
 
 	//! The PackageList object whose packages will be modified.
-	PackageList* m_packages;
+	TemplatedPackageList<PortagePackage>* m_packages;
 
 	/**
 	 * This purely virtual function is called by processLine() for every
@@ -85,7 +87,7 @@ protected:
 	 * Further, you can assume that 'm_atom' is a valid DependAtom object
 	 * which is containing info about the current line's atom.
 	 */
-	virtual void processVersion( PackageVersion* version ) = 0;
+	virtual void processVersion( PortagePackageVersion* version ) = 0;
 
 private:
 	bool check();

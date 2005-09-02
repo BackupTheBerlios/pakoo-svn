@@ -214,12 +214,12 @@
       <pcs>KDElibs</pcs>
     </references>
     <creategettersetter>
-      <prefixGet/>
+      <prefixGet></prefixGet>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
-      <inlineGet>true</inlineGet>
-      <inlineSet>true</inlineSet>
+      <inlineGet>false</inlineGet>
+      <inlineSet>false</inlineSet>
     </creategettersetter>
   </kdevcppsupport>
   <dist>

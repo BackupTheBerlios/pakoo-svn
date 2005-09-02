@@ -44,6 +44,7 @@ public:
 	bool hasInstallerClasses() { return false; }
 	bool hasConfigClasses()    { return false; }
 
+	PackageList* createPackageList();
 	PackageCategory* createPackageCategory();
 	InitialLoader* createInitialLoader();
 	PackageLoader* createPackageLoader();

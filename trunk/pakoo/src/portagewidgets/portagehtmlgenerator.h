@@ -23,10 +23,6 @@
 
 #include <qstring.h>
 
-#include <klocale.h>
-
-#include "../libqortage/libqortage.h"
-
 
 namespace libpakt {
 

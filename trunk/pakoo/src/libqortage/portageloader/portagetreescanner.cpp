@@ -20,8 +20,8 @@
 
 #include "portagetreescanner.h"
 
-#include "../core/packageversion.h"
-#include "../core/package.h"
+#include "../core/portagepackageversion.h"
+#include "../core/portagepackage.h"
 #include "../core/packagelist.h"
 #include "../core/portagesettings.h"
 #include "../core/portagecategory.h"
@@ -62,7 +62,8 @@ void PortageTreeScanner::setSettingsObject( PortageSettings* settings )
 /**
  * Set the PackageList object that will be filled with packages.
  */
-void PortageTreeScanner::setPackageList( PackageList* packages )
+void PortageTreeScanner::setPackageList(
+	TemplatedPackageList<PortagePackage>* packages )
 {
 	m_packages = packages;
 }
@@ -358,7 +359,7 @@ void PortageTreeScanner::scanTreePackage( QDir& d, bool overlay )
 					- ((m_currentPackage->name()).length() + 1)
 			)
 		);
-		m_currentVersion->overlay = overlay;
+		m_currentVersion->setOverlay( overlay );
 	}
 	m_packageCountAvailable++;
 } // end of scanTreePackage()
@@ -411,7 +412,7 @@ void PortageTreeScanner::scanCacheCategory( QDir& d )
 		m_currentVersion = m_currentPackage->version(
 			(*fileIterator).mid( (m_currentPackage->name()).length() + 1 )
 		);
-		m_currentVersion->overlay = false;
+		m_currentVersion->setOverlay( false );
 	}
 } // end of scanCacheCategory()
 
@@ -434,7 +435,7 @@ void PortageTreeScanner::scanInstalledPackage( QDir& d )
 	m_currentVersion = m_currentPackage->version(
 		dirName.mid( packageNameEndIndex + 1 )
 	);
-	m_currentVersion->installed = true;
+	m_currentVersion->setInstalled( true );
 
 	m_packageCountInstalled++;
 }

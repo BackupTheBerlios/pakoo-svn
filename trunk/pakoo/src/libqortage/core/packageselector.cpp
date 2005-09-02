@@ -316,7 +316,7 @@ bool PackageSelector::inclusionFilterMatches( Package* package )
 	// include packages with 'package.installed == given value' filter
 	if( m_includeInstalledPackages != NULL )
 	{
-		if( !package->hasInstalledVersion() == *m_includeInstalledPackages )
+		if( !package->containsInstalledVersion() == *m_includeInstalledPackages )
 			return false;
 	}
 	return true;
@@ -344,7 +344,7 @@ bool PackageSelector::exclusionFilterMatches( Package* package )
 	// exclude packages with 'package.installed == given value' filter
 	if( m_excludeInstalledPackages != NULL )
 	{
-		if( package->hasInstalledVersion() == *m_excludeInstalledPackages )
+		if( package->containsInstalledVersion() == *m_excludeInstalledPackages )
 			return true;
 	}
 	return false;

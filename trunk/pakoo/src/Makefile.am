@@ -13,15 +13,16 @@ pakoo_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 
 # the libraries to link against.
 pakoo_LDADD = $(top_builddir)/src/portagewidgets/libportagewidgets.a \
-	$(top_builddir)/src/libqortage/libpakt.a $(top_builddir)/src/libqortage/portageloader/libportageloader.a \
-	$(top_builddir)/src/libqortage/core/libcore.a $(LIB_KFILE) $(LIB_KHTML)
+	$(top_builddir)/src/libqortage/libpakt.a $(top_builddir)/src/libqortage/installer/libinstaller.a \
+	$(top_builddir)/src/libqortage/portageloader/libportageloader.a $(top_builddir)/src/libqortage/core/libcore.a $(LIB_KFILE) $(LIB_KHTML)
 
 # which sources should be compiled for pakoo
 pakoo_SOURCES = main.cpp pakoo.cpp pakooview.cpp pref.cpp pakooiface.skel \
-		pakooconfig.kcfgc actionview.cpp
+	pakooconfig.kcfgc actionview.cpp installeractionview.cpp
 
 # these are the headers for your project
-noinst_HEADERS = pakoo.h pakooview.h pref.h i18n.h actionview.h
+noinst_HEADERS = pakoo.h pakooview.h pref.h i18n.h actionview.h \
+	installeractionview.h
 
 # client stuff
 pakoo_client_LDFLAGS = $(KDE_RPATH) $(all_libraries)
@@ -55,4 +56,5 @@ kde_kcfg_DATA = pakooconfig.kcfg
 
 
 SUBDIRS = libqortage portagewidgets
+
 METASOURCES = AUTO

@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPROCESSJOB_H
 #define LIBPAKTPROCESSJOB_H
 
-#include <ijob.h>
+#include "ijob.h"
 
 #include <kprocess.h>
 
@@ -70,13 +70,13 @@ public slots:
 
 signals:
 	/**
-	 * Emitted, when output from the child process has been received,
+	 * Emitted when output from the child process has been received,
 	 * like seen on terminal output. This is a combination of stdout
 	 * and stderr.
 	 *
 	 * @param output  The data that has been received.
 	 */
-	void receievedOutput( const QString& output );
+	void receivedOutput( const QString& output );
 
 protected:
 	enum ProcessType {
@@ -127,7 +127,7 @@ protected:
 
 private slots:
 	void processExited();
-	void handleOutput( char* buffer, int buflen );
+	void handleOutput( KProcess*, char* buffer, int buflen );
 
 private:
 	void startProcess( KProcess::RunMode runMode );

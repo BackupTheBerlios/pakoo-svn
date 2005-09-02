@@ -80,7 +80,7 @@ QString Package::uniqueName() const
  */
 void Package::clear()
 {
-	versions.clear();
+	m_versions.clear();
 }
 
 /**
@@ -90,37 +90,38 @@ void Package::clear()
  */
 void Package::removeVersion( const QString& versionString )
 {
-	versions.remove( versionString );
-}
+	PackageVersionMap::iterator iterator = m_versions.find( versionString );
+	if( iterator == m_versions.end() )
+		return;
+	else
+		delete *iterator;
 
-/**
- * Add an existing PackageVersion object to the tree. If a version with same
- * version string already exists, it is replaced.
- *
- * @return  true if the version has been added to the package. false if it
- *          has not been added because its version string was empty.
- */
-bool Package::setVersion( PackageVersion& version )
-{
-	if( version.version == "" )
-		return false;
-
-	this->versions.insert( version.version, version );
-	return true;
+	m_versions.remove( versionString );
 }
 
 /**
  * Create a PackageVersion object and add it to the tree. If a version
  * with same version string already exists, it is replaced.
+ * No version is created if the version string is empty.
  *
  * @param versionString  The version string, e.g. "2.6.11-r6".
- * @return  true if the version has been added to the package. false if it
- *          has not been added because the version string was empty.
+ * @return  A pointer to the new PackageVersion object.
+ *          NULL if the version string was empty and the object
+ *          has not been created.
  */
-bool Package::setVersion( const QString& versionString )
+PackageVersion* Package::insertVersion( const QString& versionString )
 {
-	PackageVersion version( versionString );
-	return this->setVersion( version );
+	if( versionString.isEmpty() )
+		return NULL;
+
+	PackageVersion* version = createPackageVersion( versionString );
+	PackageVersionMap::iterator versionIterator =
+		m_versions.insert( version->version(), version );
+
+	if( versionIterator == m_versions.end() )
+		return NULL; // could not be inserted into m_versions
+	else
+		return *versionIterator;
 }
 
 /**
@@ -128,9 +129,9 @@ bool Package::setVersion( const QString& versionString )
  *
  * @return  true if this package contains a version, false otherwise.
  */
-bool Package::hasVersions()
+bool Package::containsVersions()
 {
-	if( this->versions.count() > 0 )
+	if( m_versions.count() > 0 )
 		return true;
 	else
 		return false;
@@ -142,9 +143,9 @@ bool Package::hasVersions()
  * @param versionString  The requested package version string.
  * @return  true if this package contains the version, false otherwise.
  */
-bool Package::hasVersion( const QString& versionString )
+bool Package::containsVersion( const QString& versionString )
 {
-	if( this->versions.contains(versionString) )
+	if( m_versions.contains(versionString) )
 		return true;
 	else
 		return false;
@@ -156,14 +157,14 @@ bool Package::hasVersion( const QString& versionString )
  *
  * @return  true if this package contains the version, false otherwise.
  */
-bool Package::hasInstalledVersion()
+bool Package::containsInstalledVersion()
 {
-	QMap<QString, PackageVersion>::iterator versionIterator;
+	PackageVersionMap::iterator versionIterator;
 
-	for( versionIterator = this->versions.begin();
-	     versionIterator != this->versions.end(); versionIterator++ )
+	for( versionIterator = m_versions.begin();
+	     versionIterator != m_versions.end(); versionIterator++ )
 	{
-		if( (*versionIterator).installed == true ) {
+		if( (*versionIterator)->isInstalled() == true ) {
 			return true;
 		}
 	}
@@ -182,20 +183,16 @@ bool Package::hasInstalledVersion()
  */
 PackageVersion* Package::version( const QString& versionString )
 {
-	PackageVersion* version = &(this->versions[versionString]);
-	// if( version->version == "" ) {
-	version->version = versionString;
-	// }
-
-	return version;
-}
-
-/**
- * Return a pointer of the PackageVersion object map.
- */
-PackageVersionMap* Package::versionMap()
-{
-	return &(this->versions);
+	PackageVersionMap::iterator versionIterator =
+		m_versions.find( versionString );
+	if( versionIterator == m_versions.end() ) {
+		// return the newly created version pointer
+		return insertVersion( versionString );
+	}
+	else {
+		// return the pointer that's already in the map
+		return *versionIterator;
+	}
 }
 
 /**
@@ -207,13 +204,13 @@ QValueList<PackageVersion*> Package::sortedVersionList()
 {
 	QValueList<PackageVersion*> sortedVersions;
 	QValueList<PackageVersion*>::iterator sortedVersionIterator;
-	QMap<QString, PackageVersion>::iterator versionIterator;
+	PackageVersionMap::iterator versionIterator;
 
-	for( versionIterator = this->versions.begin();
-	     versionIterator != this->versions.end(); versionIterator++ )
+	for( versionIterator = m_versions.begin();
+	     versionIterator != m_versions.end(); versionIterator++ )
 	{
-		if( versionIterator == this->versions.begin() ) {
-			sortedVersions.append( &(*versionIterator) );
+		if( versionIterator == m_versions.begin() ) {
+			sortedVersions.append( *versionIterator );
 			continue; // if there is only one version, it can't be compared
 		}
 
@@ -223,15 +220,16 @@ QValueList<PackageVersion*> Package::sortedVersionList()
 		{
 			if( sortedVersionIterator == sortedVersions.begin() )
 			{
-				sortedVersions.prepend( &(*versionIterator) );
+				sortedVersions.prepend( *versionIterator );
 				break;
 			}
 
 			sortedVersionIterator--;
-			if( (*versionIterator).isNewerThan( (*sortedVersionIterator)->version ) )
+			if( (*versionIterator)->isNewerThan(
+			      (*sortedVersionIterator)->version() ) )
 			{
 				sortedVersionIterator++; // insert after the compared one, not before
-				sortedVersions.insert( sortedVersionIterator, &(*versionIterator) );
+				sortedVersions.insert( sortedVersionIterator, *versionIterator );
 				break;
 			}
 		}
@@ -240,36 +238,13 @@ QValueList<PackageVersion*> Package::sortedVersionList()
 } // end of sortedVersionList()
 
 /**
- * Return a list of PackageVersion objects sorted by their version numbers,
- * with the oldest version at the beginning and the latest version at the end
- * of the list. Only versions whose slot property equals the given one
- * are included in the returned list.
- */
-QValueList<PackageVersion*> Package::sortedVersionListInSlot( const QString& slot )
-{
-	QValueList<PackageVersion*> sortedVersionsInSlot;
-
-	QValueList<PackageVersion*> sortedVersions = this->sortedVersionList();
-	QValueList<PackageVersion*>::iterator versionIterator;
-
-	// go through each version and check if it's newer than the given one
-	for( versionIterator = sortedVersions.begin();
-	     versionIterator != sortedVersions.end(); versionIterator++ )
-	{
-		if( (*versionIterator)->slot == slot )
-			sortedVersionsInSlot.append( *versionIterator );
-	}
-	return sortedVersionsInSlot;
-}
-
-/**
  * Retrieve the latest version of this package, not taking stability
  * (masking, etc.) into account. If this package contains no versions,
  * NULL is returned.
  */
 PackageVersion* Package::latestVersion()
 {
-	if( versions.count() == 0 )
+	if( m_versions.count() == 0 )
 		return NULL;
 
 	QValueList<PackageVersion*> sortedVersions = this->sortedVersionList();
@@ -277,16 +252,12 @@ PackageVersion* Package::latestVersion()
 }
 
 /**
- * Retrieve the latest version of this package
- * with stability == PackageVersion::Stable. If this package contains no
- * stable versions, NULL is returned.
- *
- * @param arch     The system architecture, which is necessary for checking
- *                 if a package version is stable or not.
+ * Retrieve the latest version of this package that can be installed.
+ * If this package contains no available versions, NULL is returned.
  */
-PackageVersion* Package::latestStableVersion( const QString& arch )
+PackageVersion* Package::latestVersionAvailable()
 {
-	if( versions.count() == 0 )
+	if( m_versions.count() == 0 )
 		return NULL;
 
 	QValueList<PackageVersion*> sortedVersions = this->sortedVersionList();
@@ -299,7 +270,7 @@ PackageVersion* Package::latestStableVersion( const QString& arch )
 	{
 		versionIterator--;
 
-		if( (*versionIterator)->stability(arch) == PackageVersion::Stable )
+		if( (*versionIterator)->isAvailable() )
 			return (*versionIterator);
 
 		if( versionIterator == sortedVersions.begin() )
@@ -311,38 +282,41 @@ PackageVersion* Package::latestStableVersion( const QString& arch )
 
 /**
  * Check if there is an update available for any version of the package.
+ * This default implementation skips installed packages and checks
+ * canUpdate(PackageVersion*) to see if it's actually updatable.
  *
- * @param arch  The system architecture, which is necessary for checking
- *              if a package version is stable or not.
  * @returns  true if there is any update on arch, false otherwise.
  */
-bool Package::hasUpdate( const QString& arch )
+bool Package::canUpdate()
 {
 	PackageVersionMap::iterator versionIterator;
 
-	for( versionIterator = this->versions.begin();
-	     versionIterator != versions.end(); versionIterator++ )
+	for( versionIterator = m_versions.begin();
+	     versionIterator != m_versions.end(); versionIterator++ )
 	{
-		if( (*versionIterator).installed == false )
+		if( (*versionIterator)->isInstalled() == false )
 			continue;
 
 		// only installed versions are checked for an update
-		if( this->hasUpdate( &(*versionIterator), arch ) == true )
+		if( this->canUpdate( *versionIterator ) == true )
 			return true;
 	}
 	// if the loop hasn't already returned true, there are no updates
 	return false;
 }
 
+
 /**
- * Check if there is an update available if a given version is installed.
+ * Check if there is an update available from the given installed version.
+ * This function is used by the canUpdate() default implementation.
+ * This implementation simply checks if there is a newer version than the
+ * given version, which should suffice in all cases except when there are
+ * different aspects to be considered than just the version number.
  *
  * @param version  An installed version which will be checked on updates.
- * @param arch     The system architecture, which is necessary for checking
- *                 if a package version is stable or not.
  * @returns  true if there is an update for version on arch, false otherwise.
  */
-bool Package::hasUpdate( PackageVersion* version, const QString& arch )
+bool Package::canUpdate( PackageVersion* version )
 {
 	QValueList<PackageVersion*> sortedVersions = this->sortedVersionList();
 	QValueList<PackageVersion*>::iterator versionIterator;
@@ -353,7 +327,9 @@ bool Package::hasUpdate( PackageVersion* version, const QString& arch )
 	     versionIterator != sortedVersions.end(); versionIterator++ )
 	{
 		// Don't check versions that are not newer than the given one
-		if( check == false && (*versionIterator)->version != version->version ) {
+		if( check == false
+		    && (*versionIterator)->version() != version->version() )
+		{
 			continue;
 		}
 		else if( check == true )
@@ -361,12 +337,10 @@ bool Package::hasUpdate( PackageVersion* version, const QString& arch )
 			// If we get here, the versionIterator is newer
 			// than the given version.
 
-			if( (*versionIterator)->installed == true ) {
+			if( (*versionIterator)->isInstalled() == true ) {
 				continue; // if it's installed, it's not upgradable. next one.
 			}
-			if( version->slot == (*versionIterator)->slot &&
-			    (*versionIterator)->stability(arch) == PackageVersion::Stable )
-			{
+			if( (*versionIterator)->isAvailable() ) {
 				return true;
 			}
 		}
@@ -379,23 +353,27 @@ bool Package::hasUpdate( PackageVersion* version, const QString& arch )
 	}
 	// if the loop hasn't already returned true, there are no updates
 	return false;
-} // end of hasUpdate()
+} // end of canUpdate()
 
-/**
- * Retrieves the list of slots that this package's versions use.
- */
-QStringList Package::slotList()
+
+Package::versioniterator Package::versionBegin()
 {
-	QValueList<QString> slotList;
-	QMap<QString, PackageVersion>::iterator versionIterator;
+	return m_versions.begin();
+}
 
-	for( versionIterator = this->versions.begin();
-	     versionIterator != this->versions.end(); versionIterator++ )
-	{
-		if( slotList.contains( (*versionIterator).slot ) == 0 )
-			slotList.append( (*versionIterator).slot );
-	}
-	return slotList;
+Package::versioniterator Package::versionEnd()
+{
+	return m_versions.end();
+}
+
+Package::const_versioniterator Package::versionBegin() const
+{
+	return m_versions.begin();
+}
+
+Package::const_versioniterator Package::versionEnd() const
+{
+	return m_versions.end();
 }
 
 } // namespace

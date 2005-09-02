@@ -23,6 +23,7 @@
 
 #include "../core/threadedjob.h"
 #include "../core/portagecategory.h"
+#include "../core/packagelist.h"
 
 #include <qstringlist.h>
 #include <qdir.h>
@@ -31,9 +32,8 @@
 
 namespace libpakt {
 
-class PackageVersion;
-class Package;
-class PackageList;
+class PortagePackageVersion;
+class PortagePackage;
 class PortageSettings;
 
 /**
@@ -56,7 +56,7 @@ public:
 
 	// settings
 	void setSettingsObject( PortageSettings* settings );
-	void setPackageList( PackageList* packages );
+	void setPackageList( TemplatedPackageList<PortagePackage>* packages );
 
 	// filters
 	void setScanAvailablePackages( bool scanAvailablePackages );
@@ -82,7 +82,7 @@ signals:
 	 * The PackageList object now contains all packages and package versions,
 	 * but without detailed package information.
 	 */
-	void finishedLoading( PackageList* packages );
+	void finishedLoading( TemplatedPackageList<PortagePackage>* packages );
 
 protected:
 	JobResult performThread();
@@ -110,7 +110,7 @@ private:
 	void emitFinishedLoading();
 
 	//! The PackageList object that will be filled.
-	PackageList* m_packages;
+	TemplatedPackageList<PortagePackage>* m_packages;
 	//! The PortageSettings object used for retrieving directories and cache info.
 	PortageSettings* m_settings;
 
@@ -140,9 +140,9 @@ private:
 	PortageCategory m_currentCategory;
 
 	//! An object used for temporarily storing package information.
-	Package* m_currentPackage;
+	PortagePackage* m_currentPackage;
 	//! An object used for temporarily storing package version information.
-	PackageVersion* m_currentVersion;
+	PortagePackageVersion* m_currentVersion;
 
 	//! Regexp for ebuild names (the part before the version string)
 	QRegExp m_rxVersion;
@@ -164,7 +164,7 @@ private:
 	{
 	public:
 		FinishedLoadingEvent() : QCustomEvent( FinishedLoadingEventType ) {};
-		PackageList* packages;
+		TemplatedPackageList<PortagePackage>* packages;
 	};
 };
 

@@ -35,11 +35,11 @@ namespace libpakt {
 class PackageCategory;
 
 /**
+ * @short  A list of Package objects.
+ *
  * PackageList is a class for managing Package objects.
  * It can be used as a representation of the package tree,
  * or to store package search results, or whatever.
- *
- * @short  A list of Package objects.
  */
 class PackageList
 {
@@ -48,12 +48,13 @@ public:
 	typedef QMapConstIterator<QString,KSharedPtr<Package> > const_iterator;
 
 	PackageList();
+	virtual ~PackageList() {};
 
 	int count();
 	void clear();
 
-	bool insert( Package* package );
-	bool insert( PackageCategory* category, const QString& name );
+	Package* insert( Package* package );
+	Package* insert( PackageCategory* category, const QString& name );
 
 	bool contains( PackageCategory* category, const QString& name );
 	Package* package( PackageCategory* category, const QString& name );
@@ -63,11 +64,54 @@ public:
 	const_iterator begin() const;
 	const_iterator end() const;
 
+protected:
+	virtual Package* createPackage( PackageCategory* category,
+	                                const QString& name ) = 0;
+
 private:
 	typedef QMap<QString,KSharedPtr<Package> > PackageMap;
 
 	//! The internal list of packages in the tree.
 	PackageMap m_packages;
+};
+
+/**
+ * Convenience class, enabling you to select the created Package
+ * specialization by selecting a template instead of having the need
+ * to derive the PackageList class. If you just need to get another
+ * Package type, subclassing would be pure overkill.
+ *
+ * Use it like TemplatedPackageList\<SpecializedPackage\>.
+ *
+ * @short Convenience class for defining the created Package type by templating.
+ */
+template<class T>
+class TemplatedPackageList : public PackageList
+{
+public:
+	TemplatedPackageList() : PackageList() {};
+
+	T* insert( Package* package )
+	{
+		return PackageList::package( (T*) package );
+	}
+
+	T* insert( PackageCategory* category, const QString& name )
+	{
+		return package( category, name );
+	}
+
+	T* package( PackageCategory* category, const QString& name )
+	{
+		return (T*) PackageList::package( category, name );
+	}
+
+protected:
+	T* createPackage( PackageCategory* category,
+	                        const QString& name )
+	{
+		return new T( category, name );
+	}
 };
 
 }

@@ -4,9 +4,6 @@ Immediate:
 - Refactor libqortage:
   * rename to libpakt (including folder renames)
   * PortageBackend::settings as static variable?
-  * Package and PortageSettings: remove *Map (and the *Map() functions) in favour of begin() & Co.
-  * m_member everywhere (in progress)
-    - missing: Package (versions member) and PackageVersion (clean up the API mess),
 
 Reasons for switching libqortage to kdelibs (libpakt?):
 - Translations

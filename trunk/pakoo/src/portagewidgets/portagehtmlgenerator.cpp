@@ -20,6 +20,8 @@
 
 #include "portagehtmlgenerator.h"
 
+#include <klocale.h>
+
 
 namespace libpakt {
 

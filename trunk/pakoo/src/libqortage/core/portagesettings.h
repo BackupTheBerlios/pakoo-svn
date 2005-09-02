@@ -33,8 +33,6 @@
 
 namespace libpakt {
 
-typedef QMap<QString,QString> ConfigValueMap;
-
 /**
  * This class holds configuration settings.
  * Most of the global Portage options are stored in here.
@@ -45,6 +43,8 @@ typedef QMap<QString,QString> ConfigValueMap;
 class PortageSettings
 {
 public:
+	typedef QMap<QString,QString> ConfigValueMap;
+
 	PortageSettings();
 
 	bool isIncremental( const QString& name );

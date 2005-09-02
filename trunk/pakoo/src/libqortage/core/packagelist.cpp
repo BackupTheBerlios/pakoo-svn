@@ -54,23 +54,26 @@ void PackageList::clear()
 }
 
 /**
- * Add an existing Package object to the tree. If a Package object with
+ * Add an existing Package object to the list. If a Package object with
  * same name, category and subcategory already exists, it is replaced.
  *
- * @return  true if the package has been added to the tree.
- *          false if it has not been added because its name string was empty.
+ * @return  The pointer to the package if it has successfully been added.
+ *          NULL if it has not been added because its name string was empty.
  */
-bool PackageList::insert( Package* package )
+Package* PackageList::insert( Package* package )
 {
 	if( package == NULL || package->name() == "" )
-		return false;
+		return NULL;
 
-	m_packages.insert(
+	PackageMap::iterator packageIterator = m_packages.insert(
 		package->category()->uniqueName() + package->name(),
 		KSharedPtr<Package>( package )
 	);
 
-	return true;
+	if( packageIterator == m_packages.end() )
+		return NULL; // could not be inserted into m_packages
+	else // return the real pointer, not the KSharedPtr object
+		return (*packageIterator).data();
 }
 
 /**
@@ -79,16 +82,16 @@ bool PackageList::insert( Package* package )
  *
  * @param category  The package category.
  * @param name      The package name string.
- * @return  true if the package has been added to the tree.
- *          false if it has not been added because its name string was empty.
+ * @return  The pointer to the package if it has successfully been added.
+ *          NULL if it has not been added because its name string was empty.
  */
-bool PackageList::insert( PackageCategory* category,
-                          const QString& name )
+Package* PackageList::insert( PackageCategory* category,
+                              const QString& name )
 {
 	if( category == NULL )
 		return false;
 
-	Package* pkg = new Package( category, name );
+	Package* pkg = createPackage( category, name );
 	return this->insert( pkg );
 }
 
@@ -142,14 +145,12 @@ Package* PackageList::package( PackageCategory* category,
 
 	// if there is no such package, then create one and retrieve again:
 	if( packageIterator == m_packages.end() ) {
-		this->insert(category, name);
-		packageIterator = m_packages.find( category->uniqueName() + name );
+		return insert( category, name ); // returns the new package pointer
 	}
 	else { // The package already exists, delete the superfluous category
 		delete category;
+		return (*packageIterator).data(); // the real pointer to the package
 	}
-
-	return ( *packageIterator ).data();
 }
 
 

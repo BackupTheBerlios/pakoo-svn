@@ -72,7 +72,7 @@ public:
 	 *
 	 * @see PackageList
 	 */
-	virtual PackageList* createPackageList();
+	virtual PackageList* createPackageList() = 0;
 
 	/**
 	 * Creates a PackageCategory. Category objects are able to return their

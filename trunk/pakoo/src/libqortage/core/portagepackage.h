@@ -18,55 +18,46 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "portagebackend.h"
+#ifndef LIBPAKTPORTAGEPACKAGE_H
+#define LIBPAKTPORTAGEPACKAGE_H
 
-#include "core/portagepackage.h"
-#include "core/packagelist.h"
-#include "core/portagesettings.h"
-#include "core/portagecategory.h"
-#include "portageloader/portagepackageloader.h"
-#include "portageloader/portageinitialloader.h"
+#include "package.h"
+#include "portagepackageversion.h"
+
+#include <qstring.h>
+
 
 namespace libpakt {
 
-PortageBackend::PortageBackend() : BackendFactory()
+/**
+ * A Package specializing in Portage.
+ * It creates PortageVersion children and features slot support.
+ */
+class PortagePackage : public Package
 {
-	// The settings object is used internally
-	// for all kinds of Portage settings
-	portageSettings = new PortageSettings();
+public:
+	PortagePackage( PackageCategory* category, const QString& name );
 
-	// These settings can't be retrieved automatically
-	portageSettings->setPreferCache( true );
-	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
-	portageSettings->setCacheDirectory("/var/cache/edb/dep/");
+	void clear();
+	void removeVersion( const QString& version );
+	PortagePackageVersion* insertVersion( const QString& versionString );
+	PortagePackageVersion* version( const QString& versionString );
+
+	bool canUpdate( PackageVersion* version );
+
+	QString description();
+	QString shortDescription();
+
+	QStringList slotList();
+	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
+
+protected:
+	PortagePackageVersion* createPackageVersion( const QString& versionString );
+
+private:
+	QString m_cachedDescription;
+};
+
 }
 
-PortageSettings* PortageBackend::settings()
-{
-	return portageSettings;
-}
-
-PackageList* PortageBackend::createPackageList() {
-	return new TemplatedPackageList<PortagePackage>();
-}
-
-PackageCategory* PortageBackend::createPackageCategory()
-{
-	return new PortageCategory();
-}
-
-InitialLoader* PortageBackend::createInitialLoader()
-{
-	PortageInitialLoader* loader = new PortageInitialLoader();
-	loader->setSettingsObject( portageSettings );
-	return loader;
-}
-
-PackageLoader* PortageBackend::createPackageLoader()
-{
-	PortagePackageLoader* loader = new PortagePackageLoader();
-	loader->setSettingsObject( portageSettings );
-	return loader;
-}
-
-} // namespace
+#endif // LIBPAKTPORTAGEPACKAGE_H

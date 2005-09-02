@@ -18,55 +18,58 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "portagebackend.h"
+#ifndef LIBPAKTPACKAGEQUEUE_H
+#define LIBPAKTPACKAGEQUEUE_H
 
-#include "core/portagepackage.h"
-#include "core/packagelist.h"
-#include "core/portagesettings.h"
-#include "core/portagecategory.h"
-#include "portageloader/portagepackageloader.h"
-#include "portageloader/portageinitialloader.h"
+#include <qvaluelist.h>
+
+#include <ksharedptr.h>
+
 
 namespace libpakt {
 
-PortageBackend::PortageBackend() : BackendFactory()
+class Package;
+class PackageVersion;
+
+enum QueuedItemType {
+	PackageType,
+	PackageVersionType,
+	WorldClassType,
+	SystemClassType
+};
+typedef struct QueuedItem {
+	QueuedItemType type;
+	KSharedPtr<KShared> data;
+
+	QueuedItem()
+		: type( WorldClassType )
+	{} // KSharedPtr initializes with an empty pointer
+
+	QueuedItem( QueuedItemType _type, KSharedPtr<KShared> _data )
+		: type(_type), data(_data) {};
+} QueuedItem;
+
+/**
+ * @short An ordered list of packages with or without specified version.
+ *
+ * Like PackageList, PackageQueue can manage packages.
+ * Unlike PackageList it is designed to act as an install/uninstall queue,
+ * so it is possible to store package versions instead of just general
+ * packages. Also, the list is ordered so the packages can be retrieved
+ * in the right order.
+ */
+class PackageQueue : public QValueList<QueuedItem>
 {
-	// The settings object is used internally
-	// for all kinds of Portage settings
-	portageSettings = new PortageSettings();
+public:
+	PackageQueue();
+	PackageQueue( const PackageQueue& otherList );
 
-	// These settings can't be retrieved automatically
-	portageSettings->setPreferCache( true );
-	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
-	portageSettings->setCacheDirectory("/var/cache/edb/dep/");
+	PackageQueue::iterator appendWorldClass();
+	PackageQueue::iterator appendSystemClass();
+	PackageQueue::iterator appendPackage( Package* package );
+	PackageQueue::iterator appendPackageVersion( PackageVersion* version );
+};
+
 }
 
-PortageSettings* PortageBackend::settings()
-{
-	return portageSettings;
-}
-
-PackageList* PortageBackend::createPackageList() {
-	return new TemplatedPackageList<PortagePackage>();
-}
-
-PackageCategory* PortageBackend::createPackageCategory()
-{
-	return new PortageCategory();
-}
-
-InitialLoader* PortageBackend::createInitialLoader()
-{
-	PortageInitialLoader* loader = new PortageInitialLoader();
-	loader->setSettingsObject( portageSettings );
-	return loader;
-}
-
-PackageLoader* PortageBackend::createPackageLoader()
-{
-	PortagePackageLoader* loader = new PortagePackageLoader();
-	loader->setSettingsObject( portageSettings );
-	return loader;
-}
-
-} // namespace
+#endif // LIBPAKTPACKAGEQUEUE_H

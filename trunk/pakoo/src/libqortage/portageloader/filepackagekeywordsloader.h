@@ -44,7 +44,7 @@ public:
 private:
 	bool isLineProcessed( const QString& line );
 	bool setAtomString( const QString& line );
-	void processVersion( PackageVersion* version );
+	void processVersion( PortagePackageVersion* version );
 
 	QStringList m_keywords;
 };

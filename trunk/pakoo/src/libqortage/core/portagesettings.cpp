@@ -147,7 +147,7 @@ void PortageSettings::addToValue( const QString& name, const QString& value )
 /**
  * Return the list of configuration values.
  */
-ConfigValueMap* PortageSettings::configValueMap()
+PortageSettings::ConfigValueMap* PortageSettings::configValueMap()
 {
 	return &(this->m_configValues);
 }

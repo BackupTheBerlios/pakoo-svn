@@ -21,8 +21,8 @@
 #include "portageml.h"
 
 #include "../core/threadedjob.h"
-#include "../core/packageversion.h"
-#include "../core/package.h"
+#include "../core/portagepackageversion.h"
+#include "../core/portagepackage.h"
 #include "../core/packagelist.h"
 #include "../core/portagecategory.h"
 
@@ -58,7 +58,7 @@ PortageML::PortageML() : ThreadedJob()
  * (in case of loading from a file) or used as source of
  * package information (in case of saving to a file).
  */
-void PortageML::setPackageList( PackageList* packages )
+void PortageML::setPackageList( TemplatedPackageList<PortagePackage>* packages )
 {
 	m_packages = packages;
 }
@@ -286,22 +286,22 @@ bool PortageML::loadVersionElement( const QDomElement& element )
 	// clean up before doing anything
 	m_package->removeVersion( versionString );
 
-	PackageVersion* version = m_package->version( versionString );
+	PortagePackageVersion* version = m_package->version( versionString );
 
 	if( element.hasAttribute( "installed" )
 		&& element.attribute( "installed", "" ) == "true" )
 	{
-		version->installed = true;
+		version->setInstalled( true );
 		m_packageCountInstalled++;
 	}
 	if( element.hasAttribute( "overlay" )
 		&& element.attribute( "overlay", "" ) == "true" )
 	{
-		version->overlay = true;
+		version->setOverlay( true );
 	}
 	if( element.hasAttribute("date") )
 	{
-		version->date = element.attribute("date", "");
+		version->setDate( element.attribute("date", "") );
 	}
 	// Can be extended with other attributes, like description
 	// or the keyword list. As I don't need that now (will I ever?)
@@ -380,7 +380,8 @@ QDomElement PortageML::createTreeElement( QDomDocument& doc )
 			return element.toDocument().toElement();
 		}
 
-		m_package = *packageIterator;
+		Package* pkg = *packageIterator;
+		m_package = (PortagePackage*) pkg;
 		packageNode = createPackageElement( doc );
 		element.appendChild( packageNode );
 	}
@@ -408,34 +409,35 @@ QDomElement PortageML::createPackageElement( QDomDocument& doc )
 	attr.setValue( m_package->name() );
 	element.setAttributeNode( attr );
 
-	PackageVersionMap* versions = m_package->versionMap();
-	PackageVersionMap::iterator versionIterator;
 	QDomElement versionElement;
 
-	for( versionIterator = versions->begin();
-	     versionIterator != versions->end(); versionIterator++ )
+	for( PortagePackage::versioniterator versionIterator = m_package->versionBegin();
+	     versionIterator != m_package->versionEnd(); versionIterator++ )
 	{
+		PortagePackageVersion* version =
+			(PortagePackageVersion*) (*versionIterator);
+
 		versionElement = doc.createElement( VERSIONELEMENTSTRING );
 
 		attr = doc.createAttribute( "version" );
-		attr.setValue( (*versionIterator).version );
+		attr.setValue( version->version() );
 		versionElement.setAttributeNode( attr );
 
-		if( (*versionIterator).installed == true ) {
+		if( version->isInstalled() ) {
 			attr = doc.createAttribute( "installed" );
 			attr.setValue( "true" );
 			versionElement.setAttributeNode( attr );
 		}
 
-		if( (*versionIterator).overlay == true ) {
+		if( version->isOverlay() ) {
 			attr = doc.createAttribute( "overlay" );
 			attr.setValue( "true" );
 			versionElement.setAttributeNode( attr );
 		}
 
-		if( (*versionIterator).date.isEmpty() == false ) {
+		if( version->date().isEmpty() == false ) {
 			attr = doc.createAttribute( "date" );
-			attr.setValue( (*versionIterator).date );
+			attr.setValue( version->date() );
 			versionElement.setAttributeNode( attr );
 		}
 		// Can be extended with other attributes, like description

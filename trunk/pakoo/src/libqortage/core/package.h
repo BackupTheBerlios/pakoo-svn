@@ -34,7 +34,6 @@
 namespace libpakt {
 
 class PackageVersion;
-typedef QMap<QString,PackageVersion> PackageVersionMap;
 
 /**
  * Package is a class to store information about a package.
@@ -46,6 +45,9 @@ typedef QMap<QString,PackageVersion> PackageVersionMap;
 class Package : public KShared
 {
 public:
+	typedef QMapIterator<QString,PackageVersion*> versioniterator;
+	typedef QMapConstIterator<QString,PackageVersion*> const_versioniterator;
+
 	Package( PackageCategory* category, const QString& name );
 	~Package();
 
@@ -56,35 +58,60 @@ public:
 	// version clearing functions
 	void clear();
 	void removeVersion( const QString& version );
-	bool setVersion( PackageVersion& version );
-	bool setVersion( const QString& versionString );
 
 	// info functions
-	bool hasVersions();
-	bool hasVersion( const QString& version );
-	bool hasInstalledVersion();
-	bool hasUpdate( const QString& arch );
-	bool hasUpdate( PackageVersion* version, const QString& arch );
+	bool containsVersions();
+	bool containsVersion( const QString& version );
+	bool containsInstalledVersion();
+
+	virtual bool canUpdate();
+	virtual bool canUpdate( PackageVersion* version );
 
 	// version retrieval functions
 	PackageVersion* version( const QString& version );
-	PackageVersionMap* versionMap();
-	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
-	QValueList<PackageVersion*> sortedVersionList();
+	PackageVersion* insertVersion( const QString& versionString );
 	PackageVersion* latestVersion();
-	PackageVersion* latestStableVersion( const QString& arch );
+	PackageVersion* latestVersionAvailable();
+	QValueList<PackageVersion*> sortedVersionList();
+
+	versioniterator versionBegin();
+	versioniterator versionEnd();
+	const_versioniterator versionBegin() const;
+	const_versioniterator versionEnd() const;
 
 	// other retrieval functions
 	QString uniqueName() const;
-	QStringList slotList();
+
+	/**
+	 * A rather detailed description of the package.
+	 * If there is no distinction between detailed and short descriptions,
+	 * this will be the same as shortDescription().
+	 */
+	virtual QString description() = 0;
+
+	/**
+	 * A short description of the package, perferably just one short sentence.
+	 * If there is no distinction between detailed and short descriptions,
+	 * this will be the same as description().
+	 */
+	virtual QString shortDescription() = 0;
 
 protected:
+	/**
+	 * Required to allocate new PackageVersion objects.
+	 * You can either derive a class to overload this function or use
+	 * TemplatedPackage to define the PackageVersion type without subclassing.
+	 */
+	virtual PackageVersion* createPackageVersion( const QString& versionString ) = 0;
+
+	typedef QMap<QString,PackageVersion*> PackageVersionMap;
+
 	//! The name of the package, e.g. "pakoo"
 	const QString m_name;
-	//! The package category, e.g. app-portage
+	//! The package category, for example, "app-portage" in Gentoo
 	PackageCategory* m_category;
 	//! The internal list of package versions.
-	PackageVersionMap versions;
+	PackageVersionMap m_versions;
 };
 
 }

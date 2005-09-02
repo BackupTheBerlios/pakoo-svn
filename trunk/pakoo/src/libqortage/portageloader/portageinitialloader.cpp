@@ -20,6 +20,8 @@
 
 #include "portageinitialloader.h"
 
+#include "../core/portagepackage.h"
+#include "../core/packagelist.h"
 #include "../core/portagesettings.h"
 #include "profileloader.h"
 #include "portagetreescanner.h"
@@ -79,6 +81,8 @@ IJob::JobResult PortageInitialLoader::performThread()
 			<< endl;
 		return Failure;
 	}
+	TemplatedPackageList<PortagePackage>* portagePackages =
+		(TemplatedPackageList<PortagePackage>*) m_packages;
 
 	JobResult result;
 
@@ -120,7 +124,7 @@ IJob::JobResult PortageInitialLoader::performThread()
 		     "Loading packages from the Portage tree...")
 	);
 	PortageTreeScanner* treeScanner = new PortageTreeScanner();
-	treeScanner->setPackageList( m_packages );
+	treeScanner->setPackageList( portagePackages );
 	treeScanner->setSettingsObject( m_settings );
 
 	connect( treeScanner, SIGNAL( packagesScanned(int,int) ),
@@ -142,7 +146,7 @@ IJob::JobResult PortageInitialLoader::performThread()
 		);
 		PortageML* portageML = new PortageML();
 		portageML->setAction( PortageML::LoadFile );
-		portageML->setPackageList( m_packages );
+		portageML->setPackageList( portagePackages );
 		portageML->setFileName( filename );
 
 		connect( portageML, SIGNAL( packagesScanned(int,int) ),
@@ -168,12 +172,12 @@ IJob::JobResult PortageInitialLoader::performThread()
 	// package.keywords, package.mask and package.unmask
 	//
 	FilePackageMaskLoader* maskLoader = new FilePackageMaskLoader();
-	maskLoader->setPackageList( m_packages );
+	maskLoader->setPackageList( portagePackages );
 
 	// package.mask files (in /usr/portage/profiles and /etc/portage)
 	maskLoader->setMode( FilePackageMaskLoader::Mask );
 	maskLoader->setFileName(
-		m_settings->mainlineTreeDirectory() + globalPackageMaskFile );
+		m_settings->mainlineTreeDirectory() + "/" + globalPackageMaskFile );
 	maskLoader->perform();
 	maskLoader->setFileName( etcPackageMaskFile );
 	maskLoader->perform();
@@ -186,7 +190,7 @@ IJob::JobResult PortageInitialLoader::performThread()
 	// package.keywords file (in /etc/portage)
 	FilePackageKeywordsLoader* keywordsLoader
 		= new FilePackageKeywordsLoader();
-	keywordsLoader->setPackageList( m_packages );
+	keywordsLoader->setPackageList( portagePackages );
 	keywordsLoader->setFileName( etcPackageKeywordsFile );
 	keywordsLoader->perform();
 

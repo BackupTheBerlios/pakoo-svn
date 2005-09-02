@@ -50,7 +50,7 @@ public:
 protected:
 	bool isLineProcessed( const QString& line );
 	bool setAtomString( const QString& line );
-    void processVersion( PackageVersion* version );
+	void processVersion( PortagePackageVersion* version );
 
 private:
 	bool m_mask;

@@ -1,3 +1,14 @@
+2005-09-02 Jakob Petsovits <jpetso@gmx.at>
+* done the remaining refactoring work at PackageVersion/Package,
+  now we're essentially set for moving on more quickly
+  - new files:
+    > core: portagepackage.[h|cpp], portagepackageversion.[h|cpp],
+            packagequeue.[h|cpp]
+* PortageHTMLGenerator is disabled for now, I rather refactor this
+  as well (which is the last task in refactoring) instead of just
+  making it compile again.
+* fixed a ProcessJob related crash when shutting down
+
 2005-08-31 Jakob Petsovits <jpetso@gmx.at>
 * Introducing libpakt's process management
   - new files:

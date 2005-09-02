@@ -20,18 +20,20 @@
 
 #include "actionview.h"
 
+#include "installeractionview.h"
+
 #include <qlayout.h>
 
-//TODO: remove
-#include <qlabel.h>
 
-
+/**
+ * Initialize this object.
+ */
 ActionView::ActionView( QWidget* parent, const char* name )
 	: QWidget( parent, name )
 {
 	QVBoxLayout* layout = new QVBoxLayout( this );
 	layout->setAutoAdd( true );
 
-	// stub
-	new QLabel( "Action View", this, "actionViewLabel" );
+	// stub - replace with real widget management
+	new InstallerActionView( this );
 }

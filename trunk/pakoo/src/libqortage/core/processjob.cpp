@@ -30,7 +30,7 @@ namespace libpakt {
 ProcessJob::ProcessJob( QObject *parent, const char *name )
 	: IJob( parent, name )
 {
-	m_process = new KProcess( this );
+	m_process = NULL;
 }
 
 /**
@@ -52,6 +52,10 @@ ProcessJob::~ProcessJob()
  */
 IJob::JobResult ProcessJob::perform()
 {
+	if( m_process != NULL )
+		delete m_process;
+	m_process = new KProcess();
+
 	startProcess( KProcess::Block );
 	return jobResult();
 }
@@ -62,6 +66,11 @@ IJob::JobResult ProcessJob::perform()
  */
 void ProcessJob::start()
 {
+	if( m_process != NULL )
+		delete m_process;
+
+	m_process = new KProcess();
+
 	connect( m_process, SIGNAL( processExited(KProcess*) ),
 	         this,        SLOT( processExited() ) );
 	startProcess( KProcess::NotifyOnExit );
@@ -93,10 +102,11 @@ void ProcessJob::startProcess( KProcess::RunMode runMode )
 	// let's start the process!
 	init(); // letting the derived classes do their initialization
 	connect( m_process, SIGNAL( receivedStdout(KProcess*,char*,int) ),
-	         this,        SLOT( handleOutput(char*,int) ) );
+	         this,        SLOT( handleOutput(KProcess*,char*,int) ) );
 	connect( m_process, SIGNAL( receivedStderr(KProcess*,char*,int) ),
-	         this,        SLOT( handleOutput(char*,int) ) );
-	emit receievedOutput( processNameAndArguments().join(" ") );
+	         this,        SLOT( handleOutput(KProcess*,char*,int) ) );
+	emit receivedOutput( processNameAndArguments().join(" ") );
+	QValueList<QCString> bla = m_process->args();
 	m_process->start( runMode, processCommunication() );
 }
 
@@ -106,7 +116,10 @@ void ProcessJob::startProcess( KProcess::RunMode runMode )
  */
 bool ProcessJob::running()
 {
-	return m_process->isRunning();
+	if( m_process != NULL )
+		return m_process->isRunning();
+	else
+		return false;
 }
 
 // Take documentation from IJob doxygen.
@@ -146,7 +159,10 @@ void ProcessJob::abortAndWait()
  */
 bool ProcessJob::wait()
 {
-	return m_process->wait();
+	if( m_process != NULL )
+		return m_process->wait();
+	else
+		return true;
 }
 
 /**
@@ -166,6 +182,7 @@ void ProcessJob::pause()
  */
 void ProcessJob::processExited()
 {
+	m_process->closeAll();
 	emit finished( jobResult() );
 
 	disconnect( m_process, SIGNAL( processExited(KProcess*) ),
@@ -176,10 +193,10 @@ void ProcessJob::processExited()
  * This slot is called when output on stdout or stderr is received,
  * it transforms it into a QString and emits the output() signal.
  */
-void ProcessJob::handleOutput( char* buffer, int buflen )
+void ProcessJob::handleOutput( KProcess*, char* buffer, int buflen )
 {
 	const QString output = QString::fromLatin1( buffer, buflen );
-	emit receievedOutput( output );
+	emit receivedOutput( output );
 }
 
 

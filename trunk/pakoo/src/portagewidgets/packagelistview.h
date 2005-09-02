@@ -112,7 +112,7 @@ private:
 	struct PackageViewPackage {
 		QListViewItem* item;
 		bool installed; // true if the package has at least one installed version
-		bool hasVersions; // true if its version child items have already been added
+		bool containsVersions; // true if its version child items have already been added
 		bool hasDetails;  // true if the package details have already been loaded
 	};
 

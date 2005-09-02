@@ -20,7 +20,7 @@
 
 #include "filepackagekeywordsloader.h"
 
-#include "packageversion.h"
+#include "portagepackageversion.h"
 
 
 namespace libpakt {
@@ -74,12 +74,13 @@ bool FilePackageKeywordsLoader::setAtomString( const QString& line )
 /**
  * Set additional keywords for the found package version.
  */
-void FilePackageKeywordsLoader::processVersion( PackageVersion* version )
+void FilePackageKeywordsLoader::processVersion(
+	PortagePackageVersion* version )
 {
 	for( QStringList::iterator keywordIterator = m_keywords.begin();
 	     keywordIterator != m_keywords.end(); keywordIterator++ )
 	{
-		version->acceptedKeywords.prepend( *keywordIterator );
+		version->acceptedKeywords().prepend( *keywordIterator );
 	}
 }
 

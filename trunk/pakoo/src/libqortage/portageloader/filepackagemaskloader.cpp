@@ -20,7 +20,7 @@
 
 #include "filepackagemaskloader.h"
 
-#include "../core/packageversion.h"
+#include "../core/portagepackageversion.h"
 
 
 namespace libpakt {
@@ -70,9 +70,9 @@ bool FilePackageMaskLoader::setAtomString( const QString& line )
  * Set or unset (depending on the object's configuration)
  * the version's hardmasked flag.
  */
-void FilePackageMaskLoader::processVersion( PackageVersion* version )
+void FilePackageMaskLoader::processVersion( PortagePackageVersion* version )
 {
-	version->isHardMasked = m_mask;
+	version->setHardMasked( m_mask );
 }
 
 } // namespace

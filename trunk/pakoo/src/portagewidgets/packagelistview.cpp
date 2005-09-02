@@ -292,7 +292,7 @@ void PackageListView::emitSelectionChanged( QListViewItem* item )
 		Package* package = m_shownPackages->package( category, packageName );
 
 		const QString& versionString = item->text(0);
-		if( package->hasVersion(versionString) )
+		if( package->containsVersion(versionString) )
 		{
 			PackageVersion* version = package->version( versionString );
 			emit selectionChanged( package, version );
@@ -407,10 +407,10 @@ void PackageListView::insertPackageItem( QListViewItem* parent,
 	PackageViewPackage& pkg =
 		m_categories[parent->text(0)].packageItems[package.name()];
 	pkg.item = packageItem;
-	pkg.hasVersions = false;
+	pkg.containsVersions = false;
 	pkg.hasDetails = false;
 
-	if( package.hasInstalledVersion() ) {
+	if( package.containsInstalledVersion() ) {
 		packageItem->setPixmap( 0, pxPackageItemInstalled );
 		pkg.installed = true;
 		m_installedPackageCount++;
@@ -451,28 +451,27 @@ void PackageListView::insertVersionItems( QListViewItem* packageItem )
 	PackageViewPackage& pkg =
 		pvcategory.packageItems[package->name()];
 
-	if( pkg.hasVersions == true )
+	if( pkg.containsVersions == true )
 		return;
 	else
-		pkg.hasVersions = true;
+		pkg.containsVersions = true;
 
 
 	QListViewItem* versionItem;
 
 	// create version subnodes
-	PackageVersionMap* versions = package->versionMap();
-	PackageVersionMap::iterator versionIteratorEnd = versions->end();
+	Package::versioniterator versionIteratorEnd = package->versionEnd();
 
-	for( PackageVersionMap::iterator versionIterator = versions->begin();
+	for( Package::versioniterator versionIterator = package->versionBegin();
 	     versionIterator != versionIteratorEnd; ++versionIterator )
 	{
 		versionItem = new KListViewItem(
-			packageItem, (*versionIterator).version );
+			packageItem, (*versionIterator)->version() );
 
-		if( (*versionIterator).installed == true ) {
+		if( (*versionIterator)->isInstalled() ) {
 			versionItem->setPixmap( 0, pxVersionItemInstalled );
 		}
-		else if( (*versionIterator).stability(m_arch) != PackageVersion::Stable ){
+		else if( (*versionIterator)->isAvailable() == false ){
 			versionItem->setPixmap( 0, pxVersionItemNotAvailable );
 		}
 		else {
@@ -489,7 +488,7 @@ void PackageListView::insertVersionItems( QListViewItem* packageItem )
  */
 void PackageListView::displayPackageDetails( Package* package )
 {
-	if( package == NULL || !package->hasVersions() )
+	if( package == NULL || !package->containsVersions() )
 		return;
 
 	PackageViewPackage& pkg =
@@ -501,15 +500,9 @@ void PackageListView::displayPackageDetails( Package* package )
 	else
 		pkg.hasDetails = true;
 
-	PackageVersion* descVersion = package->latestStableVersion(m_arch);
-	if( descVersion == NULL )
-		descVersion = package->latestVersion();
-	if( descVersion == NULL )
-		return;
+	pkg.item->setText( 1, package->shortDescription() );
 
-	pkg.item->setText( 1, descVersion->description );
-
-	if( package->hasUpdate(m_arch) ) {
+	if( package->canUpdate() ) {
 		pkg.item->setPixmap( 0, pxPackageItemUpdatable );
 		emit foundUpgradablePackage(package);
 	}

@@ -21,20 +21,35 @@
 #ifndef LIBPAKTEMERGEPROCESS_H
 #define LIBPAKTEMERGEPROCESS_H
 
-#include <processjob.h>
+#include "../core/processjob.h"
 
 
 namespace libpakt {
 
 /**
- * bla!
+ * @short A ProcessJob to install or uninstall packages.
+ *
+ * This object can take a list of packages, along with possible options
+ * for emerge, compose an appropriate shell command and parse the
+ * emerge output.
  */
 class EmergeProcess : public ProcessJob
 {
-Q_OBJECT
+	Q_OBJECT
+
 public:
-	EmergeProcess(QObject *parent = 0, const char *name = 0);
-    ~EmergeProcess();
+	EmergeProcess( QObject* parent = 0, const char* name = 0 );
+	~EmergeProcess();
+
+signals:
+	/**
+	 * Emitted when output from the child process has been received,
+	 * like seen on terminal output. This is a combination of stdout
+	 * and stderr.
+	 *
+	 * @param output  The data that has been received.
+	 */
+	//void receivedOutput( const QString& output );
 
 protected:
 	ProcessType processType();
@@ -43,4 +58,4 @@ protected:
 
 }
 
-#endif
+#endif // LIBPAKTEMERGEPROCESS_H

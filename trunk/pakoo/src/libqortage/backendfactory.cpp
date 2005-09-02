@@ -18,7 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "core/packagelist.h"
 #include "core/packageselector.h"
 #include "portageloader/multiplepackageloader.h" //TODO: rename portageloader (dir) -> loader
 
@@ -29,10 +28,6 @@ namespace libpakt {
 
 BackendFactory::BackendFactory()
 {}
-
-PackageList* BackendFactory::createPackageList() {
-	return new PackageList();
-}
 
 PackageSelector* BackendFactory::createPackageSelector() {
 	return new PackageSelector();

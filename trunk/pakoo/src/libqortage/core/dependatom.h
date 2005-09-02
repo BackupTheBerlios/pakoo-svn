@@ -21,15 +21,16 @@
 #ifndef LIBPAKTDEPENDATOM_H
 #define LIBPAKTDEPENDATOM_H
 
+#include "packagelist.h"
+
 #include <qregexp.h>
 #include <qvaluelist.h>
 
-
 namespace libpakt {
 
-class PackageList;
+class PortagePackage;
 class PortageCategory;
-class PackageVersion;
+class PortagePackageVersion;
 
 /**
  * This class is the provides capabilities to parse DEPEND atoms and get
@@ -42,18 +43,18 @@ class PackageVersion;
 class DependAtom
 {
 public:
-	DependAtom( PackageList* packages );
+	DependAtom( TemplatedPackageList<PortagePackage>* packages );
 	~DependAtom();
 
 	bool parse( const QString& atom );
 
-	QValueList<PackageVersion*> matchingVersions();
+	QValueList<PortagePackageVersion*> matchingVersions();
 
 	bool isBlocking();
 
 private:
 	//! A pointer to the portage tree from which the packages are retrieved.
-	PackageList* m_packages;
+	TemplatedPackageList<PortagePackage>* m_packages;
 	//! The regular expression for the whole atom.
 	QRegExp m_rxAtom;
 	//! This is set to the result of parse().

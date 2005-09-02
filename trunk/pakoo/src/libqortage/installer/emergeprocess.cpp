@@ -29,8 +29,8 @@ namespace libpakt {
  * Initialize this object.
  * @see QObject::QObject(QObject*, const char*)
  */
-EmergeProcess::EmergeProcess( QObject *parent, const char *name )
- : ProcessJob( parent, name )
+EmergeProcess::EmergeProcess( QObject* parent, const char* name )
+	: ProcessJob( parent, name )
 {
 }
 
