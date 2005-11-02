@@ -18,67 +18,44 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PAKOOJOBVIEW_H
-#define PAKOOJOBVIEW_H
+#include "installeractionview.h"
 
-#include <core/ijob.h>
-#include <qwidget.h>
+#include "libqortage/installer/emergeprocess.h"
 
-class QVBox;
-class QLabel;
-class KProgress;
-class KTextEdit;
-class KPushButton;
+#include <qlayout.h>
+#include <qhbox.h>
 
-using libpakt::IJob;
+#include <ktextedit.h>
+#include <kpushbutton.h>
+
+using namespace libpakt;
 
 
-/**
- * @short A class displaying the progress (and more) of an IJob.
- *
- * An ActionView acts as a front end to classes derived from IJob,
- * visualizing output like the current task, progress or status messages.
- */
-class JobView : public QWidget
+InstallerActionView::InstallerActionView( QWidget *parent, const char *name )
+ : QWidget( parent, name )
 {
-Q_OBJECT
+	emergeProcess = new EmergeProcess( this );
+	QVBoxLayout* layout = new QVBoxLayout( this );
+	layout->setAutoAdd( true );
 
-public:
-	JobView( libpakt::IJob* job, const QString& title,
-	         QWidget* parent = 0, const char* name = 0 );
-	libpakt::IJob* job();
+	m_log = new KTextEdit( this );
+	m_log->setTextFormat( Qt::LogText );
+	/* maybe use later for pretty printing:
+	QStyleSheetItem * item =
+		new QStyleSheetItem( m_log->styleSheet(), "mytag" );
+	item->setColor( "red" );
+	item->setFontWeight( QFont::Bold );
+	item->setFontUnderline( TRUE );
+	*/
 
-signals:
-	/**
-	 * Emitted when the job has finished. The argument specifies
-	 * how successful job execution has been.
-	 */
-	void finished( libpakt::IJob::JobResult result );
+	QHBox* hBox = new QHBox( this );
+	KPushButton* startButton = new KPushButton("Start!", hBox);
+	connect( startButton, SIGNAL( pressed() ),
+	         emergeProcess, SLOT( start() ) );
+	connect( emergeProcess, SIGNAL( receivedOutput(const QString&) ),
+	         m_log,           SLOT( append(const QString&) ) );
+}
 
-public slots:
-	virtual void start();
-	void setAutoClose( bool autoClose );
-
-private slots:
-	void setConsoleOutputVisible( bool showConsoleOutput );
-	void jobFinished( IJob::JobResult result );
-	void close();
-
-private:
-	libpakt::IJob* m_job;
-
-	// child widgets
-	QVBox* m_defaultView;
-	KProgress* m_progress;
-	QLabel* m_currentTaskLabel;
-	KTextEdit* m_statusMessages;
-	KTextEdit* m_consoleOutput;
-	KPushButton* m_consoleOutputButton;
-	KPushButton* m_closeButton;
-
-	// other stuff
-	bool m_autoClose;
-	libpakt::IJob::JobResult m_result; // temporary result storage
-};
-
-#endif // PAKOOJOBVIEW_H
+InstallerActionView::~InstallerActionView()
+{
+}

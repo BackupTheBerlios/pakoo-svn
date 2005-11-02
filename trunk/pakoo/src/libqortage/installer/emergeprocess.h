@@ -41,6 +41,8 @@ public:
 	EmergeProcess( QObject* parent = 0, const char* name = 0 );
 	~EmergeProcess();
 
+	bool statusMessagesEnabled() { return false; }
+
 signals:
 	/**
 	 * Emitted when output from the child process has been received,

@@ -23,6 +23,7 @@
 // libpakt
 #include <portagebackend.h>
 #include <portageloader/portageinitialloader.h>
+#include <installer/emergeprocess.h>
 
 
 // widgets
@@ -39,6 +40,7 @@
 #include <qpainter.h>
 #include <qlayout.h>
 #include <qtoolbox.h>
+#include <qwidgetstack.h>
 
 // KDE includes
 #include <klibloader.h>
@@ -46,6 +48,7 @@
 #include <krun.h>
 #include <kdebug.h>
 #include <khtmlview.h>
+#include <kapplication.h>
 
 // TODO: remove (used to make stubs in the QToolBox)
 #include <qlabel.h>
@@ -78,7 +81,7 @@ PakooView::PakooView( QWidget *parent )
 
 	// Adding the individual widgets
 
-	m_treeView = new PackageTreeView( 0, "treeView", m_backend );
+	m_treeView = new PackageTreeView( this, "treeView", m_backend );
 
 	int sectionIndex = toolBox->addItem( m_treeView, TREEVIEWTEXT );
 	m_sectionIndexes[sectionIndex] = BrowseSection;
@@ -86,16 +89,20 @@ PakooView::PakooView( QWidget *parent )
 	sectionIndex = toolBox->addItem(
 		new QLabel("Action View", 0, "tempactionlabel"), ACTIONVIEWTEXT );
 	m_sectionIndexes[sectionIndex] = ActionSection;
+	toolBox->setCurrentIndex( 1 );
 
 	sectionIndex = toolBox->addItem(
 		new QLabel("Config View", 0, "tempconfiglabel"), CONFIGVIEWTEXT );
 	m_sectionIndexes[sectionIndex] = ConfigSection;
 
-	m_packageView = new PackageView( m_vSplitter, "packageView", m_backend );
-	m_actionView = new ActionView( m_vSplitter, "actionView" );
-	m_configView = new QLabel( "Config View", m_vSplitter, "configView" );
-	m_actionView->hide();
-	m_configView->hide();
+	m_viewAreas = new QWidgetStack( m_vSplitter, "viewArea" );
+	m_packageView = new PackageView( m_viewAreas, "packageView", m_backend );
+	m_actionArea = new QWidgetStack( m_viewAreas, "actionArea" );
+	JobView* jobView = new JobView( new EmergeProcess(), "title", m_actionArea, "jobView" );
+	jobView->start();
+	m_configArea = new QWidgetStack( m_viewAreas, "configArea" );
+	new QLabel( "Config View", m_viewAreas, "configView" );
+	m_viewAreas->raiseWidget( m_actionArea );
 
 	m_packageInfoView = new PackageInfoView( m_vSplitter, "packageInfoView" );
 
@@ -133,6 +140,10 @@ PakooView::PakooView( QWidget *parent )
 		m_packageView->listView, SIGNAL(selectionChanged(Package*, PackageVersion*)),
 		m_packageInfoView, SLOT(displayPackage(Package*, PackageVersion*))
 	);
+
+	// Connect the convenience method for copying text,
+	// like pointed out by Scott Wheeler on the kde-core mailing list
+	KStdAction::copy( KApplication::kApplication(), SLOT(copy()), NULL );
 
 	// Connect the package list view with the status bar,
 	// so the latter one is updated properly
@@ -191,19 +202,13 @@ void PakooView::showSection( int sectionIndex )
 	switch( m_sectionIndexes[sectionIndex] )
 	{
 	case BrowseSection:
-		m_packageView->show();
-		m_actionView->hide();
-		m_configView->hide();
+		m_viewAreas->raiseWidget( m_packageView );
 		break;
 	case ActionSection:
-		m_packageView->hide();
-		m_actionView->show();
-		m_configView->hide();
+		m_viewAreas->raiseWidget( m_actionArea );
 		break;
 	case ConfigSection:
-		m_packageView->hide();
-		m_actionView->hide();
-		m_configView->show();
+		m_viewAreas->raiseWidget( m_configArea );
 		break;
 	}
 }

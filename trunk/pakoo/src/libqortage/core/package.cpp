@@ -152,10 +152,8 @@ bool Package::containsVersion( const QString& versionString )
 }
 
 /**
- * Determine if this package contains a version that is
- * installed on this system.
- *
- * @return  true if this package contains the version, false otherwise.
+ * Returns true if this package contains a version that is
+ * installed on this system, false otherwise.
  */
 bool Package::containsInstalledVersion()
 {
@@ -165,6 +163,26 @@ bool Package::containsInstalledVersion()
 	     versionIterator != m_versions.end(); versionIterator++ )
 	{
 		if( (*versionIterator)->isInstalled() == true ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Returns true if this package contains a version that can be
+ * installed on this system, false otherwise.
+ *
+ * @return  true if this package contains the version, false otherwise.
+ */
+bool Package::containsAvailableVersion()
+{
+	PackageVersionMap::iterator versionIterator;
+
+	for( versionIterator = m_versions.begin();
+			versionIterator != m_versions.end(); versionIterator++ )
+	{
+		if( (*versionIterator)->isAvailable() == true ) {
 			return true;
 		}
 	}

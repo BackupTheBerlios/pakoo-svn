@@ -63,6 +63,7 @@ public:
 	bool containsVersions();
 	bool containsVersion( const QString& version );
 	bool containsInstalledVersion();
+	bool containsAvailableVersion();
 
 	virtual bool canUpdate();
 	virtual bool canUpdate( PackageVersion* version );

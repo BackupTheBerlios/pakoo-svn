@@ -4,6 +4,11 @@ Immediate:
 - Refactor libqortage:
   * rename to libpakt (including folder renames)
   * PortageBackend::settings as static variable?
+- Other refactoring issues:
+  * PackageInfoView -> InfoView, and dynamic HTMLGenerator switching
+  * Make PortagePackageHTMLGenerator work again
+  * Portage versions of the widgets
+
 
 Reasons for switching libqortage to kdelibs (libpakt?):
 - Translations
@@ -24,8 +29,6 @@ Visible enhancements:
 
 Code enhancements:
 - iterator -> const_iterator
-- renames:
-  * PackageInfoView -> InfoView
 
 UI Design:
 - Search folders in the tree view, together with the categories
@@ -51,16 +54,3 @@ Feature set:
 - searching
 - configuring
 
-
-
-
-Detailed drafts:
-
-- MessageType for installer objects:
-	enum MessageType {
-		InformationMessage,
-		WarningMessage,
-		ErrorMessage,
-		SuccessMessage,
-		UnspecifiedMessage
-	};

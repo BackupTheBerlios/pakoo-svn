@@ -45,9 +45,7 @@ class PackageInfoView;
 
 } // end of libpakt declarations
 
-class ActionView;
-//TODO: remove and replace with real, working widgets
-class QLabel;
+class QWidgetStack;
 
 
 /**
@@ -60,7 +58,7 @@ class PakooView : public QWidget, public pakooIface
 {
 	Q_OBJECT
 public:
-	PakooView(QWidget *parent);
+	PakooView( QWidget *parent );
 
 	void quit();
 
@@ -88,13 +86,22 @@ signals:
 	void statusbarProgressButtonHidden();
 
 protected:
-	libpakt::PackageTreeView* m_treeView;
-	libpakt::PackageView*     m_packageView;
-	libpakt::PackageInfoView* m_packageInfoView;
-	ActionView* m_actionView;
-	QLabel* m_configView;
+	// layouting
 	QSplitter* m_hSplitter;
 	QSplitter* m_vSplitter;
+
+	// select area
+	libpakt::PackageTreeView* m_treeView;
+	// and the QToolBox, which doesn't have to be a member
+
+	// view areas
+	QWidgetStack*         m_viewAreas;
+	libpakt::PackageView* m_packageView;
+	QWidgetStack*         m_actionArea;
+	QWidgetStack*         m_configArea;
+
+	// info area
+	libpakt::PackageInfoView* m_packageInfoView;
 
 private slots:
 	void showSection( int sectionIndex );

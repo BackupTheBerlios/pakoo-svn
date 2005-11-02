@@ -18,67 +18,32 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PAKOOJOBVIEW_H
-#define PAKOOJOBVIEW_H
+#ifndef INSTALLERACTIONVIEW_H
+#define INSTALLERACTIONVIEW_H
 
-#include <core/ijob.h>
 #include <qwidget.h>
 
-class QVBox;
-class QLabel;
-class KProgress;
+namespace libpakt {
+	class EmergeProcess;
+}
+
 class KTextEdit;
-class KPushButton;
-
-using libpakt::IJob;
-
 
 /**
- * @short A class displaying the progress (and more) of an IJob.
+ * @short A widget capable of visualizing and controlling installation and uninstallation tasks.
  *
- * An ActionView acts as a front end to classes derived from IJob,
- * visualizing output like the current task, progress or status messages.
+ * TODO: insert some cool text here!
  */
-class JobView : public QWidget
+class InstallerActionView : public QWidget
 {
 Q_OBJECT
-
 public:
-	JobView( libpakt::IJob* job, const QString& title,
-	         QWidget* parent = 0, const char* name = 0 );
-	libpakt::IJob* job();
-
-signals:
-	/**
-	 * Emitted when the job has finished. The argument specifies
-	 * how successful job execution has been.
-	 */
-	void finished( libpakt::IJob::JobResult result );
-
-public slots:
-	virtual void start();
-	void setAutoClose( bool autoClose );
-
-private slots:
-	void setConsoleOutputVisible( bool showConsoleOutput );
-	void jobFinished( IJob::JobResult result );
-	void close();
+	InstallerActionView( QWidget* parent = 0, const char* name = 0 );
+	~InstallerActionView();
 
 private:
-	libpakt::IJob* m_job;
-
-	// child widgets
-	QVBox* m_defaultView;
-	KProgress* m_progress;
-	QLabel* m_currentTaskLabel;
-	KTextEdit* m_statusMessages;
-	KTextEdit* m_consoleOutput;
-	KPushButton* m_consoleOutputButton;
-	KPushButton* m_closeButton;
-
-	// other stuff
-	bool m_autoClose;
-	libpakt::IJob::JobResult m_result; // temporary result storage
+	libpakt::EmergeProcess* emergeProcess;
+	KTextEdit* m_log;
 };
 
-#endif // PAKOOJOBVIEW_H
+#endif // INSTALLERACTIONVIEW_H

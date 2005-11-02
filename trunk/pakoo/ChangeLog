@@ -1,3 +1,13 @@
+2005-09-06 Jakob Petsovits <jpetso@gmx.at>
+* new widget: JobView, which displays all kinds of job info & progress
+  and is meant for monitoring updates, installs and whatever
+* a more generic HTML generator is running again, still missing Portage features
+  - new files:
+    > htmlgenerator.[h|cpp], packagehtmlgenerator.[h|cpp]
+  - renamed files:
+    > portagehtmlgenerator.[h|cpp] -> portagepackagehtmlgenerator.[h|cpp]
+    > actionview.[h|cpp] -> jobview.[h|cpp]
+
 2005-09-02 Jakob Petsovits <jpetso@gmx.at>
 * done the remaining refactoring work at PackageVersion/Package,
   now we're essentially set for moving on more quickly

@@ -30,19 +30,16 @@ namespace libpakt {
 
 /**
  * Initialize this object.
- * @param arch  The architecture for which the info view should be specialized
- *              on - something like "x86" or "~alpha"
  */
 PackageInfoView::PackageInfoView(
-	QWidget* parentWidget, const char* widgetname, const QString& arch )
+	QWidget* parentWidget, const char* widgetname )
 : KHTMLPart(parentWidget, widgetname)
 //: KTextBrowser(parentWidget, widgetname)
 {
-	/*htmlGenerator = new PortageHTMLGenerator(arch);
+	htmlGenerator = new PackageHTMLGenerator();
 	connect( this->browserExtension(),
 		SIGNAL( openURLRequest(const KURL&, const KParts::URLArgs&) ),
 		this, SLOT( openURLRequest(const KURL&, const KParts::URLArgs&) ) );
-	*/
 }
 
 /**
@@ -50,16 +47,7 @@ PackageInfoView::PackageInfoView(
  */
 PackageInfoView::~PackageInfoView()
 {
-	//delete htmlGenerator;
-}
-
-/**
- * Set the architecture that this info view specializes in.
- * Default is "x86".
- */
-void PackageInfoView::setArchitecture( const QString& arch )
-{
-	//htmlGenerator->setArchitecture( arch );
+	delete htmlGenerator;
 }
 
 /**
@@ -67,11 +55,10 @@ void PackageInfoView::setArchitecture( const QString& arch )
  */
 void PackageInfoView::displayPackage( Package* package )
 {
-	/*this->package = package;
+	this->package = package;
 	this->version = NULL;
 
 	displayScannedPackage();
-	*/
 }
 
 /**
@@ -81,11 +68,10 @@ void PackageInfoView::displayPackage( Package* package, PackageVersion* version 
 {
 	// same as in displayPackage(Package*)
 
-	/*this->package = package;
+	this->package = package;
 	this->version = version;
 
 	displayScannedPackage();
-	*/
 }
 
 
@@ -94,22 +80,21 @@ void PackageInfoView::displayPackage( Package* package, PackageVersion* version 
  */
 void PackageInfoView::displayScannedPackage()
 {
-	/*if( package == NULL )
+	if( package == NULL )
 		return;
 
 	QString contents;
 
 	if( version == NULL )
-		contents = htmlGenerator->fromPackage( package, NULL );
-	else
-		contents = htmlGenerator->fromPackage( package, version );
-	*/
+		htmlGenerator->setPackage( package );
+		contents = htmlGenerator->html();
+	//else
+	//	contents = htmlGenerator->fromPackage( package, version );
 
 	//* KHTMLPart version
-	/*this->begin(); // right, uncomment this
+	this->begin();
 	this->write( contents );
 	this->end();
-	*/
 
 	/*/
 	// KTextBrowser version
@@ -125,14 +110,13 @@ void PackageInfoView::displayScannedPackage()
 void PackageInfoView::openURLRequest( const KURL& url, const KParts::URLArgs& )
 {
 	// get service for web browsing
-	/*KService::Ptr ptr =
+	KService::Ptr ptr =
 		KServiceTypeProfile::preferredService("text/html", "Application");
 
 	KURL::List lst;
 	// append 'url' parameter to the service and run it
 	lst.append( url );
 	KRun::run( *ptr, lst );
-	*/
 }
 
 } // namespace

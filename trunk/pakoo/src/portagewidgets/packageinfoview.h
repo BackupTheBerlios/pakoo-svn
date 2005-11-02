@@ -25,7 +25,7 @@
 //#include <ktextbrowser.h>
 
 #include "../libqortage/libqortage.h"
-#include "portagehtmlgenerator.h"
+#include "packagehtmlgenerator.h"
 
 
 namespace libpakt {
@@ -40,12 +40,10 @@ class PackageInfoView : public KHTMLPart // public KTextBrowser
 	Q_OBJECT
 
 public:
-	PackageInfoView( QWidget* parentWidget = 0, const char* widgetname = 0,
-	                 const QString& arch = "x86" );
+	PackageInfoView( QWidget* parentWidget = 0, const char* widgetname = 0 );
 	~PackageInfoView();
 
 public slots:
-	void setArchitecture( const QString& arch );
 	void displayPackage( Package* package );
 	void displayPackage( Package* package, PackageVersion* version );
 
@@ -57,7 +55,7 @@ protected:
 	//! Not NULL if a specific version of the package will be shown in detail.
 	PackageVersion* version;
 	//! The object that produces the appropriate HTML that is displayed.
-	PortageHTMLGenerator* htmlGenerator;
+	PackageHTMLGenerator* htmlGenerator;
 
 protected slots:
 	void openURLRequest( const KURL& url, const KParts::URLArgs& args );

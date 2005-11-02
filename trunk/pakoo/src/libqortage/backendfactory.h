@@ -43,6 +43,7 @@ class BackendFactory
 {
 public:
 	BackendFactory();
+	virtual ~BackendFactory() {};
 
 	/**
 	 * Determine if the backend supports loading package structures.

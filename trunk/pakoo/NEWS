@@ -1,1 +1,41 @@
- 
+---
+Progress report (Sun 11 September 2005)
+---
+
+No, Pakoo is not dead. It has had quite a long time since the 0.1 release, but it has also come a long way in terms of development since then.
+
+libpakoo (Pakoo's base library) is now a full-fledged KDE library, which means that it can take advantage of the same internationalization methods, build system and some other things only available in kdelibs. It has been heavily reworked and is now theoretically backend independent - there are no other implementations than Portage yet, but it shouldn't be too difficult to implement for other package management systems what's already possible for Portage. This is also why the former libpakoo has now been renamed to libpakt, leaving behind its sole specialization on Gentoo systems and going for world domination ;-)
+
+Pakoo 0.2 is not too far away, but it still needs some work on the user interface to get 'emerge sync' working and enjoyable. It will remain its original name until another package management backend (say, apt or Slackware's package manager) are implemented. For now, please do wait desperately for the next version!
+
+
+---
+Pakoo 0.1 released! (Tue 12 July 2005)
+---
+
+After final preparations, it's time to go out into the public with a first release and a Gentoo forums thread. Pakoo 0.1 is the start of a new front end to Portage that strives to obsolete command line usage of emerge & friends.
+
+Pakoo follows the principle of "doing it right from the beginning". That means the feature list is far from complete, but what works should really work well. For Pakoo 0.1, only browsing your package tree is implemented. Nevertheless it should be quite enjoyable as you get fast loading, a combined view for available and installed packages, and package information with description, available versions and masking info.
+
+For browsing the tree or finding a package with the search line, Pakoo 0.1 already does a great job. The next functionality that will be implemented is synchronizing the Portage tree, also known as 'emerge sync'.
+
+Your ideas, criticisms, bug reports and contributions are now most important, because it's easier to improve handling and concepts at an early stage of development. You probably want to check out the web site, so I won't stop you now ;-)
+ Have fun!
+
+
+---
+Pakoo web site is online (Fri 08 July 2005)
+---
+
+From now on, Pakoo has a home page on pakoo.berlios.de. If you come across misspellings, semantic errors or have a good idea to improve or extend the site, tell me (if you don't know how, you have yet to see the communicate page).
+
+A big *woah, thanks* goes out to rezza, also known as Doug Whiteley, who made the original web design for the Lila Center, put it under the GPL and invited me to use it for the Pakoo home page.
+
+
+---
+Public development has started (Wed 01 June 2005)
+---
+
+Hi folks! Pakoo development has now officially started, and can be tracked by watching or checking out the Subversion repository where its code lies.
+
+There is no home page yet, except for the usual BerliOS stuff, but it's going to come as soon as a first release is done. Until then, you'll have to compile the project (using KDevelop, preferably) to enjoy Pakoo. So much for now - stay tuned!
