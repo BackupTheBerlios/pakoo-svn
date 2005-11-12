@@ -20,7 +20,7 @@
 
 #include "packagehtmlgenerator.h"
 
-// libqortage includes
+// libpakt includes
 #include <core/package.h>
 
 // KDE includes

@@ -22,10 +22,10 @@
 
 #include <kiconloader.h>
 
-#include "../libqortage/backendfactory.h"
-#include "../libqortage/core/packagelist.h"
-#include "../libqortage/core/packagecategory.h"
-#include "../libqortage/core/packageselector.h"
+#include "../libpakt/backendfactory.h"
+#include "../libpakt/core/packagelist.h"
+#include "../libpakt/core/packagecategory.h"
+#include "../libpakt/core/packageselector.h"
 
 #include "pixmapnames.h"
 #include "i18n.h"

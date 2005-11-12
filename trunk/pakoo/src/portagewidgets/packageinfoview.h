@@ -24,7 +24,7 @@
 #include <khtml_part.h>
 //#include <ktextbrowser.h>
 
-#include "../libqortage/libqortage.h"
+#include "../libpakt/libpakt.h"
 #include "packagehtmlgenerator.h"
 
 

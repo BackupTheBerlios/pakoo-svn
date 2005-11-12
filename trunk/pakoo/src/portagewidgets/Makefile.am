@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/libqortage -I$(top_srcdir)/src/portagewidgets \
+INCLUDES = -I$(top_srcdir)/src/libpakt -I$(top_srcdir)/src/portagewidgets \
 	$(all_includes)
 METASOURCES = AUTO
 noinst_LIBRARIES = libportagewidgets.a

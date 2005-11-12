@@ -18,11 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-// Header file that includes all the libqortage objects, so that only
+// Header file that includes all the libpakt objects, so that only
 // one file has to be included. Just for convenience.
 
-#ifndef LIBQORTAGE_H
-#define LIBQORTAGE_H
+#ifndef LIBPAKT_H
+#define LIBPAKT_H
 
 #include "core/packageversion.h"
 #include "core/package.h"
@@ -36,4 +36,4 @@
 #include "portageloader/filepackagemaskloader.h"
 #include "portageloader/filepackagekeywordsloader.h"
 
-#endif // LIBQORTAGE_H
+#endif // LIBPAKT_H

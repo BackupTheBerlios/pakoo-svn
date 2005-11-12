@@ -1,2 +1,2 @@
-INCLUDES = -I$(top_srcdir)/src/libqortage/core
+INCLUDES = -I$(top_srcdir)/src/libpakt/core
 METASOURCES = AUTO
