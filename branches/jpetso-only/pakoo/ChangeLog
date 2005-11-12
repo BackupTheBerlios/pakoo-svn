@@ -1,0 +1,87 @@
+2005-09-06 Jakob Petsovits <jpetso@gmx.at>
+* new widget: JobView, which displays all kinds of job info & progress
+  and is meant for monitoring updates, installs and whatever
+* a more generic HTML generator is running again, still missing Portage features
+  - new files:
+    > htmlgenerator.[h|cpp], packagehtmlgenerator.[h|cpp]
+  - renamed files:
+    > portagehtmlgenerator.[h|cpp] -> portagepackagehtmlgenerator.[h|cpp]
+    > actionview.[h|cpp] -> jobview.[h|cpp]
+
+2005-09-02 Jakob Petsovits <jpetso@gmx.at>
+* done the remaining refactoring work at PackageVersion/Package,
+  now we're essentially set for moving on more quickly
+  - new files:
+    > core: portagepackage.[h|cpp], portagepackageversion.[h|cpp],
+            packagequeue.[h|cpp]
+* PortageHTMLGenerator is disabled for now, I rather refactor this
+  as well (which is the last task in refactoring) instead of just
+  making it compile again.
+* fixed a ProcessJob related crash when shutting down
+
+2005-08-31 Jakob Petsovits <jpetso@gmx.at>
+* Introducing libpakt's process management
+  - new files:
+    > core: processjob.[h|cpp]
+    > src: actionview.[h|cpp]
+    > installer: emergeprocess.[h|cpp]
+* Code maintaining
+  - Make member variables start with "m_"
+  - Iron out emitDebugOutput() calls
+  - removed files:
+    > core: iasyncjob.h (merged with IJob into ijob.h again)
+
+2005-08-29 Jakob Petsovits <jpetso@gmx.at>
+* fixing the search filter again
+* fixing the "find-the-pakoorc.ui-file-even-if-not-installed" again
+* switching of the sections on the right side of the window
+
+2005-08-20 Jakob Petsovits <jpetso@gmx.at>
+* the big libqortage (now libpakt) refactoring (man, this was tough!):
+  - make a "setBlaBla(bla); start();" interface instead of "startBla(bla);"
+  - drop the nasty event handling in favour of jobs with signals (mmmh)
+  - Safer Threading(TM)
+  - Qt'ify the API in general
+  - a big leap into backend independence
+  - a quadrizillion other changes, only a few of them in functionality
+  - and, of course, port the front end to the new API
+  - new files:
+    > libpakt: backendfactory.[h|cpp], portagebackend.[h|cpp]
+    > core:    ijob.h, iasyncjob.h, threadedjob.[h|cpp],
+               packagecategory.[h|cpp], portagecategory.[h|cpp],
+               packageselector.[h|cpp], fileloaderbase.[h|cpp]
+    > loader:  packageloader.[h|cpp], multiplepackageloader.[h|cpp],
+               initialloader.[h|cpp], portageinitialloader.[h|cpp]
+  - removed files:
+    > loader:  loadingevent.[h|cpp], portageloaderbase.[h|cpp]
+  - renamed files:
+    > core:    portagetree.[h|cpp] -> packagelist.[h|cpp]
+    > loader:  packagescanner.[h|cpp] -> portagepackageloader.[h|cpp]
+    > widgets: portagetreeview.[h|cpp] -> packagetreeview.[h|cpp]
+* New "Not Installed" search filter
+
+2005-07-12 Jakob Petsovits <jpetso@gmx.at>
+* release of Pakoo 0.1
+* user interface changes
+* make the /usr/portage scanner work again
+
+2005-07-11 Jakob Petsovits <jpetso@gmx.at>
+* button for aborting the package scanner
+* disable the buttons that don't work (ahem, that's nearly all ;-)
+* better app icons, from a modified high-res g-logo
+
+2005-07-05 Jakob Petsovits <jpetso@gmx.at>
+* support for cascading profiles, including automatic ARCH, PORTDIR & Co. retrieval
+* fixes for the PackageVersion compare algorithm
+  (which now handles trailing characters and "_beta" without number)
+
+2005-06-06 Jakob Petsovits <jpetso@gmx.at>
+* more and prettier infos in the package info view
+* fixed some semi-serious bug with package displaying, dropping some multithreading
+
+2005-06-02 Jakob Petsovits <jpetso@gmx.at>
+* fix in the DEPEND atom regexp
+* fix for loading version items in the list view
+
+2005-06-01 Jakob Petsovits <jpetso@gmx.at>
+* initial import to the Subversion repository

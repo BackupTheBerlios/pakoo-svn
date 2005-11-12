@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=pakoo
+Exec=pakoo %i %m -caption "%c"
+Icon=pakoo
+Type=Application
+DocPath=pakoo/index.html
+Comment=A package manager for KDE.
+Comment[de]=Ein Paketmanager für KDE.
+Terminal=0
