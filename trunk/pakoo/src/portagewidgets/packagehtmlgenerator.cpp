@@ -86,8 +86,8 @@ QString PackageHTMLGenerator::cssRaw()
 		".caption { margin-top: 0.5em; }\n"
 		".description { margin-top: -0.2em; }\n"
 		".packagename { font-weight:bold; }\n"
-		".installed { font-weight:bold; color: forestgreen; }\n"
-		".notavailable { font-weight:bold; color: red; }\n";
+		".installed { font-weight:bold; color: #228b22; }\n"
+		".notavailable { font-weight:bold; color: #ff0000; }\n";
 }
 
 /**
