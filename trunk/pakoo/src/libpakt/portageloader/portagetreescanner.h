@@ -23,6 +23,7 @@
 
 #include "../core/threadedjob.h"
 #include "../core/portagecategory.h"
+#include "../core/portagesettings.h"
 #include "../core/packagelist.h"
 
 #include <qstringlist.h>
@@ -123,8 +124,8 @@ private:
 	//! The directory where the portage cache resides.
 	QString m_cacheDir;
 
-	//! Set true if the Portage cache should be scanned instead of the mainline tree.
-	bool m_preferCache;
+	//! Set to what type of Portage cache to use.
+	PackageSource m_preferredPackageSource;
 
 	//! Defines if mainline and overlay trees are searched.
 	bool m_scanAvailablePackages;

@@ -89,7 +89,7 @@ PakooView::PakooView( QWidget *parent )
 	sectionIndex = toolBox->addItem(
 		new QLabel("Action View", 0, "tempactionlabel"), ACTIONVIEWTEXT );
 	m_sectionIndexes[sectionIndex] = ActionSection;
-	toolBox->setCurrentIndex( 1 );
+	toolBox->setCurrentIndex( 0 );
 
 	sectionIndex = toolBox->addItem(
 		new QLabel("Config View", 0, "tempconfiglabel"), CONFIGVIEWTEXT );

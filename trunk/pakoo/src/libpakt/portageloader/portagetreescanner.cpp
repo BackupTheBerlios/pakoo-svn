@@ -23,7 +23,6 @@
 #include "../core/portagepackageversion.h"
 #include "../core/portagepackage.h"
 #include "../core/packagelist.h"
-#include "../core/portagesettings.h"
 #include "../core/portagecategory.h"
 
 #include <qdatetime.h>
@@ -107,8 +106,7 @@ IJob::JobResult PortageTreeScanner::performThread()
 		return Failure;
 	}
 	else {
-		//FIXME: Ugly hack below. But since CDB cache isn't implanted yet it works.
-		m_preferCache = ( m_settings->preferredPackageSource() == FlatCache );
+		m_preferredPackageSource = m_settings->preferredPackageSource();
 		m_mainlineTreeDir = m_settings->mainlineTreeDirectory();
 		m_overlayTreeDirs = m_settings->overlayTreeDirectories();
 		m_installedPackagesDir = m_settings->installedPackagesDirectory();
@@ -228,7 +226,7 @@ bool PortageTreeScanner::scanTree( const QString& treeDir,
 		                             (*categoryIterator).mid(pos+1) );
 
 		// If the Portage cache is searched, do this
-		if( (treeType == Mainline) && (m_preferCache == true) )
+		if( (treeType == Mainline) && ( m_preferredPackageSource == FlatCache ) )
 		{
 			// Compose the folder name of the current category
 			d.setPath( m_cacheDir + m_mainlineTreeDir + "/"

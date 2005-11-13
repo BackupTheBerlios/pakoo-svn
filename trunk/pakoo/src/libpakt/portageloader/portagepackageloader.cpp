@@ -22,7 +22,6 @@
 
 #include "../core/portagepackageversion.h"
 #include "../core/portagepackage.h"
-#include "../core/portagesettings.h"
 #include "../core/portagecategory.h"
 
 #include <qdir.h>
@@ -83,8 +82,7 @@ IJob::JobResult PortagePackageLoader::performThread()
 		return Failure;
 	}
 	else {
-		//FIXME: Ugly hack below. But since CDB cache isn't implanted yet it works.
-		m_preferCache = ( m_settings->preferredPackageSource() == FlatCache );
+		m_preferredPackageSource = m_settings->preferredPackageSource();
 		m_mainlineTreeDir = m_settings->mainlineTreeDirectory();
 		m_overlayTreeDirs = m_settings->overlayTreeDirectories();
 		m_installedPackagesDir = m_settings->installedPackagesDirectory();
@@ -164,7 +162,8 @@ bool PortagePackageLoader::scanPackage()
 				+ "-" + version->version();
 			scanDigest( version, filename );
 
-			if( m_preferCache == true )
+			//TODO: Add suport for CDB-cache here?
+			if( m_preferredPackageSource == FlatCache )
 			{
 				filename = m_cacheDir + m_mainlineTreeDir + "/"
 					+ package()->category()->uniqueName() + "/"

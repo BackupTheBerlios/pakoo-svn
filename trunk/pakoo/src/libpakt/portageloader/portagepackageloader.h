@@ -22,6 +22,7 @@
 #define LIBPAKTPORTAGEPACKAGELOADER_H
 
 #include "packageloader.h"
+#include "../core/portagesettings.h"
 
 #include <qstringlist.h>
 #include <qregexp.h>
@@ -79,8 +80,8 @@ private:
 	//! The directory where the portage cache resides.
 	QString m_cacheDir;
 
-	//! Set true if the Portage cache should be scanned instead of the mainline tree.
-	bool m_preferCache;
+	//! Set to what type of Portage cache to use.
+	PackageSource m_preferredPackageSource;
 
 	// Regexps for various line strings inside an ebuild.
 	QRegExp m_rxDescription, m_rxHomepage, m_rxSlot;
