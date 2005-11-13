@@ -102,7 +102,7 @@ private:
 		FinishedLoadingEventType = QEvent::User + 14341
 	};
 
-	bool scanTree( const QString& treeDir, PortageTreeScanner::TreeType searchedTree );
+	bool scanTree( const QString& treeDir, PortageTreeScanner::TreeType treeType );
 	void scanTreePackage( QDir& d, bool overlay );
 	void scanCacheCategory( QDir& d );
 	void scanInstalledPackage( QDir& d );
