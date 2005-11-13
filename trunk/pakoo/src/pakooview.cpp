@@ -156,6 +156,7 @@ PakooView::PakooView( QWidget *parent )
 		m_packageView->listView, SIGNAL(finishedLoadingPackageDetails(PackageList&)),
 		this, SLOT(handleFinishedLoadingPackageDetails(PackageList&))
 	);*/
+	m_viewAreas->raiseWidget( m_packageView );
 }
 
 /**
