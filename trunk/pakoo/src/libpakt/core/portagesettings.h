@@ -33,6 +33,8 @@
 
 namespace libpakt {
 
+enum PackageSource { PortageTree, FlatCache, CdbCache };
+
 /**
  * This class holds configuration settings.
  * Most of the global Portage options are stored in here.
@@ -67,8 +69,8 @@ public:
 	QString installedPackagesDirectory();
 	void setCacheDirectory( const QString& directory );
 	QString cacheDirectory();
-	void setPreferCache( bool preferCache );
-	bool preferCache();
+	void setPreferredPackageSource( PackageSource packageSource );
+	PackageSource preferredPackageSource();
 
 protected:
 	QString substituteShellVariables( const QString& value );

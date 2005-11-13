@@ -301,7 +301,7 @@ QString PortageSettings::cacheDirectory()
 }
 
 /**
- * Define if the Portage cache should be used. This should lead to
+ * Define if/what Portage cache should be used. This should lead to
  * faster reading of tree structure and package info, but can lead to
  * wrong results if the cache isn't available (there are packages
  * in Portage designed to replace the cache) or if it's outdated
@@ -309,25 +309,32 @@ QString PortageSettings::cacheDirectory()
  *
  * This is not a Portage setting and must therefore be set specifically.
  */
-void PortageSettings::setPreferCache( bool preferCache )
+void PortageSettings::setPreferredPackageSource( PackageSource packageSource )
 {
-	if( preferCache == true )
-		setValue( "libpakt:preferCache", "true" );
+	if( packageSource == PortageTree )
+		setValue( "libpakt:preferredPackageSource", "PortageTree" );
+	else if( packageSource == CdbCache )
+		setValue( "libpakt:preferredPackageSource", "CdbCache" );
 	else
-		m_configValues.remove( "libpakt:preferCache" );
+		m_configValues.remove( "libpakt:preferredPackageSource" );
 }
 
 /**
- * Determine if the Portage cache should be used.
+ * Determine if/what Portage cache should be used.
  * This is not a Portage setting and must therefore be set specifically.
  * If there is no appropriate value, the function returns false.
  */
-bool PortageSettings::preferCache()
+PackageSource PortageSettings::preferredPackageSource()
 {
-	if( m_configValues.contains("libpakt:preferCache") )
-		return true;
+	if( m_configValues.contains("libpakt:preferredPackageSource") ) {
+		QString packageSource = value("libpakt:preferredPackageSource");
+		if( packageSource == "PortageTree" )
+			return PortageTree;
+		else
+			return CdbCache;
+	}
 	else
-		return false;
+		return FlatCache;
 }
 
 } // namespace

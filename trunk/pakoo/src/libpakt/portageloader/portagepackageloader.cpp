@@ -83,7 +83,8 @@ IJob::JobResult PortagePackageLoader::performThread()
 		return Failure;
 	}
 	else {
-		m_preferCache = m_settings->preferCache();
+		//FIXME: Ugly hack below. But since CDB cache isn't implanted yet it works.
+		m_preferCache = ( m_settings->preferredPackageSource() == FlatCache );
 		m_mainlineTreeDir = m_settings->mainlineTreeDirectory();
 		m_overlayTreeDirs = m_settings->overlayTreeDirectories();
 		m_installedPackagesDir = m_settings->installedPackagesDirectory();

@@ -36,7 +36,17 @@ PortageBackend::PortageBackend() : BackendFactory()
 	portageSettings = new PortageSettings();
 
 	// These settings can't be retrieved automatically
-	portageSettings->setPreferCache( true );
+	
+	// You can get the cache type from /etc/portage/modules
+	// If the file don't exists use FlatCache
+	// It it exists: read it to see what cache type to use.
+	// If it isn't CDB then read the portage tree.
+	// The others cache types are:
+	//   AnyDBM (included in portage) and MySQL
+	// There are one more (cpickle) in /usr/lib/portage/pym/
+	// but I don't know anything about it.
+	portageSettings->setPreferredPackageSource( FlatCache );
+	//TODO: Read these from a configuration file of some kind.
 	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
 	portageSettings->setCacheDirectory("/var/cache/edb/dep/");
 }
