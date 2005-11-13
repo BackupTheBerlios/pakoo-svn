@@ -304,10 +304,11 @@ QString PortageSettings::cacheDirectory()
  * Define if/what Portage cache should be used. This should lead to
  * faster reading of tree structure and package info, but can lead to
  * wrong results if the cache isn't available (there are packages
- * in Portage designed to replace the cache) or if it's outdated
- * (which can be fixed by 'emerge metadata' and shouldn't normally happen).
+ * in Portage designed to replace the cache), if it's outdated
+ * (which can be fixed by 'emerge metadata' and shouldn't normally happen)
  *
  * This is not a Portage setting and must therefore be set specifically.
+ * TODO: It should be possible to read /etc/portage/modules instead.
  */
 void PortageSettings::setPreferredPackageSource( PackageSource packageSource )
 {
@@ -322,7 +323,8 @@ void PortageSettings::setPreferredPackageSource( PackageSource packageSource )
 /**
  * Determine if/what Portage cache should be used.
  * This is not a Portage setting and must therefore be set specifically.
- * If there is no appropriate value, the function returns false.
+ * TODO: It should be possible to read /etc/portage/modules instead.
+ * If there is no appropriate value, the function returns FlatCache.
  */
 PackageSource PortageSettings::preferredPackageSource()
 {

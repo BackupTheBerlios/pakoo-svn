@@ -33,7 +33,15 @@
 
 namespace libpakt {
 
-enum PackageSource { PortageTree, FlatCache, CdbCache };
+/**
+ * This enum holds a list of the possible sources to get
+ * packages from.
+ */
+enum PackageSource { 
+	PortageTree /**< Get the packages from reading the portage tree (/usr/portage). */,
+	FlatCache /**< Get the packages from reading flat (normal) portage cache. */,
+	CdbCache /**< Get the packages from reading CDB portage cache. */
+};
 
 /**
  * This class holds configuration settings.
