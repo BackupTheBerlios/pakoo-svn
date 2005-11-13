@@ -31,12 +31,18 @@ namespace libpakt {
 class Package;
 class PackageVersion;
 
+/**
+ * What type of item a QueuedItem is.
+ */
 enum QueuedItemType {
 	PackageType,
 	PackageVersionType,
 	WorldClassType,
 	SystemClassType
 };
+/**
+ * A item in a PackageQueue.
+ */
 typedef struct QueuedItem {
 	QueuedItemType type;
 	KSharedPtr<KShared> data;
