@@ -2,7 +2,6 @@ List of TODO items for the Pakoo package manager frontend.
 
 Immediate:
 - Refactor libqortage:
-  * rename to libpakt (including folder renames)
   * PortageBackend::settings as static variable?
 - Other refactoring issues:
   * PackageInfoView -> InfoView, and dynamic HTMLGenerator switching
