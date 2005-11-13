@@ -127,7 +127,7 @@ QString PortagePackage::shortDescription()
  * is in fact a PortagePackageVersion - never handle over another one,
  * or it will crash.
  *
- * @param version  An installed version which will be checked on updates.
+ * @param genericVersion  An installed version which will be checked on updates.
  * @returns  true if there is an update for version on arch, false otherwise.
  * @see Package::canUpdate(PackageVersion*)
  */
