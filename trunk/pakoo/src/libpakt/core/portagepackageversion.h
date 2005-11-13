@@ -38,10 +38,10 @@ public:
 
 	//! The "maskedness" of a package version.
 	enum Stability {
-		Stable,
-		Masked,
-		HardMasked,
-		NotAvailable
+		Stable /**< A stable package */,
+		Masked /**< A "testing" package (~*) */,
+		HardMasked /**< A package mased using package.mask? */,
+		NotAvailable /**< A hard masked package? (-*) */
 	};
 
 	bool isAvailable() const;
