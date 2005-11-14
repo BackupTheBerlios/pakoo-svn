@@ -53,4 +53,4 @@ Feature set:
   * revdep-rebuild
 - searching
 - configuring
-
+- Add suport for readning /var/cache/edb/dep in CDB format.
