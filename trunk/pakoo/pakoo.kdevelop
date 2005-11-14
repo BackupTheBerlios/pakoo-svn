@@ -217,6 +217,7 @@
     </codecompletion>
     <references>
       <pcs>KDElibs</pcs>
+      <pcs>Qt</pcs>
     </references>
     <creategettersetter>
       <prefixGet></prefixGet>

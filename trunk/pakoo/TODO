@@ -41,6 +41,7 @@ UI Design:
 - Provide two (un)installing possibilites (immediate/queued):
   * "(Un)Install Selected" makes a queue containing one package and executes it
   * "Add To Queue" adds the item to the install/uninstall queue
+- Provide a list of packages depending on a package queued for uninstall?
 
 Feature set:
 - merging
@@ -48,7 +49,7 @@ Feature set:
   * install (emerge)
   * uninstall (emerge -C)
   * clean up (emerge depclean)
-  * etc-update
+  * etc-update or dispatch-conf
   * revdep-rebuild
 - searching
 - configuring
