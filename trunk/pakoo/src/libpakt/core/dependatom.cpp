@@ -21,6 +21,7 @@
 #include "dependatom.h"
 
 #include "packagelist.h"
+//FIXME: Shouldn't have portagedependecy here!
 #include "../portage/core/portagepackage.h"
 #include "../portage/core/portagecategory.h"
 #include "../portage/core/portagepackageversion.h"

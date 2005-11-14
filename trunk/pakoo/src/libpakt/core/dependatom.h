@@ -53,6 +53,7 @@ public:
 	bool isBlocking();
 
 private:
+	//FIXME: Shouldn't have portagedependecy here!
 	//! A pointer to the portage tree from which the packages are retrieved.
 	TemplatedPackageList<PortagePackage>* m_packages;
 	//! The regular expression for the whole atom.
