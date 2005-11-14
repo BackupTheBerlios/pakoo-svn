@@ -5,8 +5,8 @@
 bin_PROGRAMS = pakoo pakoo_client
 
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/src/libpakt \
-	-I$(top_srcdir)/src/libpakt/portage/loader -I$(top_srcdir)/src/portagewidgets $(all_includes)
+INCLUDES = -I$(top_srcdir)/src/libpakt -I$(top_srcdir)/src/portagewidgets \
+	$(all_includes)
 
 # the library search path.
 pakoo_LDFLAGS = $(KDE_RPATH) $(all_libraries)

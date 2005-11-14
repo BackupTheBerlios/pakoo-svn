@@ -4,7 +4,7 @@ INCLUDES = -I$(top_srcdir)/src/libpakt -I$(top_srcdir)/src/libpakt/base \
 	-I$(top_srcdir)/src/libpakt/core -I$(top_srcdir)/src/libpakt/installer \
 	-I$(top_srcdir)/src/libpakt/portage/config -I$(top_srcdir)/src/libpakt/portage/core \
 	-I$(top_srcdir)/src/libpakt/portage/installer -I$(top_srcdir)/src/libpakt/portage/loader \
-	-I$(top_srcdir)/src/libpakt/portageconfig -I$(top_srcdir)/src/libpakt/portageloader $(all_includes)
+	-I$(top_srcdir)/src/libpakt/portageconfig $(all_includes)
 METASOURCES = AUTO
 
 SUBDIRS = base core portageconfig portage installer
