@@ -22,7 +22,7 @@
 #define LIBPAKTPACKAGESELECTOR_H
 
 #include "threadedjob.h"
-#include "../core/portagecategory.h"
+#include "../portage/core/portagecategory.h"
 
 
 namespace libpakt {

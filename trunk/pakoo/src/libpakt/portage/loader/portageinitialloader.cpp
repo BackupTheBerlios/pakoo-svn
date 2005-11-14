@@ -21,7 +21,7 @@
 #include "portageinitialloader.h"
 
 #include "../core/portagepackage.h"
-#include "../core/packagelist.h"
+#include "../../core/packagelist.h"
 #include "../core/portagesettings.h"
 #include "profileloader.h"
 #include "portagetreescanner.h"

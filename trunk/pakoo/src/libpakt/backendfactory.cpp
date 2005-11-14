@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 #include "core/packageselector.h"
-#include "portageloader/multiplepackageloader.h" //TODO: rename portageloader (dir) -> loader
+#include "portage/loader/multiplepackageloader.h" //TODO: rename portageloader (dir) -> loader
 
 #include "backendfactory.h"
 

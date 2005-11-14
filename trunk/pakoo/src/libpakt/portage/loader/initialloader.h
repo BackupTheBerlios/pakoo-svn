@@ -18,46 +18,69 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTPORTAGEPACKAGE_H
-#define LIBPAKTPORTAGEPACKAGE_H
+#ifndef LIBPAKTINITIALLOADER_H
+#define LIBPAKTINITIALLOADER_H
 
-#include "package.h"
-#include "portagepackageversion.h"
-
-#include <qstring.h>
+#include "../../core/threadedjob.h"
 
 
 namespace libpakt {
 
+class PackageList;
+
 /**
- * A Package specializing in Portage.
- * It creates PortageVersion children and features slot support.
+ * This is a job that initializes the package list with packages in the
+ * package tree, loads global settings from config files, and/or does other
+ * initialization work (depending on the specific backend). Please perform()
+ * or start() this job before attempting to work with the back end,
+ * because otherwise there won't be any packages that you can access.
  */
-class PortagePackage : public Package
+class InitialLoader : public ThreadedJob
 {
+	Q_OBJECT
+
 public:
-	PortagePackage( PackageCategory* category, const QString& name );
+	InitialLoader();
 
-	void clear();
-	void removeVersion( const QString& version );
-	PortagePackageVersion* insertVersion( const QString& versionString );
-	PortagePackageVersion* version( const QString& versionString );
+	void setPackageList( PackageList* packages );
 
-	bool canUpdate( PackageVersion* version );
+signals:
+	/**
+	 * Emitted if the package tree has successfully been loaded from disk.
+	 * The PackageList object now contains all packages and package versions,
+	 * but without detailed package information.
+	 */
+	void finishedLoading( PackageList* packages );
 
-	QString description();
-	QString shortDescription();
-
-	QStringList slotList();
-	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
+protected slots:
+	void emitFinishedLoading( PackageList* packages );
 
 protected:
-	PortagePackageVersion* createPackageVersion( const QString& versionString );
+	void customEvent(QCustomEvent* event);
+
+	//! The PackageList object that will be filled with packages.
+	PackageList* m_packages;
 
 private:
-	QString m_cachedDescription;
+	enum InitialLoaderEventType
+	{
+		FinishedLoadingEventType = QEvent::User + 14344
+	};
+
+
+	//
+	// nested event classes
+	//
+
+	class FinishedLoadingEvent : public QCustomEvent
+	{
+	public:
+		FinishedLoadingEvent() : QCustomEvent( FinishedLoadingEventType ) {};
+		PackageList* packages;
+	};
+
 };
 
 }
 
-#endif // LIBPAKTPORTAGEPACKAGE_H
+#endif // LIBPAKTINITIALLOADER_H

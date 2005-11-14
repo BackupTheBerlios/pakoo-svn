@@ -20,7 +20,7 @@
 
 #include "filepackagekeywordsloader.h"
 
-#include "portagepackageversion.h"
+#include "../core/portagepackageversion.h"
 
 
 namespace libpakt {

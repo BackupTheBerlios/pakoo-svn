@@ -18,46 +18,46 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTPROFILELOADER_H
-#define LIBPAKTPROFILELOADER_H
+#ifndef LIBPAKTPORTAGEPACKAGE_H
+#define LIBPAKTPORTAGEPACKAGE_H
 
-#include "../core/threadedjob.h"
+#include "../../core/package.h"
+#include "portagepackageversion.h"
 
-class QString;
-class QDir;
+#include <qstring.h>
 
 
 namespace libpakt {
 
-class PortageSettings;
-
 /**
- * ProfileLoader is responsible for reading the current profile configuration.
- * It supports cascading profiles and gets important settings like
- * the ACCEPT_KEYWORDS value (e.g. x86 or ~alpha) or Portage directories.
- *
- * Like all jobs derived from ThreadedJob, you can call start() or perform()
- * to execute it.
+ * A Package specializing in Portage.
+ * It creates PortageVersion children and features slot support.
  */
-class ProfileLoader : public ThreadedJob
+class PortagePackage : public Package
 {
-	Q_OBJECT
-
 public:
-	ProfileLoader();
+	PortagePackage( PackageCategory* category, const QString& name );
 
-	void setSettingsObject( PortageSettings* settings );
+	void clear();
+	void removeVersion( const QString& version );
+	PortagePackageVersion* insertVersion( const QString& versionString );
+	PortagePackageVersion* version( const QString& versionString );
 
-	IJob::JobResult performThread();
+	bool canUpdate( PackageVersion* version );
+
+	QString description();
+	QString shortDescription();
+
+	QStringList slotList();
+	QValueList<PackageVersion*> sortedVersionListInSlot( const QString& slot );
+
+protected:
+	PortagePackageVersion* createPackageVersion( const QString& versionString );
 
 private:
-	bool goToStartDirectory( QDir& dir );
-	bool goToParentDirectory( QDir& currentDir );
-
-	//! The PortageSettings object that will be filled with configuration values.
-	PortageSettings* m_settings;
+	QString m_cachedDescription;
 };
 
 }
 
-#endif // LIBPAKTPROFILELOADER_H
+#endif // LIBPAKTPORTAGEPACKAGE_H

@@ -31,8 +31,8 @@
 #include <core/packageversion.h>
 #include <core/packagecategory.h>
 #include <core/packageselector.h>
-#include <portageloader/packageloader.h>
-#include <portageloader/multiplepackageloader.h>
+#include <portage/loader/packageloader.h>
+#include <portage/loader/multiplepackageloader.h>
 
 
 namespace libpakt {

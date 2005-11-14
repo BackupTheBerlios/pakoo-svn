@@ -21,7 +21,7 @@
 #include "profileloader.h"
 
 #include "filemakeconfigloader.h"
-#include "portagesettings.h"
+#include "../core/portagesettings.h"
 
 #include <qstring.h>
 #include <qdir.h>

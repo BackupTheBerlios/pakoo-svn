@@ -18,12 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTFILEMAKECONFIGLOADER_H
-#define LIBPAKTFILEMAKECONFIGLOADER_H
+#ifndef LIBPAKTPROFILELOADER_H
+#define LIBPAKTPROFILELOADER_H
 
-#include "../core/fileloaderbase.h"
+#include "../../core/threadedjob.h"
 
-#include <qregexp.h>
+class QString;
+class QDir;
 
 
 namespace libpakt {
@@ -31,32 +32,32 @@ namespace libpakt {
 class PortageSettings;
 
 /**
- * This is a class that is able to load files like /etc/make.conf,
- * /etc/make.globals or the make.defaults files in each profile directory.
- * Starting the loader with start() or perform() retrieves the configuration
- * values and stores them into a given PortageSettings object.
+ * ProfileLoader is responsible for reading the current profile configuration.
+ * It supports cascading profiles and gets important settings like
+ * the ACCEPT_KEYWORDS value (e.g. x86 or ~alpha) or Portage directories.
+ *
+ * Like all jobs derived from ThreadedJob, you can call start() or perform()
+ * to execute it.
  */
-class FileMakeConfigLoader : public FileLoaderBase
+class ProfileLoader : public ThreadedJob
 {
 	Q_OBJECT
 
 public:
-	FileMakeConfigLoader();
+	ProfileLoader();
 
 	void setSettingsObject( PortageSettings* settings );
 
+	IJob::JobResult performThread();
+
 private:
-	bool check();
-	bool isLineProcessed( const QString& line );
-	void processLine( const QString& line );
+	bool goToStartDirectory( QDir& dir );
+	bool goToParentDirectory( QDir& currentDir );
 
 	//! The PortageSettings object that will be filled with configuration values.
 	PortageSettings* m_settings;
-
-	// Regexp for a configuration line, like ARCH="x86" or SUPPORT_ALSA=1
-	QRegExp m_rxConfigLine;
 };
 
 }
 
-#endif // LIBPAKTFILEMAKECONFIGLOADER_H
+#endif // LIBPAKTPROFILELOADER_H

@@ -5,16 +5,17 @@
 bin_PROGRAMS = pakoo pakoo_client
 
 # set the include path for X, qt and KDE
-INCLUDES = -I$(top_srcdir)/src/libpakt -I$(top_srcdir)/src/portagewidgets \
-	$(all_includes)
+INCLUDES = -I$(top_srcdir)/src/libpakt \
+	-I$(top_srcdir)/src/libpakt/portage/loader -I$(top_srcdir)/src/portagewidgets $(all_includes)
 
 # the library search path.
 pakoo_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 
 # the libraries to link against.
 pakoo_LDADD = $(top_builddir)/src/portagewidgets/libportagewidgets.a \
-	$(top_builddir)/src/libpakt/libpakt.a $(top_builddir)/src/libpakt/portageloader/libportageloader.a \
-	$(top_builddir)/src/libpakt/installer/libinstaller.a $(top_builddir)/src/libpakt/core/libcore.a $(LIB_KFILE) $(LIB_KHTML)
+	$(top_builddir)/src/libpakt/libpakt.a $(top_builddir)/src/libpakt/portage/loader/libportageloader.a \
+	$(top_builddir)/src/libpakt/installer/libinstaller.a $(top_builddir)/src/libpakt/portage/core/libportagecore.a \
+	$(top_builddir)/src/libpakt/core/libcore.a $(LIB_KFILE) $(LIB_KHTML)
 
 # which sources should be compiled for pakoo
 pakoo_SOURCES = main.cpp pakoo.cpp pakooview.cpp pref.cpp pakooiface.skel \

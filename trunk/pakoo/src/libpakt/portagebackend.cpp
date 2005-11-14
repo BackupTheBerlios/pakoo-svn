@@ -20,12 +20,12 @@
 
 #include "portagebackend.h"
 
-#include "core/portagepackage.h"
+#include "portage/core/portagepackage.h"
 #include "core/packagelist.h"
-#include "core/portagesettings.h"
-#include "core/portagecategory.h"
-#include "portageloader/portagepackageloader.h"
-#include "portageloader/portageinitialloader.h"
+#include "portage/core/portagesettings.h"
+#include "portage/core/portagecategory.h"
+#include "portage/loader/portagepackageloader.h"
+#include "portage/loader/portageinitialloader.h"
 
 namespace libpakt {
 
@@ -45,7 +45,8 @@ PortageBackend::PortageBackend() : BackendFactory()
 	//   AnyDBM (included in portage) and MySQL
 	// There are one more (cpickle) in /usr/lib/portage/pym/
 	// but I don't know anything about it.
-	portageSettings->setPreferredPackageSource( FlatCache );
+	//portageSettings->setPreferredPackageSource( FlatCache );
+	portageSettings->setPreferredPackageSource( PortageTree );
 	//TODO: Read these from a configuration file of some kind.
 	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
 	portageSettings->setCacheDirectory("/var/cache/edb/dep/");

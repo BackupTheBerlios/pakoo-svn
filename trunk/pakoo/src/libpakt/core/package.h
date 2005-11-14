@@ -28,7 +28,7 @@
 
 #include <ksharedptr.h>
 
-#include "portagecategory.h"
+#include "../portage/core/portagecategory.h"
 
 
 namespace libpakt {

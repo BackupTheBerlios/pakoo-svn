@@ -22,7 +22,7 @@
 
 // libpakt
 #include <portagebackend.h>
-#include <portageloader/portageinitialloader.h>
+#include <portage/loader/portageinitialloader.h>
 #include <installer/emergeprocess.h>
 
 

@@ -18,58 +18,45 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTMULTIPLEPACKAGELOADER_H
-#define LIBPAKTMULTIPLEPACKAGELOADER_H
+#ifndef LIBPAKTFILEMAKECONFIGLOADER_H
+#define LIBPAKTFILEMAKECONFIGLOADER_H
 
-#include "../core/threadedjob.h"
+#include "../../core/fileloaderbase.h"
+
+#include <qregexp.h>
 
 
 namespace libpakt {
 
-class PackageLoader;
-class PackageList;
+class PortageSettings;
 
 /**
- * MultiplePackageLoader is a threaded job which uses a PackageLoader
- * object to scan a list of packages for package details.
- * When scanning, the settings of the PackageLoader are used.
- *
- * After setting up the loader (using at least the setPackageLoader and
- * setPackageList() member functions) you can call start() or perform()
- * to begin loading the packages.
- *
- * You might want to connect to the PackageLoader's packageLoaded() signal
- * if you want to know which packages now contain detailed package info.
- *
- * @short A threaded class for retrieving detail info of multiple packages.
+ * This is a class that is able to load files like /etc/make.conf,
+ * /etc/make.globals or the make.defaults files in each profile directory.
+ * Starting the loader with start() or perform() retrieves the configuration
+ * values and stores them into a given PortageSettings object.
  */
-class MultiplePackageLoader : public ThreadedJob
+class FileMakeConfigLoader : public FileLoaderBase
 {
-	// By the way, don't even think of deriving this from any PackageLoader,
-	// because those loaders are backend-specific, and MultiplePackageLoader
-	// is NOT.
-
 	Q_OBJECT
 
 public:
-	MultiplePackageLoader( PackageLoader* loader );
-	~MultiplePackageLoader();
+	FileMakeConfigLoader();
 
-	PackageLoader* packageLoader();
-	void setPackageLoader( PackageLoader* loader );
-	void setAutoDeletePackageLoader( bool autoDelete );
-
-	void setPackageList( PackageList* packages );
-
-protected:
-	JobResult performThread();
+	void setSettingsObject( PortageSettings* settings );
 
 private:
-	PackageLoader* m_loader;
-	PackageList* m_packages;
-	bool m_autoDeleteLoader;
+	bool check();
+	bool isLineProcessed( const QString& line );
+	void processLine( const QString& line );
+
+	//! The PortageSettings object that will be filled with configuration values.
+	PortageSettings* m_settings;
+
+	// Regexp for a configuration line, like ARCH="x86" or SUPPORT_ALSA=1
+	QRegExp m_rxConfigLine;
 };
 
 }
 
-#endif // LIBPAKTMULTIPLEPACKAGELOADER_H
+#endif // LIBPAKTFILEMAKECONFIGLOADER_H

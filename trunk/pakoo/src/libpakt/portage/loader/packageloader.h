@@ -18,42 +18,70 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef LIBPAKTPORTAGECATEGORY_H
-#define LIBPAKTPORTAGECATEGORY_H
+#ifndef LIBPAKTPACKAGELOADER_H
+#define LIBPAKTPACKAGELOADER_H
 
-#include "packagecategory.h"
+#include "../../core/threadedjob.h"
 
 
 namespace libpakt {
 
+class Package;
+class PackageVersion;
+
 /**
- * This is a QStringList with a few convenience functions regarding
- * package categories. A category is viewed as part of the package tree,
- * and follows a hierarchical model. An empty list means all packages
- * (or: no category), a list containing one element (e.g. "app") is
- * a subset of the "all packages" category, and a list containing more
- * elements (e.g. "app"->"portage") is an even smaller subset and
- * shows the tree structure of the package tree quite well.
+ * PackageLoader is a threaded job which is able to retrieve package
+ * detail information. This class is responsible for filling in
+ * package and version infos which were not loaded by InitialLoader
+ * (because it would have been too resource- or time-expensive to load
+ * all the info at once).
+ *
+ * After setting up the scanner (using at least the setPackage()
+ * member function) you can call start() or perform() to begin scanning.
+ *
+ * @short A threaded class for retrieving detail info of a single package.
  */
-class PortageCategory : public PackageCategory
+class PackageLoader : public ThreadedJob
 {
+	Q_OBJECT
+
 public:
-	enum PortageCategoryIndex {
-		MainCategory = 0,
-		SubCategory = 1
+	PackageLoader();
+	void setPackage( Package* package );
+	Package* package();
+
+signals:
+	/** Emitted every time when a package has successfully been scanned.
+	 * The scanned package is given as argument. */
+	void packageLoaded( Package* package );
+
+protected:
+	void emitPackageLoaded();
+	void customEvent( QCustomEvent* event );
+
+private:
+
+	enum PackageLoaderEventType
+	{
+		PackageLoadedEventType = QEvent::User + 14346
 	};
 
-	PortageCategory() : PackageCategory() {};
-	PortageCategory( const QStringList& list ) : PackageCategory(list) {};
-	PortageCategory( const QString& mainCategory, const QString& subCategory );
+	//! The package that will be scanned.
+	Package* m_package;
 
-	void setCategory( const QString& mainCategory, const QString& subCategory );
 
-	QString userVisibleName() const;
-	QString uniqueName() const;
-	bool loadFromUniqueName( const QString& uniqueName );
+	//
+	// nested event classes
+	//
+
+	class PackageLoadedEvent : public QCustomEvent
+	{
+	public:
+		PackageLoadedEvent() : QCustomEvent( PackageLoadedEventType ) {};
+		Package* package;
+	};
 };
 
 }
 
-#endif // LIBPAKTPORTAGECATEGORY_H
+#endif // LIBPAKTPACKAGELOADER_H

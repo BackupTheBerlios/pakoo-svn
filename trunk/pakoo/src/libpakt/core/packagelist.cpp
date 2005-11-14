@@ -22,7 +22,7 @@
 
 #include "packageversion.h"
 #include "package.h"
-#include "portagecategory.h"
+#include "../portage/core/portagecategory.h"
 
 #include <klocale.h>
 #include <kdebug.h>
