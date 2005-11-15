@@ -15,8 +15,7 @@ pakoo_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 pakoo_LDADD = $(top_builddir)/src/portagewidgets/libportagewidgets.a \
 	$(top_builddir)/src/libpakt/libpakt.a $(top_builddir)/src/libpakt/portage/loader/libportageloader.a \
 	$(top_builddir)/src/libpakt/installer/libinstaller.a $(top_builddir)/src/libpakt/portage/core/libportagecore.a \
-	$(top_builddir)/src/libpakt/core/libcore.a $(top_builddir)/src/libpakt/base/loader/libloader.a $(LIB_KFILE) \
-	$(LIB_KHTML)
+	$(top_builddir)/src/libpakt/base/loader/libloader.a $(top_builddir)/src/libpakt/core/libcore.a $(LIB_KFILE) $(LIB_KHTML)
 
 # which sources should be compiled for pakoo
 pakoo_SOURCES = main.cpp pakoo.cpp pakooview.cpp pref.cpp pakooiface.skel \
