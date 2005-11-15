@@ -22,9 +22,9 @@
 
 #include "packagelist.h"
 //FIXME: Shouldn't have portagedependecy here!
-#include "../portage/core/portagepackage.h"
-#include "../portage/core/portagecategory.h"
-#include "../portage/core/portagepackageversion.h"
+#include "../../portage/core/portagepackage.h"
+#include "../../portage/core/portagecategory.h"
+#include "../../portage/core/portagepackageversion.h"
 
 // For more info on DEPEND atoms, see the DEPEND Atoms section of man 5 ebuild
 

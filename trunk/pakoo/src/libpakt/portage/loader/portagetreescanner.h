@@ -21,10 +21,10 @@
 #ifndef LIBPAKTPORTAGETREESCANNER_H
 #define LIBPAKTPORTAGETREESCANNER_H
 
-#include "../../core/threadedjob.h"
+#include "../../base/core/threadedjob.h"
 #include "../core/portagecategory.h"
 #include "../core/portagesettings.h"
-#include "../../core/packagelist.h"
+#include "../../base/core/packagelist.h"
 
 #include <qstringlist.h>
 #include <qdir.h>

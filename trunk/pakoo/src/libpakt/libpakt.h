@@ -24,11 +24,11 @@
 #ifndef LIBPAKT_H
 #define LIBPAKT_H
 
-#include "core/packageversion.h"
-#include "core/package.h"
-#include "core/packagelist.h"
+#include "base/core/packageversion.h"
+#include "base/core/package.h"
+#include "base/core/packagelist.h"
 #include "portage/core/portagesettings.h"
-//#include "core/dependatom.h"
+//#include "base/core/dependatom.h"
 #include "portage/loader/portagetreescanner.h"
 #include "base/loader/packageloader.h"
 #include "portage/loader/profileloader.h"

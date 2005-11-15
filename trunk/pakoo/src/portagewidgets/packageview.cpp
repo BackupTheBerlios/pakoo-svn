@@ -22,7 +22,7 @@
 #include "pixmapnames.h"
 #include "i18n.h"
 
-#include <core/packageselector.h>
+#include <base/core/packageselector.h>
 
 #include <qvbox.h>
 #include <qlabel.h>

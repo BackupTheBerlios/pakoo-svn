@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGEPACKAGEVERSION_H
 #define LIBPAKTPORTAGEPACKAGEVERSION_H
 
-#include "../../core/packageversion.h"
+#include "../../base/core/packageversion.h"
 
 namespace libpakt {
 

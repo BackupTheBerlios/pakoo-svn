@@ -22,10 +22,10 @@
 
 #include <kiconloader.h>
 
-#include "../libpakt/backendfactory.h"
-#include "../libpakt/core/packagelist.h"
-#include "../libpakt/core/packagecategory.h"
-#include "../libpakt/core/packageselector.h"
+#include <backendfactory.h>
+#include <base/core/packagelist.h>
+#include <base/core/packagecategory.h>
+#include <base/core/packageselector.h>
 
 #include "pixmapnames.h"
 #include "i18n.h"

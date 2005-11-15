@@ -26,11 +26,11 @@
 #include <kdebug.h>
 
 #include <backendfactory.h>
-#include <core/packagelist.h>
-#include <core/package.h>
-#include <core/packageversion.h>
-#include <core/packagecategory.h>
-#include <core/packageselector.h>
+#include <base/core/packagelist.h>
+#include <base/core/package.h>
+#include <base/core/packageversion.h>
+#include <base/core/packagecategory.h>
+#include <base/core/packageselector.h>
 #include <base/loader/packageloader.h>
 #include <base/loader/multiplepackageloader.h>
 

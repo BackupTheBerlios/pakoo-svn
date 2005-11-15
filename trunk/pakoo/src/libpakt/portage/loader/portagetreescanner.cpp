@@ -22,7 +22,7 @@
 
 #include "../core/portagepackageversion.h"
 #include "../core/portagepackage.h"
-#include "../../core/packagelist.h"
+#include "../../base/core/packagelist.h"
 #include "../core/portagecategory.h"
 
 #include <qdatetime.h>

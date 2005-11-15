@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGEPACKAGE_H
 #define LIBPAKTPORTAGEPACKAGE_H
 
-#include "../../core/package.h"
+#include "../../base/core/package.h"
 #include "portagepackageversion.h"
 
 #include <qstring.h>

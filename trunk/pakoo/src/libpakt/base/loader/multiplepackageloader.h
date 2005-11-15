@@ -21,7 +21,7 @@
 #ifndef LIBPAKTMULTIPLEPACKAGELOADER_H
 #define LIBPAKTMULTIPLEPACKAGELOADER_H
 
-#include "../../core/threadedjob.h"
+#include "../core/threadedjob.h"
 
 
 namespace libpakt {

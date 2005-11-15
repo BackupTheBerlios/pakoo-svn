@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGECATEGORY_H
 #define LIBPAKTPORTAGECATEGORY_H
 
-#include "../../core/packagecategory.h"
+#include "../../base/core/packagecategory.h"
 
 
 namespace libpakt {

@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPROFILELOADER_H
 #define LIBPAKTPROFILELOADER_H
 
-#include "../../core/threadedjob.h"
+#include "../../base/core/threadedjob.h"
 
 class QString;
 class QDir;

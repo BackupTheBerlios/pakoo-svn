@@ -21,7 +21,7 @@
 #ifndef LIBPAKTINITIALLOADER_H
 #define LIBPAKTINITIALLOADER_H
 
-#include "../../core/threadedjob.h"
+#include "../core/threadedjob.h"
 
 
 namespace libpakt {

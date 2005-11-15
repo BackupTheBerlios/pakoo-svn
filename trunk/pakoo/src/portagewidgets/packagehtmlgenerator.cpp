@@ -21,7 +21,7 @@
 #include "packagehtmlgenerator.h"
 
 // libpakt includes
-#include <core/package.h>
+#include <base/core/package.h>
 
 // KDE includes
 #include <klocale.h>

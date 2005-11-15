@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGEML_H
 #define LIBPAKTPORTAGEML_H
 
-#include "../../core/threadedjob.h"
+#include "../../base/core/threadedjob.h"
 
 #include <qdom.h>
 

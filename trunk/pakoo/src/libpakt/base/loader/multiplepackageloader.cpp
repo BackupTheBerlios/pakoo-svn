@@ -20,7 +20,7 @@
 
 #include "multiplepackageloader.h"
 
-#include "../../core/packagelist.h"
+#include "../core/packagelist.h"
 #include "packageloader.h"
 
 #include <klocale.h>

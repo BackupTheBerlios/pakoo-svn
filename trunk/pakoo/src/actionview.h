@@ -21,7 +21,7 @@
 #ifndef PAKOOJOBVIEW_H
 #define PAKOOJOBVIEW_H
 
-#include <core/ijob.h>
+#include <base/core/ijob.h>
 #include <qwidget.h>
 
 class QVBox;

@@ -20,10 +20,10 @@
 
 #include "portageml.h"
 
-#include "../../core/threadedjob.h"
+#include "../../base/core/threadedjob.h"
 #include "../core/portagepackageversion.h"
 #include "../core/portagepackage.h"
-#include "../../core/packagelist.h"
+#include "../../base/core/packagelist.h"
 #include "../core/portagecategory.h"
 
 #include <qfile.h>

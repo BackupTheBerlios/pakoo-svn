@@ -21,7 +21,7 @@
 #ifndef LIBPAKTFILEMAKECONFIGLOADER_H
 #define LIBPAKTFILEMAKECONFIGLOADER_H
 
-#include "../../core/fileloaderbase.h"
+#include "../../base/core/fileloaderbase.h"
 
 #include <qregexp.h>
 

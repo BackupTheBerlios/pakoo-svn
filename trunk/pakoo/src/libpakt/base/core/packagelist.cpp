@@ -23,7 +23,7 @@
 #include "packageversion.h"
 #include "package.h"
 //FIXME: Shouldn't have portagedependecy here!
-#include "../portage/core/portagecategory.h"
+#include "../../portage/core/portagecategory.h"
 
 #include <klocale.h>
 #include <kdebug.h>
