@@ -9,7 +9,7 @@ Immediate:
   * Portage versions of the widgets
 
 
-Reasons for switching libqortage to kdelibs (libpakt?):
+Reasons for switching libpakt to kdelibs:
 - Translations
 - K(Ext)Process
 - KShared
