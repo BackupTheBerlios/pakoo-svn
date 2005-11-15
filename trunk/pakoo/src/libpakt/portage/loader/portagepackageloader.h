@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGEPACKAGELOADER_H
 #define LIBPAKTPORTAGEPACKAGELOADER_H
 
-#include "packageloader.h"
+#include "../../base/loader/packageloader.h"
 #include "../core/portagesettings.h"
 
 #include <qstringlist.h>

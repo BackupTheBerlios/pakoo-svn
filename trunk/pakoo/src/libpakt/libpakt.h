@@ -30,7 +30,7 @@
 #include "portage/core/portagesettings.h"
 //#include "core/dependatom.h"
 #include "portage/loader/portagetreescanner.h"
-#include "portage/loader/packageloader.h"
+#include "base/loader/packageloader.h"
 #include "portage/loader/profileloader.h"
 #include "portage/loader/portageml.h"
 #include "portage/loader/filepackagemaskloader.h"

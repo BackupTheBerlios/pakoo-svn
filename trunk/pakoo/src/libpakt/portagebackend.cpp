@@ -45,8 +45,8 @@ PortageBackend::PortageBackend() : BackendFactory()
 	//   AnyDBM (included in portage) and MySQL
 	// There are one more (cpickle) in /usr/lib/portage/pym/
 	// but I don't know anything about it.
-	portageSettings->setPreferredPackageSource( FlatCache );
-	//portageSettings->setPreferredPackageSource( PortageTree );
+	//portageSettings->setPreferredPackageSource( FlatCache );
+	portageSettings->setPreferredPackageSource( PortageTree );
 	//TODO: Read these from a configuration file of some kind.
 	portageSettings->setInstalledPackagesDirectory("/var/db/pkg/");
 	portageSettings->setCacheDirectory("/var/cache/edb/dep/");

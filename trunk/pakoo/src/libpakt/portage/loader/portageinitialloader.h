@@ -21,7 +21,7 @@
 #ifndef LIBPAKTPORTAGEINITIALLOADER_H
 #define LIBPAKTPORTAGEINITIALLOADER_H
 
-#include "initialloader.h"
+#include "../../base/loader/initialloader.h"
 
 
 namespace libpakt {
