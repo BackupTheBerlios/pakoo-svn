@@ -37,7 +37,7 @@ UI Design:
 - "Actions" tab: install, uninstall, revdep-rebuild, etc.
 - "Configure" tab: view/edit configuration files
 - How to handle very detailed package info (like use flags or dependencies)?
-  * Show as child items of the package (before the version items, if possible)
+  * Show in the info view? (One tab for use flags and one for dependencies?)
 - Provide two (un)installing possibilites (immediate/queued):
   * "(Un)Install Selected" makes a queue containing one package and executes it
   * "Add To Queue" adds the item to the install/uninstall queue
