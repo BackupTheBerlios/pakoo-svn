@@ -52,6 +52,10 @@ PortageBackend::PortageBackend() : BackendFactory()
 	portageSettings->setCacheDirectory("/var/cache/edb/dep/");
 }
 
+PortageBackend::~PortageBackend() {
+	delete portageSettings;
+}
+
 PortageSettings* PortageBackend::settings()
 {
 	return portageSettings;

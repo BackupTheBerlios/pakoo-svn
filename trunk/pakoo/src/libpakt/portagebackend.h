@@ -36,7 +36,7 @@ class PortageBackend : public BackendFactory
 {
 public:
 	PortageBackend();
-
+	~PortageBackend();
 	//! Return the PortageSettings object containing the global configuration.
 	PortageSettings* settings();
 
