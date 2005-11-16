@@ -49,7 +49,7 @@
 int main(int argc, char **argv)
 {
 	KAboutData about(PACKAGE, APPNAME, VERSION, DESCRIPTION,
-			 KAboutData::License_GPL, COPYRIGHT,
+	                 KAboutData::License_GPL, COPYRIGHT,
 	                 DISCLAIMER, HOMEPAGE,
 	                 "https://developer.berlios.de/bugs/?group_id=3829"
 	                 /* the place for bug reports */ );
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
 	                 I18N_NOOP("Main Pakoo developer"),
 	                 "jpetso@gmx.at" );
 	about.addAuthor( "AnMaster",
-			 I18N_NOOP("Pakoo developer"),
-			 "anmaster@users.berlios.de" );
+	                 I18N_NOOP("Pakoo developer"),
+	                 "anmaster@users.berlios.de" );
 	about.addAuthor( "karye", I18N_NOOP("Initial code (from Kuroo)"),
 	                 "karye@users.sourceforge.net", "http://tux.myftp.org" );
 
