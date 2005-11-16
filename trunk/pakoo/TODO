@@ -38,7 +38,7 @@ UI Design:
 - "Configure" tab: view/edit configuration files
 - How to handle very detailed package info (like use flags or dependencies)?
   * Show in the info view? (One tab for use flags and one for dependencies?)
-- Provide two (un)installing possibilites (immediate/queued):
+- Provide two (un)installing possibilities (immediate/queued):
   * "(Un)Install Selected" makes a queue containing one package and executes it
   * "Add To Queue" adds the item to the install/uninstall queue
 - Provide a list of packages depending on a package queued for uninstall?
@@ -53,4 +53,4 @@ Feature set:
   * revdep-rebuild
 - searching
 - configuring
-- Add suport for readning /var/cache/edb/dep in CDB format.
+- Add support for reading /var/cache/edb/dep in CDB format.
