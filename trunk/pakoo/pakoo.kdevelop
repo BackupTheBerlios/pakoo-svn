@@ -20,14 +20,13 @@
       <part>kdevsnippet</part>
       <part>kdevastyle</part>
       <part>kdevscripting</part>
-      <part>kdevregexptest</part>
     </ignoreparts>
     <secondaryLanguages/>
     <versioncontrol>kdevsubversion</versioncontrol>
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>src/libpakt/core/libcore.a</activetarget>
+      <activetarget>src/pakoo</activetarget>
       <useconfiguration>debug</useconfiguration>
     </general>
     <run>
@@ -189,7 +188,7 @@
     <projectdoc>
       <docsystem>Doxygen-dokumentationssamling</docsystem>
       <docurl>pakoo.tag</docurl>
-      <usermanualurl/>
+      <usermanualurl></usermanualurl>
     </projectdoc>
   </kdevdocumentation>
   <substmap>
