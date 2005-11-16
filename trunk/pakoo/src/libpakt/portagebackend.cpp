@@ -21,7 +21,7 @@
 #include "portagebackend.h"
 
 #include "portage/core/portagepackage.h"
-#include "core/packagelist.h"
+#include "base/core/packagelist.h"
 #include "portage/core/portagesettings.h"
 #include "portage/core/portagecategory.h"
 #include "portage/loader/portagepackageloader.h"
