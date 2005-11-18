@@ -13,8 +13,8 @@ pakoo_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 
 # the libraries to link against.
 pakoo_LDADD = $(top_builddir)/src/portagewidgets/libportagewidgets.a \
-	$(top_builddir)/src/libpakt/libpakt.a $(top_builddir)/src/libpakt/portage/loader/libportageloader.a \
-	$(top_builddir)/src/libpakt/installer/libinstaller.a $(top_builddir)/src/libpakt/portage/core/libportagecore.a \
+	$(top_builddir)/src/libpakt/libpakt.a $(top_builddir)/src/libpakt/portage/installer/libportageinstaller.a \
+	$(top_builddir)/src/libpakt/portage/loader/libportageloader.a $(top_builddir)/src/libpakt/portage/core/libportagecore.a \
 	$(top_builddir)/src/libpakt/base/loader/libloader.a $(top_builddir)/src/libpakt/base/core/libcore.a $(LIB_KFILE) \
 	$(LIB_KHTML)
 

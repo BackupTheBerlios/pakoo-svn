@@ -20,7 +20,7 @@
 
 #include "installeractionview.h"
 
-#include "libpakt/installer/emergeprocess.h"
+#include "libpakt/portage/installer/emergeprocess.h"
 
 #include <qlayout.h>
 #include <qhbox.h>

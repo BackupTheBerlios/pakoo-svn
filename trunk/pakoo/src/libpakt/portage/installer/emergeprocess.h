@@ -21,7 +21,7 @@
 #ifndef LIBPAKTEMERGEPROCESS_H
 #define LIBPAKTEMERGEPROCESS_H
 
-#include "../base/core/processjob.h"
+#include "../../base/core/processjob.h"
 
 
 namespace libpakt {

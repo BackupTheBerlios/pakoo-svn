@@ -23,7 +23,7 @@
 // libpakt
 #include <portagebackend.h>
 #include <portage/loader/portageinitialloader.h>
-#include <installer/emergeprocess.h>
+#include <portage/installer/emergeprocess.h>
 
 
 // widgets
