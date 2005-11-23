@@ -20,8 +20,8 @@
 
 #include "packageselector.h"
 
-#include "../core/package.h"
-#include "../core/packagelist.h"
+#include "package.h"
+#include "packagelist.h"
 
 #include <klocale.h>
 #include <kdebug.h>

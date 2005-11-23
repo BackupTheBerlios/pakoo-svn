@@ -20,9 +20,6 @@
 
 #include "fileloaderbase.h"
 
-#include "../core/packagelist.h"
-#include "../core/dependatom.h"
-
 #include <qfile.h>
 #include <qtextstream.h>
 
