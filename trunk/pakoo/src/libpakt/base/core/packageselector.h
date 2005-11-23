@@ -22,8 +22,7 @@
 #define LIBPAKTPACKAGESELECTOR_H
 
 #include "threadedjob.h"
-//FIXME: Shouldn't have portagedependecy here!
-#include "../../portage/core/portagecategory.h"
+#include "packagecategory.h"
 
 
 namespace libpakt {

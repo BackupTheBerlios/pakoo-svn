@@ -28,8 +28,7 @@
 
 #include <ksharedptr.h>
 
-//FIXME: Shouldn't have portagedependecy here!
-#include "../../portage/core/portagecategory.h"
+#include "packagecategory.h"
 
 
 namespace libpakt {
