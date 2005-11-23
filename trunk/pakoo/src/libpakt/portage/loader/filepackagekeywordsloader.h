@@ -21,7 +21,7 @@
 #ifndef LIBPAKTFILEPACKAGEKEYWORDSLOADER_H
 #define LIBPAKTFILEPACKAGEKEYWORDSLOADER_H
 
-#include "../../base/loader/fileatomloaderbase.h"
+#include "../loader/fileatomloaderbase.h"
 
 #include <qstringlist.h>
 

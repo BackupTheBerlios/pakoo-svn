@@ -23,7 +23,7 @@
 
 #include <qstring.h>
 
-#include "../core/fileloaderbase.h"
+#include "../../base/core/fileloaderbase.h"
 
 
 namespace libpakt {

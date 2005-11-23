@@ -21,7 +21,7 @@
 #ifndef LIBPAKTFILEPACKAGEMASKLOADER_H
 #define LIBPAKTFILEPACKAGEMASKLOADER_H
 
-#include "../../base/loader/fileatomloaderbase.h"
+#include "../loader/fileatomloaderbase.h"
 
 
 namespace libpakt {
