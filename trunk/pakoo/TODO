@@ -21,6 +21,7 @@ Really Serious Bugs (TM):
 
 Not so serious bugs:
 - Skips package descriptions when scrolling down fast
+- Doesn't obey package.mask
 
 Visible enhancements:
 - Version links in the info view should select version items.

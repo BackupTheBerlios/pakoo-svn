@@ -128,7 +128,8 @@ FILE_PATTERNS          = *.c \
                          *.xpm \
                          *.dox
 RECURSIVE              = YES
-EXCLUDE                = /home/arvid/src/pakoo/debug
+EXCLUDE                = /home/arvid/src/pakoo/debug \
+                         /home/arvid/src/pakoo/optimized
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXAMPLE_PATH           = 

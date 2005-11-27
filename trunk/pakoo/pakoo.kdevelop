@@ -26,8 +26,8 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>src/pakoo</activetarget>
-      <useconfiguration>optimized</useconfiguration>
+      <activetarget>src/libpakt/portage/installer/libportageinstaller.a</activetarget>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>src/pakoo</mainprogram>
@@ -64,7 +64,7 @@
         <configargs/>
         <topsourcedir/>
         <cppflags/>
-        <ldflags/>
+        <ldflags>-Wl,-O1</ldflags>
         <ccompilerbinary/>
         <cxxcompilerbinary/>
         <f77compilerbinary/>
