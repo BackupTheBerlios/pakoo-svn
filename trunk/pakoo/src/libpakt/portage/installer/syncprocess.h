@@ -27,7 +27,7 @@
 namespace libpakt {
 
 /**
- * @short A ProcessJob to install or uninstall packages.
+ * @short A ProcessJob to sync the portage tree.
  *
  * This object can run emerge --sync or eix-sync, compose 
  * an appropriate shell command and parse the emerge output.
