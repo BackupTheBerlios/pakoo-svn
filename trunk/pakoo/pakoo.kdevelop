@@ -14,7 +14,7 @@
     </keywords>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description/>
+    <description></description>
     <ignoreparts>
       <part>kdevctags2</part>
       <part>kdevsnippet</part>
@@ -33,8 +33,8 @@
       <mainprogram>src/pakoo</mainprogram>
       <terminal>false</terminal>
       <directoryradio>executable</directoryradio>
-      <customdirectory/>
-      <programargs/>
+      <customdirectory>/</customdirectory>
+      <programargs></programargs>
       <autocompile>true</autocompile>
       <envvars/>
       <runarguments>
@@ -145,15 +145,15 @@
   <kdevdebugger>
     <general>
       <dbgshell>libtool</dbgshell>
-      <programargs/>
-      <gdbpath/>
+      <programargs></programargs>
+      <gdbpath></gdbpath>
       <breakonloadinglibs>false</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <runappinappdirectory>true</runappinappdirectory>
-      <configGdbScript/>
-      <runShellScript/>
-      <runGdbScript/>
+      <configGdbScript></configGdbScript>
+      <runShellScript></runShellScript>
+      <runGdbScript></runGdbScript>
     </general>
     <display>
       <staticmembers>false</staticmembers>
@@ -198,7 +198,7 @@
     <projectdoc>
       <docsystem>Doxygen-dokumentationssamling</docsystem>
       <docurl>pakoo.tag</docurl>
-      <usermanualurl/>
+      <usermanualurl></usermanualurl>
     </projectdoc>
   </kdevdocumentation>
   <substmap>
@@ -230,7 +230,7 @@
       <pcs>KDElibs</pcs>
     </references>
     <creategettersetter>
-      <prefixGet/>
+      <prefixGet></prefixGet>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
