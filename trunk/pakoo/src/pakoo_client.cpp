@@ -26,20 +26,20 @@
 
 int main(int argc, char **argv)
 {
-    KApplication app(argc, argv, "pakoo_client", false);
+	KApplication app(argc, argv, "pakoo_client", false);
 
-    // get our DCOP client and attach so that we may use it
-    DCOPClient *client = app.dcopClient();
-    client->attach();
+	// get our DCOP client and attach so that we may use it
+	DCOPClient *client = app.dcopClient();
+	client->attach();
 
-    // do a 'send' for now
-    QByteArray data;
-    QDataStream ds(data, IO_WriteOnly);
-    if (argc > 1)
-        ds << QString(argv[1]);
-    else
-        ds << QString("http://www.kde.org");
-    client->send("pakoo", "pakooIface", "openURL(QString)", data);
+	// do a 'send' for now
+	QByteArray data;
+	QDataStream ds(data, IO_WriteOnly);
+	if (argc > 1)
+		ds << QString(argv[1]);
+	else
+		ds << QString("http://www.kde.org");
+	client->send("pakoo", "pakooIface", "openURL(QString)", data);
 
-    return app.exec();
+	return app.exec();
 }

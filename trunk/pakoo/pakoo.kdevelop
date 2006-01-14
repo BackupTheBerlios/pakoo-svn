@@ -14,10 +14,9 @@
     </keywords>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description></description>
+    <description/>
     <ignoreparts>
       <part>kdevctags2</part>
-      <part>kdevsnippet</part>
       <part>kdevastyle</part>
       <part>kdevscripting</part>
     </ignoreparts>
@@ -34,7 +33,7 @@
       <terminal>false</terminal>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs></programargs>
+      <programargs/>
       <autocompile>true</autocompile>
       <envvars/>
       <runarguments>
@@ -59,7 +58,7 @@
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevg77options</f77compiler>
-        <cxxflags>-fforce-addr -O2 -g0 -march=pentium4</cxxflags>
+        <cxxflags>-O2 -g0 -funit-at-a-time -march=pentium4</cxxflags>
         <envvars/>
         <configargs/>
         <topsourcedir/>
@@ -145,15 +144,15 @@
   <kdevdebugger>
     <general>
       <dbgshell>libtool</dbgshell>
-      <programargs></programargs>
-      <gdbpath></gdbpath>
+      <programargs/>
+      <gdbpath/>
       <breakonloadinglibs>false</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
       <runappinappdirectory>true</runappinappdirectory>
-      <configGdbScript></configGdbScript>
-      <runShellScript></runShellScript>
-      <runGdbScript></runGdbScript>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
     </general>
     <display>
       <staticmembers>false</staticmembers>
@@ -198,7 +197,7 @@
     <projectdoc>
       <docsystem>Doxygen-dokumentationssamling</docsystem>
       <docurl>pakoo.tag</docurl>
-      <usermanualurl></usermanualurl>
+      <usermanualurl/>
     </projectdoc>
   </kdevdocumentation>
   <substmap>
@@ -230,7 +229,7 @@
       <pcs>KDElibs</pcs>
     </references>
     <creategettersetter>
-      <prefixGet></prefixGet>
+      <prefixGet/>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
